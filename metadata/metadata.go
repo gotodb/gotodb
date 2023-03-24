@@ -141,7 +141,7 @@ func (m *Metadata) SelectColumnsByIndexes(indexes []int) *Metadata {
 		rec[i] = true
 	}
 	indexes = []int{}
-	for index, _ := range rec {
+	for index := range rec {
 		indexes = append(indexes, index)
 	}
 	sort.Ints(indexes)
@@ -162,7 +162,7 @@ func (m *Metadata) SelectColumns(columns []string) *Metadata {
 		rec[index] = true
 	}
 	var indexes []int
-	for index, _ := range rec {
+	for index := range rec {
 		indexes = append(indexes, index)
 	}
 	sort.Ints(indexes)

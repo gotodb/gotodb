@@ -1,7 +1,6 @@
 package filesystem
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -20,7 +19,7 @@ func (fs *LocalFileSystem) Open(fl *FileLocation) (VirtualFile, error) {
 }
 
 func (fs *LocalFileSystem) List(fl *FileLocation) (fileLocations []*FileLocation, err error) {
-	files, err := ioutil.ReadDir(fl.Location)
+	files, err := os.ReadDir(fl.Location)
 	if err != nil {
 		return nil, err
 	}

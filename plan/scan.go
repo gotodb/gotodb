@@ -16,7 +16,7 @@ type ScanNode struct {
 	Name          string
 	Metadata      *metadata.Metadata
 	InputMetadata *metadata.Metadata
-	PartitionInfo *partition.PartitionInfo
+	PartitionInfo *partition.Info
 	Output        Node
 	Filters       []*operator.BooleanExpressionNode
 }

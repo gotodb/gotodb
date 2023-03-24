@@ -1,0 +1,99 @@
+syntax = "proto3";
+package pb;
+
+service GueryMaster {
+  rpc SendHeartbeat(stream AgentHeartbeat) returns (Empty) {}
+}
+
+service GueryExecutor {
+  rpc Quit(Empty) returns (Empty) {}
+  rpc Restart(Empty) returns (Empty) {}
+  rpc Duplicate(Empty) returns (Empty) {}
+
+  rpc SendInstruction(Instruction) returns (Empty) {}
+  rpc SetupWriters(Empty) returns (Empty) {}
+  rpc SetupReaders(Empty) returns (Empty) {}
+  rpc Run(Empty) returns (Empty) {}
+
+  rpc GetOutputChannelLocation(Location) returns (Location) {}
+}
+
+service GueryAgent {
+  rpc Quit(Empty) returns (Empty) {}
+  rpc Restart(Empty) returns (Empty) {}
+  rpc Duplicate(Empty) returns (Empty) {}
+  rpc SendHeartbeat(stream ExecutorHeartbeat) returns (Empty) {}
+
+  rpc SendTask(Task) returns (Empty) {}
+  rpc KillTask(Task) returns (Empty) {}
+  rpc Run(Task) returns (Empty) {}
+
+  rpc GetOutputChannelLocation(Location) returns (Location) {}
+}
+
+enum LogLevel {
+  INFO = 0;
+  WARN = 1;
+  ERR = 2;
+}
+
+message LogInfo {
+  LogLevel Level = 1;
+  bytes Info = 2;
+}
+
+message Empty{}
+
+message Location {
+  string Name = 1;
+  string Address = 2;
+  int32 Port = 3;
+  int32 ChannelIndex = 4;
+}
+
+message Instruction {
+  string TaskId = 1;
+  int32 TaskType = 2;
+  bytes EncodedEPlanNodeBytes = 3;
+  bytes RuntimeBytes = 4;
+  Location Location = 5;
+}
+
+message ExecutorHeartbeat {
+  string TaskId = 1;
+  TaskStatus Status = 2;
+  Location location = 3;
+  repeated LogInfo Infos = 4;
+}
+
+enum TaskStatus{
+  TODO = 0;
+  RUNNING = 1;
+  ERROR = 2;
+  SUCCEED = 3;
+}
+
+message Task {
+  string TaskId = 1;
+  repeated Instruction Instructions = 2;
+}
+
+message TaskInfo {
+  string TaskId = 1;
+  TaskStatus Status = 2;
+  double Progress = 3;
+  repeated LogInfo Infos = 4;
+}
+
+message AgentHeartbeat {
+  Location location = 1;
+  int32 CpuNumber = 2;
+  repeated double CpuUsage = 3;
+  int64 TotalMemory = 4;
+  int64 FreeMemory = 5;
+  int32 BusyExecutorNumber = 6;
+  int32 ExecutorNumber = 7;
+  int64 UpTime = 8;
+  int32 RunningTaskNumber = 10;
+  repeated TaskInfo TaskInfos = 11;
+}

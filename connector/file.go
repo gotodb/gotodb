@@ -19,7 +19,7 @@ type File struct {
 	Metadata      *metadata.Metadata
 	FileReader    filereader.FileReader
 	FileType      filesystem.FileType
-	PartitionInfo *partition.PartitionInfo
+	PartitionInfo *partition.Info
 }
 
 func NewFileConnectorEmpty() (*File, error) {
@@ -66,7 +66,7 @@ func (c *File) GetMetadata() (*metadata.Metadata, error) {
 	return c.Metadata, nil
 }
 
-func (c *File) GetPartitionInfo() (*partition.PartitionInfo, error) {
+func (c *File) GetPartitionInfo() (*partition.Info, error) {
 	if c.PartitionInfo == nil {
 		if err := c.setPartitionInfo(); err != nil {
 			return nil, err
@@ -77,7 +77,7 @@ func (c *File) GetPartitionInfo() (*partition.PartitionInfo, error) {
 
 func (c *File) setPartitionInfo() error {
 	parMD := metadata.NewMetadata()
-	c.PartitionInfo = partition.NewPartitionInfo(parMD)
+	c.PartitionInfo = partition.NewInfo(parMD)
 	for _, loc := range c.Config.PathList {
 		fs, err := filesystem.List(loc)
 		if err != nil {

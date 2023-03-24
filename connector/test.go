@@ -20,7 +20,7 @@ type Test struct {
 	Rows          []row.Row
 	Index         int64
 	Table         string
-	PartitionInfo *partition.PartitionInfo
+	PartitionInfo *partition.Info
 }
 
 var columns = []string{"process_date", "var1", "var2", "var3", "data_source", "network_id", "event_date"}
@@ -113,9 +113,9 @@ func (c *Test) GetMetadata() (*metadata.Metadata, error) {
 	return c.Metadata, nil
 }
 
-func (c *Test) GetPartitionInfo() (*partition.PartitionInfo, error) {
+func (c *Test) GetPartitionInfo() (*partition.Info, error) {
 	if c.PartitionInfo == nil {
-		c.PartitionInfo = partition.NewPartitionInfo(metadata.NewMetadata())
+		c.PartitionInfo = partition.NewInfo(metadata.NewMetadata())
 		if c.Table == "csv" {
 			c.PartitionInfo.FileList = []*filesystem.FileLocation{
 				{

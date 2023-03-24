@@ -6,7 +6,7 @@ import (
 	"github.com/gotodb/gotodb/row"
 )
 
-type PartitionInfo struct {
+type Info struct {
 	Metadata   *metadata.Metadata
 	Partitions []*Partition
 	Locations  []string
@@ -17,8 +17,8 @@ type PartitionInfo struct {
 	FileList []*filesystem.FileLocation
 }
 
-func NewPartitionInfo(md *metadata.Metadata) *PartitionInfo {
-	res := &PartitionInfo{
+func NewInfo(md *metadata.Metadata) *Info {
+	res := &Info{
 		Metadata:  md,
 		Locations: []string{},
 		FileTypes: []filesystem.FileType{},
@@ -34,18 +34,18 @@ func NewPartitionInfo(md *metadata.Metadata) *PartitionInfo {
 	return res
 }
 
-func (p *PartitionInfo) GetPartitionColumnNum() int {
+func (p *Info) GetPartitionColumnNum() int {
 	return len(p.Partitions)
 }
 
-func (p *PartitionInfo) GetPartitionNum() int {
+func (p *Info) GetPartitionNum() int {
 	if len(p.Partitions) <= 0 {
 		return 0
 	}
 	return len(p.Partitions[0].Vals)
 }
 
-func (p *PartitionInfo) GetPartitionRowGroup(i int) *row.RowsGroup {
+func (p *Info) GetPartitionRowGroup(i int) *row.RowsGroup {
 	r := p.GetPartitionRow(i)
 	if r == nil {
 		return nil
@@ -55,7 +55,7 @@ func (p *PartitionInfo) GetPartitionRowGroup(i int) *row.RowsGroup {
 	return rb
 }
 
-func (p *PartitionInfo) GetPartitionRow(i int) *row.Row {
+func (p *Info) GetPartitionRow(i int) *row.Row {
 	if i >= p.GetPartitionNum() {
 		return nil
 	}
@@ -66,51 +66,51 @@ func (p *PartitionInfo) GetPartitionRow(i int) *row.Row {
 	return r
 }
 
-func (p *PartitionInfo) GetPartitionFiles(i int) []*filesystem.FileLocation {
+func (p *Info) GetPartitionFiles(i int) []*filesystem.FileLocation {
 	if i >= len(p.FileLists) {
 		return []*filesystem.FileLocation{}
 	}
 	return p.FileLists[i]
 }
 
-func (p *PartitionInfo) GetNoPartititonFiles() []*filesystem.FileLocation {
+func (p *Info) GetNoPartititonFiles() []*filesystem.FileLocation {
 	return p.FileList
 }
 
-func (p *PartitionInfo) GetLocation(i int) string {
+func (p *Info) GetLocation(i int) string {
 	if i >= len(p.Locations) {
 		return ""
 	}
 	return p.Locations[i]
 }
 
-func (p *PartitionInfo) GetFileType(i int) filesystem.FileType {
+func (p *Info) GetFileType(i int) filesystem.FileType {
 	if i >= len(p.FileTypes) {
 		return filesystem.UNKNOWNFILETYPE
 	}
 	return p.FileTypes[i]
 }
 
-func (p *PartitionInfo) Write(row *row.Row) {
+func (p *Info) Write(row *row.Row) {
 	for i, val := range row.Vals {
 		p.Partitions[i].Append(val)
 	}
 }
 
-func (p *PartitionInfo) IsPartition() bool {
+func (p *Info) IsPartition() bool {
 	if p.Metadata != nil && len(p.Metadata.Columns) > 0 {
 		return true
 	}
 	return false
 }
 
-func (p *PartitionInfo) Encode() {
+func (p *Info) Encode() {
 	for _, par := range p.Partitions {
 		par.Encode()
 	}
 }
 
-func (p *PartitionInfo) Decode() error {
+func (p *Info) Decode() error {
 	for _, par := range p.Partitions {
 		if err := par.Decode(); err != nil {
 			return err
