@@ -51,7 +51,7 @@ func NewSelectNode(runtime *config.Runtime, input Node, sq parser.ISetQuantifier
 }
 
 func (n *SelectNode) GetType() NodeType {
-	return SELECTNODE
+	return NodeTypeSelect
 }
 
 func (n *SelectNode) GetInputs() []Node {

@@ -40,7 +40,7 @@ func (n *DistinctGlobalNode) SetOutput(output Node) {
 }
 
 func (n *DistinctGlobalNode) GetType() NodeType {
-	return DISTINCTGLOBALNODE
+	return NodeTypeDistinctGlobal
 }
 
 func (n *DistinctGlobalNode) SetMetadata() (err error) {

@@ -45,7 +45,7 @@ func (n *LimitNode) SetOutput(output Node) {
 }
 
 func (n *LimitNode) GetType() NodeType {
-	return LIMITNODE
+	return NodeTypeLimit
 }
 
 func (n *LimitNode) GetMetadata() *metadata.Metadata {

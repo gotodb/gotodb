@@ -46,7 +46,7 @@ func (n *OrderByNode) SetOutput(output Node) {
 }
 
 func (n *OrderByNode) GetType() NodeType {
-	return ORDERBYNODE
+	return NodeTypeOrderBy
 }
 
 func (n *OrderByNode) String() string {

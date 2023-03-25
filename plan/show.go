@@ -95,7 +95,7 @@ func NewShowNodePartitions(_ *config.Runtime, catalog, schema, table string) *Sh
 }
 
 func (n *ShowNode) GetType() NodeType {
-	return SHOWNODE
+	return NodeTypeShow
 }
 
 func (n *ShowNode) SetMetadata() error {

@@ -38,7 +38,7 @@ func (n *AggregateFuncLocalNode) SetOutput(output Node) {
 }
 
 func (n *AggregateFuncLocalNode) GetType() NodeType {
-	return AGGREGATEFUNCLOCALNODE
+	return NodeTypeAggregateFuncLocal
 }
 
 func (n *AggregateFuncLocalNode) GetMetadata() *metadata.Metadata {

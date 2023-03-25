@@ -40,7 +40,7 @@ func (n *FilterNode) SetOutput(output Node) {
 }
 
 func (n *FilterNode) GetType() NodeType {
-	return FILTERNODE
+	return NodeTypeFilter
 }
 
 func (n *FilterNode) SetMetadata() (err error) {

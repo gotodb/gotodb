@@ -17,7 +17,7 @@ func NewUseNode(_ *config.Runtime, ct, sh string) *UseNode {
 }
 
 func (n *UseNode) GetType() NodeType {
-	return USENODE
+	return NodeTypeUse
 }
 
 func (n *UseNode) SetMetadata() error {

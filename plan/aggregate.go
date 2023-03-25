@@ -35,7 +35,7 @@ func (n *AggregateNode) SetOutput(output Node) {
 }
 
 func (n *AggregateNode) GetType() NodeType {
-	return AGGREGATENODE
+	return NodeTypeAggregate
 }
 
 func (n *AggregateNode) GetMetadata() *metadata.Metadata {

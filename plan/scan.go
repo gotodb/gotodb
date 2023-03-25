@@ -33,7 +33,7 @@ func NewScanNode(runtime *config.Runtime, name string) *ScanNode {
 }
 
 func (n *ScanNode) GetType() NodeType {
-	return SCANNODE
+	return NodeTypeScan
 }
 
 func (n *ScanNode) String() string {

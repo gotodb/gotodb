@@ -37,7 +37,7 @@ func (n *RenameNode) SetOutput(output Node) {
 }
 
 func (n *RenameNode) GetType() NodeType {
-	return RENAMENODE
+	return NodeTypeRename
 }
 
 func (n *RenameNode) GetMetadata() *metadata.Metadata {

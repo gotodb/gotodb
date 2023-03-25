@@ -59,7 +59,7 @@ func (n *HashJoinNode) SetOutput(output Node) {
 }
 
 func (n *HashJoinNode) GetType() NodeType {
-	return HASHJOINNODE
+	return NodeTypeHashJoin
 }
 
 func (n *HashJoinNode) GetMetadata() *metadata.Metadata {

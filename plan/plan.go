@@ -12,26 +12,26 @@ type NodeType int32
 
 const (
 	_ NodeType = iota
-	SCANNODE
-	JOINNODE
-	HASHJOINNODE
-	FILTERNODE
-	ORDERBYNODE
-	LIMITNODE
-	SELECTNODE
-	UNIONNODE
-	HAVINGNODE
-	RENAMENODE
-	COMBINENODE
-	GROUPBYNODE
-	AGGREGATENODE
-	AGGREGATEFUNCLOCALNODE
-	AGGREGATEFUNCGLOBALNODE
-	SHUFFLENODE
-	DISTINCTLOCALNODE
-	DISTINCTGLOBALNODE
-	USENODE
-	SHOWNODE
+	NodeTypeScan
+	NodeTypeJoin
+	NodeTypeHashJoin
+	NodeTypeFilter
+	NodeTypeOrderBy
+	NodeTypeLimit
+	NodeTypeSelect
+	NodeTypeUnion
+	NodeTypeHaving
+	NodeTypeRename
+	NodeTypeCombine
+	NodeTypeGroupBy
+	NodeTypeAggregate
+	NodeTypeAggregateFuncLocal
+	NodeTypeAggregateFuncGlobal
+	NodeTypeShuffle
+	NodeTypeDistinctLocal
+	NodeTypeDistinctGlobal
+	NodeTypeUse
+	NodeTypeShow
 )
 
 type Node interface {

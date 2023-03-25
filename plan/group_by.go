@@ -41,7 +41,7 @@ func (n *GroupByNode) SetOutput(output Node) {
 }
 
 func (n *GroupByNode) GetType() NodeType {
-	return GROUPBYNODE
+	return NodeTypeGroupBy
 }
 
 func (n *GroupByNode) SetMetadata() (err error) {

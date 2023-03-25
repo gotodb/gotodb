@@ -35,7 +35,7 @@ func (n *CombineNode) SetOutput(output Node) {
 }
 
 func (n *CombineNode) GetType() NodeType {
-	return COMBINENODE
+	return NodeTypeCombine
 }
 
 func (n *CombineNode) GetMetadata() *metadata.Metadata {

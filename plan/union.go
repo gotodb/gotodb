@@ -62,7 +62,7 @@ func (n *UnionNode) SetOutput(output Node) {
 }
 
 func (n *UnionNode) GetType() NodeType {
-	return UNIONNODE
+	return NodeTypeUnion
 }
 
 func (n *UnionNode) GetMetadata() *metadata.Metadata {

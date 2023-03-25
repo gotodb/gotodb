@@ -41,7 +41,7 @@ func (n *ShuffleNode) SetOutput(output Node) {
 }
 
 func (n *ShuffleNode) GetType() NodeType {
-	return SHUFFLENODE
+	return NodeTypeShuffle
 }
 
 func (n *ShuffleNode) SetMetadata() (err error) {

@@ -40,7 +40,7 @@ func (n *DistinctLocalNode) SetOutput(output Node) {
 }
 
 func (n *DistinctLocalNode) GetType() NodeType {
-	return DISTINCTLOCALNODE
+	return NodeTypeDistinctLocal
 }
 
 func (n *DistinctLocalNode) SetMetadata() (err error) {

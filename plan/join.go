@@ -52,7 +52,7 @@ func (n *JoinNode) SetOutput(output Node) {
 }
 
 func (n *JoinNode) GetType() NodeType {
-	return JOINNODE
+	return NodeTypeJoin
 }
 
 func (n *JoinNode) GetMetadata() *metadata.Metadata {
