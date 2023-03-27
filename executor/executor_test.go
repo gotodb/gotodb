@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 	"github.com/gotodb/gotodb/config"
+	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/parser"
 	"github.com/gotodb/gotodb/pb"
@@ -24,7 +25,66 @@ import (
 	"time"
 )
 
-func TestPlan(t *testing.T) {
+// to temp dir
+var tempDir = os.TempDir()
+
+//to current dir
+//var tempDir = "." //os.TempDir()
+
+func (e *Executor) setupWriters() {
+	logger.Infof("SetupWriters start")
+	var wg sync.WaitGroup
+	for i := 0; i < len(e.OutputLocations); i++ {
+		pr, pw := io.Pipe()
+		e.Writers = append(e.Writers, pw)
+		e.OutputChannelLocations = append(e.OutputChannelLocations,
+			&pb.Location{
+				Name:    e.OutputLocations[i].Name,
+				Address: e.OutputLocations[i].Address,
+				Port:    e.OutputLocations[i].Port,
+			},
+		)
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			file, err := os.OpenFile(fmt.Sprintf("%s/%s.txt", tempDir, e.OutputLocations[i].Name), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
+			if err != nil {
+				logger.Errorf("failed to open file: %v", err)
+				return
+			}
+
+			if _, err := io.Copy(file, pr); err != nil {
+				logger.Errorf("writer failed to CopyBuffer: %v", err)
+			}
+
+			if err := file.Close(); err != nil {
+				logger.Errorf("close writer failed: %v", err)
+			}
+		}(i)
+	}
+	wg.Wait()
+	logger.Infof("SetupWriters Input=%v, Output=%v", e.InputChannelLocations, e.OutputChannelLocations)
+}
+
+func (e *Executor) setupReaders() {
+	logger.Infof("SetupReaders start")
+	for i := 0; i < len(e.InputLocations); i++ {
+		file, err := os.Open(fmt.Sprintf("%s/%s.txt", tempDir, e.InputLocations[i].Name))
+		if err != nil {
+			logger.Errorf("failed to open file: %v", err)
+		}
+		e.Readers = append(e.Readers, file)
+		e.InputChannelLocations = append(e.InputChannelLocations, &pb.Location{
+			Name:    e.InputLocations[i].Name,
+			Address: e.InputLocations[i].Address,
+			Port:    e.InputLocations[i].Port,
+		})
+	}
+
+	logger.Infof("SetupReaders Input=%v, Output=%v", e.InputChannelLocations, e.OutputChannelLocations)
+}
+
+func TestExecutor(t *testing.T) {
 	sqlStr := "select var1 from test.test.csv limit 10"
 	inputStream := antlr.NewInputStream(sqlStr)
 	lexer := parser.NewSqlLexer(parser.NewCaseChangingStream(inputStream, true))
@@ -53,7 +113,7 @@ func TestPlan(t *testing.T) {
 	}
 	var stageJobs []stage.Job
 
-	aggJob, err := stage.CreateJob(logicalTree, &stageJobs, executorHeap, 1)
+	aggJob, err := stage.CreateJob(logicalTree, &stageJobs, executorHeap, 2)
 	if err != nil {
 		t.Error(err)
 		return
@@ -81,21 +141,29 @@ func TestPlan(t *testing.T) {
 			Location:              &loc,
 		}
 		exec := NewExecutor("", taskId, "test")
-		exec.SendInstruction(context.Background(), &instruction)
+
+		if _, err := exec.SendInstruction(context.Background(), &instruction); err != nil {
+			t.Errorf("exec.SendInstruction: %v", err)
+			return
+		}
 
 		var wg sync.WaitGroup
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			exec.SetupWriters(context.Background(), new(pb.Empty))
+			exec.setupWriters()
 
 		}()
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			exec.SetupReaders(context.Background(), new(pb.Empty))
+			exec.setupReaders()
 		}()
-		exec.Run(context.Background(), new(pb.Empty))
+
+		if _, err := exec.Run(context.Background(), new(pb.Empty)); err != nil {
+			t.Errorf("exec.Run: %v", err)
+			return
+		}
 		wg.Wait()
 		for {
 			if exec.Status == pb.TaskStatus_SUCCEED {
