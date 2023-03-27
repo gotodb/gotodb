@@ -24,13 +24,14 @@ type Test struct {
 }
 
 var columns = []string{"process_date", "var1", "var2", "var3", "data_source", "network_id", "event_date"}
+var tempDir = os.TempDir()
 
 func GenerateTestRows(columns []string) error {
-	f1, err := os.Create("/tmp/test01.csv")
+	f1, err := os.Create(tempDir + "/test01.csv")
 	if err != nil {
 		return err
 	}
-	f2, err := os.Create("/tmp/test02.csv")
+	f2, err := os.Create(tempDir + "/test02.csv")
 	if err != nil {
 		return err
 	}
@@ -119,11 +120,11 @@ func (c *Test) GetPartitionInfo() (*partition.Info, error) {
 		if c.Table == "csv" {
 			c.PartitionInfo.FileList = []*filesystem.FileLocation{
 				{
-					Location: "/tmp/test01.csv",
+					Location: tempDir + "/test01.csv",
 					FileType: filesystem.CSV,
 				},
 				{
-					Location: "/tmp/test02.csv",
+					Location: tempDir + "/test02.csv",
 					FileType: filesystem.CSV,
 				},
 			}
@@ -132,14 +133,14 @@ func (c *Test) GetPartitionInfo() (*partition.Info, error) {
 		} else if c.Table == "parquet" {
 			c.PartitionInfo.FileList = []*filesystem.FileLocation{
 				{
-					Location: "/tmp/test.parquet",
+					Location: tempDir + "/test.parquet",
 					FileType: filesystem.PARQUET,
 				},
 			}
 		} else if c.Table == "orc" {
 			c.PartitionInfo.FileList = []*filesystem.FileLocation{
 				{
-					Location: "/tmp/test.orc",
+					Location: tempDir + "/test.orc",
 					FileType: filesystem.ORC,
 				},
 			}
