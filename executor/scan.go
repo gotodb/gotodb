@@ -14,8 +14,6 @@ import (
 )
 
 func (e *Executor) SetInstructionScan(instruction *pb.Instruction) error {
-	logger.Infof("set instruction scan")
-
 	var job stage.ScanJob
 	var err error
 	if err = msgpack.Unmarshal(instruction.EncodedEPlanNodeBytes, &job); err != nil {

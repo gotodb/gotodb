@@ -135,7 +135,7 @@ func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruct
 	config.Conf.Runtime = &runtime
 
 	nodeType := stage.JobType(instruction.TaskType)
-	logger.Infof("Instruction: %v", instruction.TaskType)
+	logger.Infof("Instruction: %s", nodeType)
 	e.Status = pb.TaskStatus_RUNNING
 	e.IsStatusChanged = true
 
@@ -179,7 +179,6 @@ func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruct
 		return res, e.SetInstructionDistinctLocal(instruction)
 	case stage.JobTypeDistinctGlobal:
 		return res, e.SetInstructionDistinctGlobal(instruction)
-
 	default:
 		e.Status = pb.TaskStatus_TODO
 		return res, fmt.Errorf("unknown node type")

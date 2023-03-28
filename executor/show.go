@@ -14,7 +14,6 @@ import (
 )
 
 func (e *Executor) SetInstructionShow(instruction *pb.Instruction) error {
-	logger.Infof("set instruction show")
 	var job stage.ShowJob
 	var err error
 	if err = msgpack.Unmarshal(instruction.EncodedEPlanNodeBytes, &job); err != nil {

@@ -81,7 +81,7 @@ func (n *SelectItemNode) ExtractAggFunc(res *[]*FuncCallNode) {
 }
 
 func (n *SelectItemNode) Result(input *row.RowsGroup) ([]interface{}, error) {
-	res := []interface{}{}
+	var res []interface{}
 	if n.Expression != nil { //some items
 		rec, err := n.Expression.Result(input)
 		if err != nil {

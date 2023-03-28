@@ -29,7 +29,6 @@ func (e *Executor) SetInstructionAggregate(instruction *pb.Instruction) (err err
 }
 
 func (e *Executor) RunAggregate() (err error) {
-	writer := e.Writers[0]
 
 	md := &metadata.Metadata{}
 	//read md
@@ -40,6 +39,7 @@ func (e *Executor) RunAggregate() (err error) {
 	}
 
 	//write md
+	writer := e.Writers[0]
 	if err = util.WriteObject(writer, md); err != nil {
 		return err
 	}

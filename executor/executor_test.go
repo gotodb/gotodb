@@ -9,6 +9,7 @@ import (
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
+	"github.com/gotodb/gotodb/optimizer"
 	"github.com/gotodb/gotodb/parser"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/plan"
@@ -65,7 +66,7 @@ func (e *Executor) setupReaders() {
 }
 
 func TestExecutor(t *testing.T) {
-	sqlStr := "select var1, var2, data_source from test.test.csv limit 10"
+	sqlStr := "select a.var1, b.var2, a.data_source from test.test.csv as a join test.test.csv as b on a.var1 = b.var1 limit 10"
 	inputStream := antlr.NewInputStream(sqlStr)
 	lexer := parser.NewSqlLexer(parser.NewCaseChangingStream(inputStream, true))
 	p := parser.NewSqlParser(antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel))
@@ -82,6 +83,11 @@ func TestExecutor(t *testing.T) {
 
 	//SetMetaData
 	if err := logicalTree.SetMetadata(); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := optimizer.DeleteRenameNode(logicalTree); err != nil {
 		t.Error(err)
 		return
 	}
