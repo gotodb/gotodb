@@ -1,13 +1,9 @@
 package executor
 
 import (
-	"fmt"
 	"github.com/gotodb/gotodb/stage"
 	"io"
-	"os"
-	"runtime/pprof"
 	"sync"
-	"time"
 
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/logger"
@@ -31,15 +27,6 @@ func (e *Executor) SetInstructionFilter(instruction *pb.Instruction) (err error)
 }
 
 func (e *Executor) RunFilter() (err error) {
-	f, _ := os.Create(fmt.Sprintf("executor_%v_filter_%v_cpu.pprof", e.Name, time.Now().Format("20060102150405")))
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
-
-	defer func() {
-		e.AddLogInfo(err, pb.LogLevel_ERR)
-		e.Clear()
-	}()
-
 	job := e.StageJob.(*stage.FilterJob)
 
 	md := &metadata.Metadata{}

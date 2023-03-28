@@ -2,19 +2,15 @@ package executor
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/stage"
-	"io"
-	"os"
-	"runtime/pprof"
-	"time"
-
 	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/plan"
 	"github.com/gotodb/gotodb/row"
+	"github.com/gotodb/gotodb/stage"
 	"github.com/gotodb/gotodb/util"
 	"github.com/vmihailenco/msgpack"
+	"io"
 )
 
 func (e *Executor) SetInstructionJoin(instruction *pb.Instruction) (err error) {
@@ -30,15 +26,6 @@ func (e *Executor) SetInstructionJoin(instruction *pb.Instruction) (err error) {
 }
 
 func (e *Executor) RunJoin() (err error) {
-	fname := fmt.Sprintf("executor_%v_join_%v_cpu.pprof", e.Name, time.Now().Format("20060102150405"))
-	f, _ := os.Create(fname)
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
-
-	defer func() {
-		e.AddLogInfo(err, pb.LogLevel_ERR)
-		e.Clear()
-	}()
 	writer := e.Writers[0]
 	job := e.StageJob.(*stage.JoinJob)
 

@@ -20,7 +20,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 )
@@ -33,7 +32,6 @@ var tempDir = "."
 
 func (e *Executor) setupWriters() {
 	logger.Infof("SetupWriters start")
-	var wg sync.WaitGroup
 	for i := 0; i < len(e.OutputLocations); i++ {
 		pr, pw := io.Pipe()
 		e.Writers = append(e.Writers, pw)
@@ -44,9 +42,7 @@ func (e *Executor) setupWriters() {
 				Port:    e.OutputLocations[i].Port,
 			},
 		)
-		wg.Add(1)
 		go func(i int) {
-			defer wg.Done()
 			file, err := os.OpenFile(fmt.Sprintf("%s/%s.txt", tempDir, e.OutputLocations[i].Name), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
 			if err != nil {
 				logger.Errorf("failed to open file: %v", err)
@@ -62,7 +58,6 @@ func (e *Executor) setupWriters() {
 			}
 		}(i)
 	}
-	wg.Wait()
 	logger.Infof("SetupWriters Input=%v, Output=%v", e.InputChannelLocations, e.OutputChannelLocations)
 }
 
@@ -113,7 +108,7 @@ func TestExecutor(t *testing.T) {
 	}
 	var stageJobs []stage.Job
 
-	aggJob, err := stage.CreateJob(logicalTree, &stageJobs, executorHeap, 2)
+	aggJob, err := stage.CreateJob(logicalTree, &stageJobs, executorHeap, 1)
 	if err != nil {
 		t.Error(err)
 		return
@@ -147,24 +142,13 @@ func TestExecutor(t *testing.T) {
 			return
 		}
 
-		var wg sync.WaitGroup
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			exec.setupWriters()
-
-		}()
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			exec.setupReaders()
-		}()
+		exec.setupWriters()
+		exec.setupReaders()
 
 		if _, err := exec.Run(context.Background(), new(pb.Empty)); err != nil {
 			t.Errorf("exec.Run: %v", err)
 			return
 		}
-		wg.Wait()
 		for {
 			if exec.Status == pb.TaskStatus_SUCCEED {
 				t.Logf("Done job %s", exec.StageJob.GetType())

@@ -1,20 +1,15 @@
 package executor
 
 import (
-	"fmt"
-	"github.com/gotodb/gotodb/stage"
-	"io"
-	"os"
-	"runtime/pprof"
-	"time"
-
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
+	"github.com/gotodb/gotodb/stage"
 	"github.com/gotodb/gotodb/util"
 	"github.com/vmihailenco/msgpack"
+	"io"
 )
 
 func (e *Executor) SetInstructionOrderByLocal(instruction *pb.Instruction) (err error) {
@@ -30,15 +25,6 @@ func (e *Executor) SetInstructionOrderByLocal(instruction *pb.Instruction) (err 
 }
 
 func (e *Executor) RunOrderByLocal() (err error) {
-	f, _ := os.Create(fmt.Sprintf("executor_%v_orderbylocal_%v_cpu.pprof", e.Name, time.Now().Format("20060102150405")))
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
-
-	defer func() {
-		e.AddLogInfo(err, pb.LogLevel_ERR)
-		e.Clear()
-	}()
-
 	reader, writer := e.Readers[0], e.Writers[0]
 	job := e.StageJob.(*stage.OrderByLocalJob)
 	md := &metadata.Metadata{}

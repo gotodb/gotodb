@@ -1,20 +1,15 @@
 package executor
 
 import (
-	"fmt"
-	"github.com/gotodb/gotodb/stage"
-	"io"
-	"os"
-	"runtime/pprof"
-	"sync"
-	"time"
-
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
+	"github.com/gotodb/gotodb/stage"
 	"github.com/gotodb/gotodb/util"
 	"github.com/vmihailenco/msgpack"
+	"io"
+	"sync"
 )
 
 func (e *Executor) SetInstructionShuffle(instruction *pb.Instruction) (err error) {
@@ -46,14 +41,6 @@ func ShuffleHash(s string) int {
 }
 
 func (e *Executor) RunShuffle() (err error) {
-	f, _ := os.Create(fmt.Sprintf("executor_%v_hashjoinshuffle_%v_cpu.pprof", e.Name, time.Now().Format("20060102150405")))
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
-
-	defer func() {
-		e.AddLogInfo(err, pb.LogLevel_ERR)
-		e.Clear()
-	}()
 	job := e.StageJob.(*stage.ShuffleJob)
 	//read md
 	md := &metadata.Metadata{}

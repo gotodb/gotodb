@@ -2,18 +2,14 @@ package executor
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/stage"
-	"io"
-	"os"
-	"runtime/pprof"
-	"time"
-
 	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
+	"github.com/gotodb/gotodb/stage"
 	"github.com/gotodb/gotodb/util"
 	"github.com/vmihailenco/msgpack"
+	"io"
 )
 
 func (e *Executor) SetInstructionUnion(instruction *pb.Instruction) (err error) {
@@ -29,16 +25,7 @@ func (e *Executor) SetInstructionUnion(instruction *pb.Instruction) (err error) 
 }
 
 func (e *Executor) RunUnion() (err error) {
-	f, _ := os.Create(fmt.Sprintf("executor_%v_scan_%v_cpu.pprof", e.Name, time.Now().Format("20060102150405")))
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
-
-	defer func() {
-		e.AddLogInfo(err, pb.LogLevel_ERR)
-		e.Clear()
-	}()
 	writer := e.Writers[0]
-
 	//read md
 	if len(e.Readers) != 2 {
 		return fmt.Errorf("union readers number %v <> 2", len(e.Readers))

@@ -1,21 +1,16 @@
 package executor
 
 import (
-	"fmt"
-	"github.com/gotodb/gotodb/stage"
-	"io"
-	"os"
-	"runtime/pprof"
-	"sync"
-	"time"
-
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/connector"
 	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
+	"github.com/gotodb/gotodb/stage"
 	"github.com/gotodb/gotodb/util"
 	"github.com/vmihailenco/msgpack"
+	"io"
+	"sync"
 )
 
 func (e *Executor) SetInstructionScan(instruction *pb.Instruction) error {
@@ -38,18 +33,12 @@ func (e *Executor) SetInstructionScan(instruction *pb.Instruction) error {
 }
 
 func (e *Executor) RunScan() (err error) {
-	f, _ := os.Create(fmt.Sprintf("executor_%v_scan_%v_cpu.pprof", e.Name, time.Now().Format("20060102150405")))
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
 
 	defer func() {
 		for i := 0; i < len(e.Writers); i++ {
 			util.WriteEOFMessage(e.Writers[i])
 			e.Writers[i].(io.WriteCloser).Close()
 		}
-		e.AddLogInfo(err, pb.LogLevel_ERR)
-		e.Clear()
-
 	}()
 
 	job := e.StageJob.(*stage.ScanJob)

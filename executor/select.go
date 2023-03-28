@@ -2,19 +2,15 @@ package executor
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/stage"
-	"io"
-	"os"
-	"runtime/pprof"
-	"time"
-
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
+	"github.com/gotodb/gotodb/stage"
 	"github.com/gotodb/gotodb/util"
 	"github.com/vmihailenco/msgpack"
+	"io"
 )
 
 func (e *Executor) SetInstructionSelect(instruction *pb.Instruction) (err error) {
@@ -30,18 +26,7 @@ func (e *Executor) SetInstructionSelect(instruction *pb.Instruction) (err error)
 }
 
 func (e *Executor) RunSelect() (err error) {
-	fname := fmt.Sprintf("executor_%v_select_%v_cpu.pprof", e.Name, time.Now().Format("20060102150405"))
-	f, _ := os.Create(fname)
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
-
-	defer func() {
-		e.AddLogInfo(err, pb.LogLevel_ERR)
-		e.Clear()
-	}()
-
 	job := e.StageJob.(*stage.SelectJob)
-
 	md := &metadata.Metadata{}
 	reader := e.Readers[0]
 	writer := e.Writers[0]
@@ -86,13 +71,13 @@ func (e *Executor) RunSelect() (err error) {
 		//for distinct
 		if job.SetQuantifier != nil && (*job.SetQuantifier) == gtype.DISTINCT {
 			for i := 0; i < res.GetRowsNumber(); i++ {
-				row := res.GetRow(i)
-				rowkey := fmt.Sprintf("%v", row)
-				if _, ok := distinctMap[rowkey]; ok {
+				r := res.GetRow(i)
+				key := fmt.Sprintf("%v", r)
+				if _, ok := distinctMap[key]; ok {
 					continue
 				}
-				distinctMap[rowkey] = true
-				if err = rbWriter.WriteRow(row); err != nil {
+				distinctMap[key] = true
+				if err = rbWriter.WriteRow(r); err != nil {
 					break
 				}
 			}

@@ -1,14 +1,10 @@
 package executor
 
 import (
-	"fmt"
 	"github.com/gotodb/gotodb/plan/operator"
 	"github.com/gotodb/gotodb/stage"
 	"io"
-	"os"
-	"runtime/pprof"
 	"sync"
-	"time"
 
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/logger"
@@ -51,15 +47,6 @@ func CalHashKey(es []*operator.ExpressionNode, rg *row.RowsGroup) (string, error
 }
 
 func (e *Executor) RunHashJoin() (err error) {
-	fname := fmt.Sprintf("executor_%v_hashjoin_%v_cpu.pprof", e.Name, time.Now().Format("20060102150405"))
-	f, _ := os.Create(fname)
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
-
-	defer func() {
-		e.AddLogInfo(err, pb.LogLevel_ERR)
-		e.Clear()
-	}()
 	writer := e.Writers[0]
 	job := e.StageJob.(*stage.HashJoinJob)
 

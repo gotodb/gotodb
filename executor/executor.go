@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"runtime/pprof"
 	"strings"
 	"sync"
 	"time"
@@ -183,55 +184,67 @@ func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruct
 		e.Status = pb.TaskStatus_TODO
 		return res, fmt.Errorf("unknown node type")
 	}
-	return res, nil
 }
 
 func (e *Executor) Run(ctx context.Context, empty *pb.Empty) (*pb.Empty, error) {
 	res := &pb.Empty{}
 	nodeType := stage.JobType(e.Instruction.TaskType)
+	go func() {
+		var err error
+		f, _ := os.Create(fmt.Sprintf("executor_%v_%s_%v_cpu.pprof", e.Name, strings.ToLower(nodeType.String()), time.Now().Format("20060102150405")))
+		err = pprof.StartCPUProfile(f)
+		if err != nil {
+			return
+		}
+		defer func() {
+			pprof.StopCPUProfile()
+			e.AddLogInfo(err, pb.LogLevel_ERR)
+			e.Clear()
+		}()
 
-	switch nodeType {
-	case stage.JobTypeScan:
-		go e.RunScan()
-	case stage.JobTypeSelect:
-		go e.RunSelect()
-	case stage.JobTypeGroupBy:
-		go e.RunGroupBy()
-	case stage.JobTypeJoin:
-		go e.RunJoin()
-	case stage.JobTypeHashJoin:
-		go e.RunHashJoin()
-	case stage.JobTypeShuffle:
-		go e.RunShuffle()
-	case stage.JobTypeDuplicate:
-		go e.RunDuplicate()
-	case stage.JobTypeAggregate:
-		go e.RunAggregate()
-	case stage.JobTypeAggregateFuncGlobal:
-		go e.RunAggregateFuncGlobal()
-	case stage.JobTypeAggregateFuncLocal:
-		go e.RunAggregateFuncLocal()
-	case stage.JobTypeLimit:
-		go e.RunLimit()
-	case stage.JobTypeFilter:
-		go e.RunFilter()
-	case stage.JobTypeOrderByLocal:
-		go e.RunOrderByLocal()
-	case stage.JobTypeOrderBy:
-		go e.RunOrderBy()
-	case stage.JobTypeUnion:
-		go e.RunUnion()
-	case stage.JobTypeShow:
-		go e.RunShow()
-	case stage.JobTypeBalance:
-		go e.RunBalance()
-	case stage.JobTypeDistinctLocal:
-		go e.RunDistinctLocal()
-	case stage.JobTypeDistinctGlobal:
-		go e.RunDistinctGlobal()
-	default:
-		return res, fmt.Errorf("unknown job type")
-	}
+		switch nodeType {
+		case stage.JobTypeScan:
+			err = e.RunScan()
+		case stage.JobTypeSelect:
+			err = e.RunSelect()
+		case stage.JobTypeGroupBy:
+			err = e.RunGroupBy()
+		case stage.JobTypeJoin:
+			err = e.RunJoin()
+		case stage.JobTypeHashJoin:
+			err = e.RunHashJoin()
+		case stage.JobTypeShuffle:
+			err = e.RunShuffle()
+		case stage.JobTypeDuplicate:
+			err = e.RunDuplicate()
+		case stage.JobTypeAggregate:
+			err = e.RunAggregate()
+		case stage.JobTypeAggregateFuncGlobal:
+			err = e.RunAggregateFuncGlobal()
+		case stage.JobTypeAggregateFuncLocal:
+			err = e.RunAggregateFuncLocal()
+		case stage.JobTypeLimit:
+			err = e.RunLimit()
+		case stage.JobTypeFilter:
+			err = e.RunFilter()
+		case stage.JobTypeOrderByLocal:
+			err = e.RunOrderByLocal()
+		case stage.JobTypeOrderBy:
+			err = e.RunOrderBy()
+		case stage.JobTypeUnion:
+			err = e.RunUnion()
+		case stage.JobTypeShow:
+			err = e.RunShow()
+		case stage.JobTypeBalance:
+			err = e.RunBalance()
+		case stage.JobTypeDistinctLocal:
+			err = e.RunDistinctLocal()
+		case stage.JobTypeDistinctGlobal:
+			err = e.RunDistinctGlobal()
+		default:
+			err = fmt.Errorf("unknown job type")
+		}
+	}()
 	return res, nil
 }
 
