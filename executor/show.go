@@ -1,7 +1,6 @@
 package executor
 
 import (
-	"fmt"
 	"github.com/gotodb/gotodb/stage"
 	"io"
 
@@ -36,10 +35,6 @@ func (e *Executor) RunShow() (err error) {
 			e.Writers[i].(io.WriteCloser).Close()
 		}
 	}()
-
-	if e.Instruction == nil {
-		return fmt.Errorf("No Instruction")
-	}
 
 	job := e.StageJob.(*stage.ShowJob)
 	ctr, err := connector.NewConnector(job.Catalog, job.Schema, job.Table)

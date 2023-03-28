@@ -33,8 +33,8 @@ var tempDir = "."
 func (e *Executor) setupWriters() {
 	logger.Infof("SetupWriters start")
 	for i := 0; i < len(e.OutputLocations); i++ {
-		pr, pw := io.Pipe()
-		e.Writers = append(e.Writers, pw)
+		file, _ := os.Create(fmt.Sprintf("%s/%s.txt", tempDir, e.OutputLocations[i].Name))
+		e.Writers = append(e.Writers, file)
 		e.OutputChannelLocations = append(e.OutputChannelLocations,
 			&pb.Location{
 				Name:    e.OutputLocations[i].Name,
@@ -42,21 +42,6 @@ func (e *Executor) setupWriters() {
 				Port:    e.OutputLocations[i].Port,
 			},
 		)
-		go func(i int) {
-			file, err := os.OpenFile(fmt.Sprintf("%s/%s.txt", tempDir, e.OutputLocations[i].Name), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0660)
-			if err != nil {
-				logger.Errorf("failed to open file: %v", err)
-				return
-			}
-
-			if _, err := io.Copy(file, pr); err != nil {
-				logger.Errorf("writer failed to CopyBuffer: %v", err)
-			}
-
-			if err := file.Close(); err != nil {
-				logger.Errorf("close writer failed: %v", err)
-			}
-		}(i)
 	}
 	logger.Infof("SetupWriters Input=%v, Output=%v", e.InputChannelLocations, e.OutputChannelLocations)
 }
@@ -158,6 +143,9 @@ func TestExecutor(t *testing.T) {
 					t.Errorf("info %s", info)
 				}
 				return
+			} else {
+				// In order to switch coroutines
+				time.Sleep(100 * time.Millisecond)
 			}
 		}
 	}

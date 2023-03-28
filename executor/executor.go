@@ -191,16 +191,20 @@ func (e *Executor) Run(ctx context.Context, empty *pb.Empty) (*pb.Empty, error) 
 	nodeType := stage.JobType(e.Instruction.TaskType)
 	go func() {
 		var err error
-		f, _ := os.Create(fmt.Sprintf("executor_%v_%s_%v_cpu.pprof", e.Name, strings.ToLower(nodeType.String()), time.Now().Format("20060102150405")))
-		err = pprof.StartCPUProfile(f)
-		if err != nil {
-			return
-		}
 		defer func() {
 			pprof.StopCPUProfile()
 			e.AddLogInfo(err, pb.LogLevel_ERR)
 			e.Clear()
 		}()
+		f, err := os.Create(fmt.Sprintf("executor_%v_%s_%v_cpu.pprof", e.Name, strings.ToLower(nodeType.String()), time.Now().Format("20060102150405")))
+		if err != nil {
+			return
+		}
+
+		err = pprof.StartCPUProfile(f)
+		if err != nil {
+			return
+		}
 
 		switch nodeType {
 		case stage.JobTypeScan:

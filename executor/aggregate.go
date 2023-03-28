@@ -1,12 +1,8 @@
 package executor
 
 import (
-	"fmt"
 	"github.com/gotodb/gotodb/stage"
 	"io"
-	"os"
-	"runtime/pprof"
-	"time"
 
 	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
@@ -33,15 +29,6 @@ func (e *Executor) SetInstructionAggregate(instruction *pb.Instruction) (err err
 }
 
 func (e *Executor) RunAggregate() (err error) {
-	f, _ := os.Create(fmt.Sprintf("executor_%v_aggregate_%v_cpu.pprof", e.Name, time.Now().Format("20060102150405")))
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
-
-	defer func() {
-		e.AddLogInfo(err, pb.LogLevel_ERR)
-		e.Clear()
-	}()
-
 	writer := e.Writers[0]
 
 	md := &metadata.Metadata{}
