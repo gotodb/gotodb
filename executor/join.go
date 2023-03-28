@@ -36,9 +36,7 @@ func (e *Executor) RunJoin() (err error) {
 	defer pprof.StopCPUProfile()
 
 	defer func() {
-		if err != nil {
-			e.AddLogInfo(err, pb.LogLevel_ERR)
-		}
+		e.AddLogInfo(err, pb.LogLevel_ERR)
 		e.Clear()
 	}()
 	writer := e.Writers[0]

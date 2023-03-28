@@ -42,9 +42,7 @@ func (e *Executor) RunShow() (err error) {
 			util.WriteEOFMessage(e.Writers[i])
 			e.Writers[i].(io.WriteCloser).Close()
 		}
-		if err != nil {
-			e.AddLogInfo(err, pb.LogLevel_ERR)
-		}
+		e.AddLogInfo(err, pb.LogLevel_ERR)
 		e.Clear()
 	}()
 

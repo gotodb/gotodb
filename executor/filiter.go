@@ -36,15 +36,10 @@ func (e *Executor) RunFilter() (err error) {
 	defer pprof.StopCPUProfile()
 
 	defer func() {
-		if err != nil {
-			e.AddLogInfo(err, pb.LogLevel_ERR)
-		}
+		e.AddLogInfo(err, pb.LogLevel_ERR)
 		e.Clear()
 	}()
 
-	if e.Instruction == nil {
-		return fmt.Errorf("No Instruction")
-	}
 	job := e.StageJob.(*stage.FilterJob)
 
 	md := &metadata.Metadata{}

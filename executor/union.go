@@ -38,7 +38,6 @@ func (e *Executor) RunUnion() (err error) {
 		e.Clear()
 	}()
 	writer := e.Writers[0]
-	//enode := e.StageJob.(*stage.UnionNode)
 
 	//read md
 	if len(e.Readers) != 2 {

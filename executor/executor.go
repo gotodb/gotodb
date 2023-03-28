@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gotodb/gotodb/stage"
+	"github.com/vmihailenco/msgpack"
 	"io"
 	"log"
 	"net"
@@ -126,9 +127,11 @@ func (e *Executor) Restart(ctx context.Context, em *pb.Empty) (*pb.Empty, error)
 func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruction) (*pb.Empty, error) {
 	res := &pb.Empty{}
 
-	if err := e.SetRuntime(instruction); err != nil {
+	var runtime config.Runtime
+	if err := msgpack.Unmarshal(instruction.RuntimeBytes, &runtime); err != nil {
 		return res, err
 	}
+	config.Conf.Runtime = &runtime
 
 	nodeType := stage.JobType(instruction.TaskType)
 	logger.Infof("Instruction: %v", instruction.TaskType)

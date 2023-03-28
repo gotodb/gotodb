@@ -26,10 +26,10 @@ import (
 )
 
 // to temp dir
-var tempDir = os.TempDir()
+//var tempDir = os.TempDir()
 
-//to current dir
-//var tempDir = "." //os.TempDir()
+// to current dir
+var tempDir = "."
 
 func (e *Executor) setupWriters() {
 	logger.Infof("SetupWriters start")
@@ -85,7 +85,7 @@ func (e *Executor) setupReaders() {
 }
 
 func TestExecutor(t *testing.T) {
-	sqlStr := "select var1 from test.test.csv limit 10"
+	sqlStr := "select var1, var2, data_source from test.test.csv limit 10"
 	inputStream := antlr.NewInputStream(sqlStr)
 	lexer := parser.NewSqlLexer(parser.NewCaseChangingStream(inputStream, true))
 	p := parser.NewSqlParser(antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel))

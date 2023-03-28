@@ -44,9 +44,7 @@ func (e *Executor) RunDistinctGlobal() (err error) {
 	defer pprof.StopCPUProfile()
 
 	defer func() {
-		if err != nil {
-			e.AddLogInfo(err, pb.LogLevel_ERR)
-		}
+		e.AddLogInfo(err, pb.LogLevel_ERR)
 		e.Clear()
 	}()
 	job := e.StageJob.(*stage.DistinctGlobalJob)
@@ -101,7 +99,7 @@ func (e *Executor) RunDistinctGlobal() (err error) {
 
 	//write rows
 	var wg sync.WaitGroup
-	for i, _ := range e.Readers {
+	for i := range e.Readers {
 		wg.Add(1)
 		go func(wi int) {
 			defer func() {

@@ -47,18 +47,13 @@ func (e *Executor) RunScan() (err error) {
 			util.WriteEOFMessage(e.Writers[i])
 			e.Writers[i].(io.WriteCloser).Close()
 		}
-		if err != nil {
-			e.AddLogInfo(err, pb.LogLevel_ERR)
-		}
+		e.AddLogInfo(err, pb.LogLevel_ERR)
 		e.Clear()
 
 	}()
 
-	if e.Instruction == nil {
-		return fmt.Errorf("No Instruction")
-	}
-
 	job := e.StageJob.(*stage.ScanJob)
+
 	ctr, err := connector.NewConnector(job.Catalog, job.Schema, job.Table)
 	if err != nil {
 		return err

@@ -28,10 +28,10 @@ func (e *Executor) SetInstructionHashJoin(instruction *pb.Instruction) (err erro
 	e.Instruction = instruction
 	e.StageJob = &job
 	e.InputLocations = []*pb.Location{}
-	for i, _ := range job.LeftInputs {
+	for i := range job.LeftInputs {
 		e.InputLocations = append(e.InputLocations, &job.LeftInputs[i])
 	}
-	for i, _ := range job.RightInputs {
+	for i := range job.RightInputs {
 		e.InputLocations = append(e.InputLocations, &job.RightInputs[i])
 	}
 	e.OutputLocations = []*pb.Location{&job.Output}
@@ -57,9 +57,7 @@ func (e *Executor) RunHashJoin() (err error) {
 	defer pprof.StopCPUProfile()
 
 	defer func() {
-		if err != nil {
-			e.AddLogInfo(err, pb.LogLevel_ERR)
-		}
+		e.AddLogInfo(err, pb.LogLevel_ERR)
 		e.Clear()
 	}()
 	writer := e.Writers[0]
@@ -115,7 +113,7 @@ func (e *Executor) RunHashJoin() (err error) {
 		//read right
 		var wg sync.WaitGroup
 		var mutex sync.Mutex
-		for i, _ := range rightReaders {
+		for i := range rightReaders {
 			wg.Add(1)
 			go func(index int) {
 				defer func() {
@@ -152,7 +150,7 @@ func (e *Executor) RunHashJoin() (err error) {
 		wg.Wait()
 
 		//read left
-		for i, _ := range leftReaders {
+		for i := range leftReaders {
 			wg.Add(1)
 			go func(index int) {
 				defer func() {

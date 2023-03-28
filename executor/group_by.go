@@ -36,15 +36,10 @@ func (e *Executor) RunGroupBy() (err error) {
 	defer pprof.StopCPUProfile()
 
 	defer func() {
-		if err != nil {
-			e.AddLogInfo(err, pb.LogLevel_ERR)
-		}
+		e.AddLogInfo(err, pb.LogLevel_ERR)
 		e.Clear()
 	}()
 
-	if e.Instruction == nil {
-		return fmt.Errorf("no instruction")
-	}
 	job := e.StageJob.(*stage.GroupByJob)
 
 	md := &metadata.Metadata{}
