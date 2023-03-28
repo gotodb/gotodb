@@ -15,7 +15,7 @@ type DistinctGlobalNode struct {
 	Expressions []*operator.ExpressionNode
 }
 
-func NewDistinctGlobalNode(runtime *config.Runtime, eps []*operator.ExpressionNode, input Node) *DistinctGlobalNode {
+func NewDistinctGlobalNode(_ *config.Runtime, eps []*operator.ExpressionNode, input Node) *DistinctGlobalNode {
 	res := &DistinctGlobalNode{
 		Input:       input,
 		Metadata:    metadata.NewMetadata(),
