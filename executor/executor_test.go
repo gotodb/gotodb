@@ -13,6 +13,7 @@ import (
 	"github.com/gotodb/gotodb/parser"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/plan"
+	"github.com/gotodb/gotodb/plan/operator"
 	"github.com/gotodb/gotodb/row"
 	"github.com/gotodb/gotodb/stage"
 	"github.com/gotodb/gotodb/util"
@@ -66,8 +67,8 @@ func (e *Executor) setupReaders() {
 }
 
 func TestExecutor(t *testing.T) {
-	//sqlStr := "select sum(a.var1), a.var2, a.data_source from test.test.csv as a limit 10"
-	sqlStr := "show COLUMNS from test.test.csv"
+	sqlStr := "select sum(a.var1), a.var2, a.data_source from test.test.csv as a limit 10"
+	//sqlStr := "show COLUMNS from test.test.csv"
 	inputStream := antlr.NewInputStream(sqlStr)
 	lexer := parser.NewSqlLexer(parser.NewCaseChangingStream(inputStream, true))
 	p := parser.NewSqlParser(antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel))
@@ -94,6 +95,11 @@ func TestExecutor(t *testing.T) {
 	}
 
 	if err := optimizer.FilterColumns(logicalTree, []string{}); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := optimizer.PredicatePushDown(logicalTree, []*operator.BooleanExpressionNode{}); err != nil {
 		t.Error(err)
 		return
 	}
