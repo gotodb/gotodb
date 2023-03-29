@@ -92,21 +92,12 @@ func GenerateTestMetadata(columns []string, table string) *metadata.Metadata {
 }
 
 func NewTestConnector(catalog, schema, table string) (*Test, error) {
-	if catalog != "test" || schema != "test" {
-		return nil, fmt.Errorf("[NewTestConnector] table not found")
-	}
 	var res *Test
-	switch table {
-	case "csv", "parquet", "orc":
-		res = &Test{
-			Metadata: GenerateTestMetadata(columns, table),
-			Index:    0,
-			Table:    table,
-		}
-	default:
-		return res, fmt.Errorf("table '%s' isn't support", table)
+	res = &Test{
+		Metadata: GenerateTestMetadata(columns, table),
+		Index:    0,
+		Table:    table,
 	}
-
 	return res, nil
 }
 

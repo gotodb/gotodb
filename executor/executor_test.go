@@ -66,7 +66,8 @@ func (e *Executor) setupReaders() {
 }
 
 func TestExecutor(t *testing.T) {
-	sqlStr := "select sum(a.var1), a.var2, a.data_source from test.test.csv as a limit 10"
+	//sqlStr := "select sum(a.var1), a.var2, a.data_source from test.test.csv as a limit 10"
+	sqlStr := "show COLUMNS from test.test.csv"
 	inputStream := antlr.NewInputStream(sqlStr)
 	lexer := parser.NewSqlLexer(parser.NewCaseChangingStream(inputStream, true))
 	p := parser.NewSqlParser(antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel))
@@ -88,6 +89,11 @@ func TestExecutor(t *testing.T) {
 	}
 
 	if err := optimizer.DeleteRenameNode(logicalTree); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := optimizer.FilterColumns(logicalTree, []string{}); err != nil {
 		t.Error(err)
 		return
 	}
