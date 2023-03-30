@@ -23,7 +23,6 @@ type Executor struct {
 
 	Instruction                                   *pb.Instruction
 	StageJob                                      stage.Job
-	InputLocations, OutputLocations               []*pb.Location
 	InputChannelLocations, OutputChannelLocations []*pb.Location
 	Readers                                       []io.Reader
 	Writers                                       []io.Writer
@@ -180,7 +179,7 @@ func (e *Executor) SetupWriters(ctx context.Context, empty *pb.Empty) (*pb.Empty
 						logger.Errorf("failed to accept: %v", err)
 						continue
 					}
-					logger.Infof("connect %v", conn)
+					logger.Infof("connect %v", conn.RemoteAddr())
 
 					go func(w io.Writer) {
 						err := util.CopyBuffer(pr, w)

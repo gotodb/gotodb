@@ -19,8 +19,6 @@ func (e *Executor) SetInstructionOrderByLocal(instruction *pb.Instruction) (err 
 	}
 	e.Instruction = instruction
 	e.StageJob = &job
-	e.InputLocations = job.GetInputs()
-	e.OutputLocations = job.GetOutputs()
 	return nil
 }
 

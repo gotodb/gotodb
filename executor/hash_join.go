@@ -23,8 +23,6 @@ func (e *Executor) SetInstructionHashJoin(instruction *pb.Instruction) (err erro
 	}
 	e.Instruction = instruction
 	e.StageJob = &job
-	e.InputLocations = job.GetInputs()
-	e.OutputLocations = job.GetOutputs()
 	return nil
 }
 

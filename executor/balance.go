@@ -17,9 +17,6 @@ func (e *Executor) SetInstructionBalance(instruction *pb.Instruction) (err error
 	}
 	e.Instruction = instruction
 	e.StageJob = &job
-	e.InputLocations = job.GetInputs()
-	e.OutputLocations = job.GetOutputs()
-
 	return nil
 }
 

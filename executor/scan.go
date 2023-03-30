@@ -23,7 +23,6 @@ func (e *Executor) SetInstructionScan(instruction *pb.Instruction) error {
 
 	e.StageJob = &job
 	e.Instruction = instruction
-	e.OutputLocations = job.GetOutputs()
 	return nil
 }
 

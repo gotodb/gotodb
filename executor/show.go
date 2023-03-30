@@ -19,11 +19,8 @@ func (e *Executor) SetInstructionShow(instruction *pb.Instruction) error {
 	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
-
 	e.StageJob = &job
 	e.Instruction = instruction
-	e.InputLocations = job.GetInputs()
-	e.OutputLocations = job.GetOutputs()
 	return nil
 }
 

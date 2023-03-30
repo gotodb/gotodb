@@ -48,7 +48,7 @@ import (
 )
 
 func main() {
-	sqlStr := "select sum(a.var1), a.var2, a.data_source from test.test.csv as a limit 10"
+	sqlStr := "select a.var1, a.var2, a.data_source from test.test.csv as a limit 10"
 	//sqlStr := "show COLUMNS from test.test.csv"
 	inputStream := antlr.NewInputStream(sqlStr)
 	lexer := parser.NewSqlLexer(parser.NewCaseChangingStream(inputStream, true))

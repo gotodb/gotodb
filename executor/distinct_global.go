@@ -19,9 +19,6 @@ func (e *Executor) SetInstructionDistinctGlobal(instruction *pb.Instruction) (er
 	}
 	e.Instruction = instruction
 	e.StageJob = &job
-	e.InputLocations = job.GetInputs()
-	e.OutputLocations = job.GetOutputs()
-
 	return nil
 }
 

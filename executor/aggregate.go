@@ -19,10 +19,6 @@ func (e *Executor) SetInstructionAggregate(instruction *pb.Instruction) (err err
 	}
 	e.Instruction = instruction
 	e.StageJob = &job
-	e.InputLocations = []*pb.Location{}
-	e.InputLocations = job.GetInputs()
-	e.OutputLocations = job.GetOutputs()
-
 	return nil
 }
 
