@@ -16,14 +16,14 @@ import (
 func (e *Executor) SetInstructionShow(instruction *pb.Instruction) error {
 	var job stage.ShowJob
 	var err error
-	if err = msgpack.Unmarshal(instruction.EncodedEPlanNodeBytes, &job); err != nil {
+	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 
 	e.StageJob = &job
 	e.Instruction = instruction
-	e.InputLocations = []*pb.Location{}
-	e.OutputLocations = append(e.OutputLocations, &job.Output)
+	e.InputLocations = job.GetInputs()
+	e.OutputLocations = job.GetOutputs()
 	return nil
 }
 

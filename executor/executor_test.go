@@ -34,32 +34,33 @@ var tempDir = "."
 
 func (e *Executor) setupWriters() {
 	logger.Infof("SetupWriters start")
-	for i := 0; i < len(e.OutputLocations); i++ {
-		file, _ := os.Create(fmt.Sprintf("%s/%s.txt", tempDir, e.OutputLocations[i].Name))
+	for _, location := range e.StageJob.GetOutputs() {
+		file, _ := os.Create(fmt.Sprintf("%s/%s.txt", tempDir, location.Name))
 		e.Writers = append(e.Writers, file)
 		e.OutputChannelLocations = append(e.OutputChannelLocations,
 			&pb.Location{
-				Name:    e.OutputLocations[i].Name,
-				Address: e.OutputLocations[i].Address,
-				Port:    e.OutputLocations[i].Port,
+				Name:    location.Name,
+				Address: location.Address,
+				Port:    location.Port,
 			},
 		)
 	}
+
 	logger.Infof("SetupWriters Input=%v, Output=%v", e.InputChannelLocations, e.OutputChannelLocations)
 }
 
 func (e *Executor) setupReaders() {
 	logger.Infof("SetupReaders start")
-	for i := 0; i < len(e.InputLocations); i++ {
-		file, err := os.Open(fmt.Sprintf("%s/%s.txt", tempDir, e.InputLocations[i].Name))
+	for _, location := range e.StageJob.GetInputs() {
+		file, err := os.Open(fmt.Sprintf("%s/%s.txt", tempDir, location.Name))
 		if err != nil {
 			logger.Errorf("failed to open file: %v", err)
 		}
 		e.Readers = append(e.Readers, file)
 		e.InputChannelLocations = append(e.InputChannelLocations, &pb.Location{
-			Name:    e.InputLocations[i].Name,
-			Address: e.InputLocations[i].Address,
-			Port:    e.InputLocations[i].Port,
+			Name:    location.Name,
+			Address: location.Address,
+			Port:    location.Port,
 		})
 	}
 
@@ -112,7 +113,7 @@ func TestExecutor(t *testing.T) {
 	executorHeap := util.NewHeap()
 	heap.Init(executorHeap)
 	for i := 0; i < 100; i++ {
-		heap.Push(executorHeap, util.NewItem(pb.Location{Name: fmt.Sprintf("%v", i)}, 1))
+		heap.Push(executorHeap, util.NewItem(&pb.Location{Name: fmt.Sprintf("%v", i)}, 1))
 	}
 	var stageJobs []stage.Job
 
@@ -137,13 +138,13 @@ func TestExecutor(t *testing.T) {
 		}
 		loc := job.GetLocation()
 		instruction := pb.Instruction{
-			TaskId:                taskId,
-			TaskType:              int32(job.GetType()),
-			EncodedEPlanNodeBytes: buf,
-			RuntimeBytes:          runtimeBuf,
-			Location:              &loc,
+			TaskID:               taskId,
+			TaskType:             int32(job.GetType()),
+			EncodedStageJobBytes: buf,
+			RuntimeBytes:         runtimeBuf,
+			Location:             loc,
 		}
-		exec := NewExecutor("", taskId, "test")
+		exec := New(loc.Name)
 
 		if _, err := exec.SendInstruction(context.Background(), &instruction); err != nil {
 			t.Errorf("exec.SendInstruction: %v", err)

@@ -8,9 +8,9 @@ import (
 )
 
 type DistinctGlobalJob struct {
-	Location    pb.Location
-	Inputs      []pb.Location
-	Outputs     []pb.Location
+	Location    *pb.Location
+	Inputs      []*pb.Location
+	Outputs     []*pb.Location
 	Expressions []*operator.ExpressionNode
 	Metadata    *metadata.Metadata
 }
@@ -28,19 +28,19 @@ func (n *DistinctGlobalJob) GetType() JobType {
 	return JobTypeDistinctGlobal
 }
 
-func (n *DistinctGlobalJob) GetInputs() []pb.Location {
+func (n *DistinctGlobalJob) GetInputs() []*pb.Location {
 	return n.Inputs
 }
 
-func (n *DistinctGlobalJob) GetOutputs() []pb.Location {
+func (n *DistinctGlobalJob) GetOutputs() []*pb.Location {
 	return n.Outputs
 }
 
-func (n *DistinctGlobalJob) GetLocation() pb.Location {
+func (n *DistinctGlobalJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewDistinctGlobalJob(node *plan.DistinctGlobalNode, inputs []pb.Location, outputs []pb.Location) *DistinctGlobalJob {
+func NewDistinctGlobalJob(node *plan.DistinctGlobalNode, inputs []*pb.Location, outputs []*pb.Location) *DistinctGlobalJob {
 	res := &DistinctGlobalJob{
 		Location:    outputs[0],
 		Inputs:      inputs,

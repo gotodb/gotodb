@@ -8,9 +8,9 @@ import (
 )
 
 type OrderByLocalJob struct {
-	Location  pb.Location
-	Input     pb.Location
-	Output    pb.Location
+	Location  *pb.Location
+	Input     *pb.Location
+	Output    *pb.Location
 	SortItems []*operator.SortItemNode
 	Metadata  *metadata.Metadata
 }
@@ -19,19 +19,19 @@ func (n *OrderByLocalJob) GetType() JobType {
 	return JobTypeOrderByLocal
 }
 
-func (n *OrderByLocalJob) GetInputs() []pb.Location {
-	return []pb.Location{n.Input}
+func (n *OrderByLocalJob) GetInputs() []*pb.Location {
+	return []*pb.Location{n.Input}
 }
 
-func (n *OrderByLocalJob) GetOutputs() []pb.Location {
-	return []pb.Location{n.Output}
+func (n *OrderByLocalJob) GetOutputs() []*pb.Location {
+	return []*pb.Location{n.Output}
 }
 
-func (n *OrderByLocalJob) GetLocation() pb.Location {
+func (n *OrderByLocalJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewOrderByLocalJob(node *plan.OrderByNode, input pb.Location, output pb.Location) *OrderByLocalJob {
+func NewOrderByLocalJob(node *plan.OrderByNode, input *pb.Location, output *pb.Location) *OrderByLocalJob {
 	return &OrderByLocalJob{
 		Location:  output,
 		Input:     input,

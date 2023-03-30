@@ -14,13 +14,13 @@ import (
 
 func (e *Executor) SetInstructionOrderByLocal(instruction *pb.Instruction) (err error) {
 	var job stage.OrderByLocalJob
-	if err = msgpack.Unmarshal(instruction.EncodedEPlanNodeBytes, &job); err != nil {
+	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	e.Instruction = instruction
 	e.StageJob = &job
-	e.InputLocations = []*pb.Location{&job.Input}
-	e.OutputLocations = []*pb.Location{&job.Output}
+	e.InputLocations = job.GetInputs()
+	e.OutputLocations = job.GetOutputs()
 	return nil
 }
 

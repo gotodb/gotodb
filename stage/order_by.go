@@ -8,9 +8,9 @@ import (
 )
 
 type OrderByJob struct {
-	Location  pb.Location
-	Inputs    []pb.Location
-	Output    pb.Location
+	Location  *pb.Location
+	Inputs    []*pb.Location
+	Output    *pb.Location
 	SortItems []*operator.SortItemNode
 	Metadata  *metadata.Metadata
 }
@@ -19,19 +19,19 @@ func (n *OrderByJob) GetType() JobType {
 	return JobTypeOrderBy
 }
 
-func (n *OrderByJob) GetInputs() []pb.Location {
+func (n *OrderByJob) GetInputs() []*pb.Location {
 	return n.Inputs
 }
 
-func (n *OrderByJob) GetOutputs() []pb.Location {
-	return []pb.Location{n.Output}
+func (n *OrderByJob) GetOutputs() []*pb.Location {
+	return []*pb.Location{n.Output}
 }
 
-func (n *OrderByJob) GetLocation() pb.Location {
+func (n *OrderByJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewOrderByJob(node *plan.OrderByNode, inputs []pb.Location, output pb.Location) *OrderByJob {
+func NewOrderByJob(node *plan.OrderByNode, inputs []*pb.Location, output *pb.Location) *OrderByJob {
 	return &OrderByJob{
 		Location:  output,
 		Inputs:    inputs,

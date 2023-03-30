@@ -18,19 +18,13 @@ import (
 
 func (e *Executor) SetInstructionHashJoin(instruction *pb.Instruction) (err error) {
 	var job stage.HashJoinJob
-	if err = msgpack.Unmarshal(instruction.EncodedEPlanNodeBytes, &job); err != nil {
+	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	e.Instruction = instruction
 	e.StageJob = &job
-	e.InputLocations = []*pb.Location{}
-	for i := range job.LeftInputs {
-		e.InputLocations = append(e.InputLocations, &job.LeftInputs[i])
-	}
-	for i := range job.RightInputs {
-		e.InputLocations = append(e.InputLocations, &job.RightInputs[i])
-	}
-	e.OutputLocations = []*pb.Location{&job.Output}
+	e.InputLocations = job.GetInputs()
+	e.OutputLocations = job.GetOutputs()
 	return nil
 }
 

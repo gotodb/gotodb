@@ -16,17 +16,14 @@ import (
 func (e *Executor) SetInstructionScan(instruction *pb.Instruction) error {
 	var job stage.ScanJob
 	var err error
-	if err = msgpack.Unmarshal(instruction.EncodedEPlanNodeBytes, &job); err != nil {
+	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	job.PartitionInfo.Decode() //partition info must decode firstly
 
 	e.StageJob = &job
 	e.Instruction = instruction
-	for i := 0; i < len(job.Outputs); i++ {
-		loc := job.Outputs[i]
-		e.OutputLocations = append(e.OutputLocations, &loc)
-	}
+	e.OutputLocations = job.GetOutputs()
 	return nil
 }
 

@@ -3,31 +3,18 @@ package executor
 import (
 	"context"
 	"fmt"
-	"github.com/gotodb/gotodb/stage"
-	"github.com/vmihailenco/msgpack"
-	"io"
-	"log"
-	"net"
-	"os"
-	"os/exec"
-	"runtime/pprof"
-	"strings"
-	"sync"
-	"time"
-
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/kardianos/osext"
-	"google.golang.org/grpc"
+	"github.com/gotodb/gotodb/stage"
+	"github.com/vmihailenco/msgpack"
+	"io"
+	"sync"
 )
 
 type Executor struct {
 	sync.Mutex
-	AgentAddress string
-
-	Address string
-	Name    string
+	Name string
 
 	Instruction                                   *pb.Instruction
 	StageJob                                      stage.Job
@@ -43,18 +30,21 @@ type Executor struct {
 	DoneChan chan int
 }
 
-var executorServer *Executor
+var executors = make(map[string]*Executor)
 
-func NewExecutor(agentAddress string, address, name string) *Executor {
+func New(name string) *Executor {
 	res := &Executor{
-		AgentAddress: agentAddress,
-		Address:      address,
-		Name:         name,
-		DoneChan:     make(chan int),
-		Infos:        []*pb.LogInfo{},
-		Status:       pb.TaskStatus_TODO,
+		Name:     name,
+		DoneChan: make(chan int),
+		Infos:    []*pb.LogInfo{},
+		Status:   pb.TaskStatus_TODO,
 	}
+	executors[name] = res
 	return res
+}
+
+func Get(name string) *Executor {
+	return executors[name]
 }
 
 func (e *Executor) AddLogInfo(info interface{}, level pb.LogLevel) {
@@ -88,41 +78,6 @@ func (e *Executor) Clear() {
 	default:
 		close(e.DoneChan)
 	}
-}
-
-func (e *Executor) Duplicate(ctx context.Context, em *pb.Empty) (*pb.Empty, error) {
-	res := &pb.Empty{}
-	exeFullName, _ := osext.Executable()
-
-	command := exec.Command(exeFullName,
-		fmt.Sprintf("executor"),
-		"--agent",
-		fmt.Sprintf("%v", e.AgentAddress),
-		"--address",
-		fmt.Sprintf("%v", strings.Split(e.Address, ":")[0]+":0"),
-		"--config",
-		fmt.Sprintf("%v", config.Conf.File),
-	)
-
-	command.Stdout = os.Stdout
-	command.Stdin = os.Stdin
-	command.Stderr = os.Stderr
-	err := command.Start()
-	return res, err
-}
-
-func (e *Executor) Quit(ctx context.Context, em *pb.Empty) (*pb.Empty, error) {
-	res := &pb.Empty{}
-	os.Exit(0)
-	return res, nil
-}
-
-func (e *Executor) Restart(ctx context.Context, em *pb.Empty) (*pb.Empty, error) {
-	res := &pb.Empty{}
-	e.Duplicate(context.Background(), em)
-	time.Sleep(time.Second)
-	e.Quit(ctx, em)
-	return res, nil
 }
 
 func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruction) (*pb.Empty, error) {
@@ -188,66 +143,64 @@ func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruct
 func (e *Executor) Run(ctx context.Context, empty *pb.Empty) (*pb.Empty, error) {
 	res := &pb.Empty{}
 	nodeType := stage.JobType(e.Instruction.TaskType)
-	go func() {
-		var err error
-		defer func() {
-			pprof.StopCPUProfile()
-			e.AddLogInfo(err, pb.LogLevel_ERR)
-			e.Clear()
-		}()
-		f, err := os.Create(fmt.Sprintf("executor_%v_%d_%v_cpu.pprof", e.Name, nodeType, time.Now().Format("20060102150405")))
-		if err != nil {
-			return
-		}
-
-		err = pprof.StartCPUProfile(f)
-		if err != nil {
-			return
-		}
-
-		switch nodeType {
-		case stage.JobTypeScan:
-			err = e.RunScan()
-		case stage.JobTypeSelect:
-			err = e.RunSelect()
-		case stage.JobTypeGroupBy:
-			err = e.RunGroupBy()
-		case stage.JobTypeJoin:
-			err = e.RunJoin()
-		case stage.JobTypeHashJoin:
-			err = e.RunHashJoin()
-		case stage.JobTypeShuffle:
-			err = e.RunShuffle()
-		case stage.JobTypeDuplicate:
-			err = e.RunDuplicate()
-		case stage.JobTypeAggregate:
-			err = e.RunAggregate()
-		case stage.JobTypeAggregateFuncGlobal:
-			err = e.RunAggregateFuncGlobal()
-		case stage.JobTypeAggregateFuncLocal:
-			err = e.RunAggregateFuncLocal()
-		case stage.JobTypeLimit:
-			err = e.RunLimit()
-		case stage.JobTypeFilter:
-			err = e.RunFilter()
-		case stage.JobTypeOrderByLocal:
-			err = e.RunOrderByLocal()
-		case stage.JobTypeOrderBy:
-			err = e.RunOrderBy()
-		case stage.JobTypeUnion:
-			err = e.RunUnion()
-		case stage.JobTypeShow:
-			err = e.RunShow()
-		case stage.JobTypeBalance:
-			err = e.RunBalance()
-		case stage.JobTypeDistinctLocal:
-			err = e.RunDistinctLocal()
-		case stage.JobTypeDistinctGlobal:
-			err = e.RunDistinctGlobal()
-		default:
-			err = fmt.Errorf("unknown job type")
-		}
+	var err error
+	defer func() {
+		//pprof.StopCPUProfile()
+		e.AddLogInfo(err, pb.LogLevel_ERR)
+		e.Clear()
 	}()
+	//f, err := os.Create(fmt.Sprintf("executor_%v_%d_%v_cpu.pprof", e.Name, nodeType, time.Now().Format("20060102150405")))
+	//if err != nil {
+	//	return res, err
+	//}
+
+	//err = pprof.StartCPUProfile(f)
+	//if err != nil {
+	//	return res, err
+	//}
+
+	switch nodeType {
+	case stage.JobTypeScan:
+		err = e.RunScan()
+	case stage.JobTypeSelect:
+		err = e.RunSelect()
+	case stage.JobTypeGroupBy:
+		err = e.RunGroupBy()
+	case stage.JobTypeJoin:
+		err = e.RunJoin()
+	case stage.JobTypeHashJoin:
+		err = e.RunHashJoin()
+	case stage.JobTypeShuffle:
+		err = e.RunShuffle()
+	case stage.JobTypeDuplicate:
+		err = e.RunDuplicate()
+	case stage.JobTypeAggregate:
+		err = e.RunAggregate()
+	case stage.JobTypeAggregateFuncGlobal:
+		err = e.RunAggregateFuncGlobal()
+	case stage.JobTypeAggregateFuncLocal:
+		err = e.RunAggregateFuncLocal()
+	case stage.JobTypeLimit:
+		err = e.RunLimit()
+	case stage.JobTypeFilter:
+		err = e.RunFilter()
+	case stage.JobTypeOrderByLocal:
+		err = e.RunOrderByLocal()
+	case stage.JobTypeOrderBy:
+		err = e.RunOrderBy()
+	case stage.JobTypeUnion:
+		err = e.RunUnion()
+	case stage.JobTypeShow:
+		err = e.RunShow()
+	case stage.JobTypeBalance:
+		err = e.RunBalance()
+	case stage.JobTypeDistinctLocal:
+		err = e.RunDistinctLocal()
+	case stage.JobTypeDistinctGlobal:
+		err = e.RunDistinctGlobal()
+	default:
+		err = fmt.Errorf("unknown job type")
+	}
 	return res, nil
 }
 
@@ -256,21 +209,4 @@ func (e *Executor) GetOutputChannelLocation(ctx context.Context, location *pb.Lo
 		return nil, fmt.Errorf("ChannelLocation %v not found: %v", location.ChannelIndex, location)
 	}
 	return e.OutputChannelLocations[location.ChannelIndex], nil
-}
-
-func RunExecutor(masterAddress string, address, name string) {
-	executorServer = NewExecutor(masterAddress, address, name)
-	listener, err := net.Listen("tcp", executorServer.Address)
-	if err != nil {
-		log.Fatalf("Executor failed to run: %v", err)
-	}
-	defer listener.Close()
-	executorServer.Address = listener.Addr().String()
-	logger.Infof("Executor: %v", executorServer.Address)
-
-	go executorServer.Heartbeat()
-
-	grpcS := grpc.NewServer()
-	pb.RegisterGueryExecutorServer(grpcS, executorServer)
-	grpcS.Serve(listener)
 }

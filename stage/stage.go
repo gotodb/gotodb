@@ -90,9 +90,9 @@ func (s JobType) String() string {
 
 type Job interface {
 	GetType() JobType
-	GetInputs() []pb.Location
-	GetOutputs() []pb.Location
-	GetLocation() pb.Location
+	GetInputs() []*pb.Location
+	GetOutputs() []*pb.Location
+	GetLocation() *pb.Location
 }
 
 func CreateJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) (Job, error) {
@@ -102,7 +102,7 @@ func CreateJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) (Jo
 	}
 	output := executorHeap.GetExecutorLoc()
 
-	var inputs []pb.Location
+	var inputs []*pb.Location
 	for _, inputJob := range inputJobs {
 		inputs = append(inputs, inputJob.GetOutputs()...)
 	}
@@ -124,7 +124,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 
 	case *plan.ScanNode:
 		scanNode := node.(*plan.ScanNode)
-		var outputs []pb.Location
+		var outputs []*pb.Location
 		for i := 0; i < pn; i++ {
 			output := executorHeap.GetExecutorLoc()
 			output.ChannelIndex = int32(0)
@@ -195,7 +195,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 
 		var resScan []Job
 		for i := 0; i < pn; i++ {
-			resScan = append(resScan, NewScanJob(scanNode, parInfos[i], outputs[i], []pb.Location{outputs[i]}))
+			resScan = append(resScan, NewScanJob(scanNode, parInfos[i], outputs[i], []*pb.Location{outputs[i]}))
 		}
 
 		*jobs = append(*jobs, resScan...)
@@ -208,7 +208,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 			return res, err
 		}
 		if selectNode.SetQuantifier == nil || (*selectNode.SetQuantifier != gtype.DISTINCT) || len(inputJobs) == 1 {
-			var inputs []pb.Location
+			var inputs []*pb.Location
 			for _, inputNode := range inputJobs {
 				inputs = append(inputs, inputNode.GetOutputs()...)
 			}
@@ -222,7 +222,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 				}
 			} else {
 				nodeLoc := executorHeap.GetExecutorLoc()
-				var outputs []pb.Location
+				var outputs []*pb.Location
 				for i := 0; i < pn; i++ {
 					nodeLoc.ChannelIndex = int32(i)
 					outputs = append(outputs, nodeLoc)
@@ -239,7 +239,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 		} else { //for select distinct
 			aggLoc := executorHeap.GetExecutorLoc()
 			aggLoc.ChannelIndex = 0
-			var inputLocs []pb.Location
+			var inputLocs []*pb.Location
 			for _, inputNode := range inputJobs {
 				inputLocs = append(inputLocs, inputNode.GetOutputs()...)
 			}
@@ -281,8 +281,8 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 		}
 
 		//duplicate right inputs
-		var inputs []pb.Location
-		var outputs []pb.Location
+		var inputs []*pb.Location
+		var outputs []*pb.Location
 		for _, inputJob := range rightInputJobs {
 			inputs = append(inputs, inputJob.GetOutputs()...)
 		}
@@ -295,7 +295,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 
 		//join
 		rightInputs := duplicateJob.GetOutputs()
-		var leftInputs []pb.Location
+		var leftInputs []*pb.Location
 		for _, leftInputJob := range leftInputJobs {
 			leftInputs = append(leftInputs, leftInputJob.GetOutputs()...)
 		}
@@ -324,13 +324,13 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 		}
 
 		//shuffle left inputs
-		var leftInputs []pb.Location
+		var leftInputs []*pb.Location
 		var leftShuffleJobs []Job
 		for _, inputJob := range leftInputJobs {
 			leftInputs = append(leftInputs, inputJob.GetOutputs()...)
 		}
 		for _, input := range leftInputs {
-			var outputs []pb.Location
+			var outputs []*pb.Location
 			output := executorHeap.GetExecutorLoc()
 
 			for i := 0; i < pn; i++ {
@@ -349,17 +349,17 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 				}
 				keyExps = append(keyExps, exp)
 			}
-			leftShuffleJobs = append(leftShuffleJobs, NewShuffleNode([]pb.Location{input}, outputs, keyExps))
+			leftShuffleJobs = append(leftShuffleJobs, NewShuffleNode([]*pb.Location{input}, outputs, keyExps))
 		}
 
 		//shuffle right inputs
-		var rightInputs []pb.Location
+		var rightInputs []*pb.Location
 		var rightShuffleJobs []Job
 		for _, inputJob := range rightInputJobs {
 			rightInputs = append(rightInputs, inputJob.GetOutputs()...)
 		}
 		for _, input := range rightInputs {
-			var outputs []pb.Location
+			var outputs []*pb.Location
 			output := executorHeap.GetExecutorLoc()
 			for i := 0; i < pn; i++ {
 				output.ChannelIndex = int32(i)
@@ -376,10 +376,10 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 				}
 				keyExps = append(keyExps, exp)
 			}
-			rightShuffleJobs = append(rightShuffleJobs, NewShuffleNode([]pb.Location{input}, outputs, keyExps))
+			rightShuffleJobs = append(rightShuffleJobs, NewShuffleNode([]*pb.Location{input}, outputs, keyExps))
 		}
 
-		leftInputss, rightInputss := make([][]pb.Location, pn), make([][]pb.Location, pn)
+		leftInputss, rightInputss := make([][]*pb.Location, pn), make([][]*pb.Location, pn)
 		for _, node := range leftShuffleJobs {
 			outputs := node.GetOutputs()
 			for i, output := range outputs {
@@ -411,7 +411,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 		if err != nil {
 			return res, err
 		}
-		var inputs []pb.Location
+		var inputs []*pb.Location
 		for _, inputJob := range inputJobs {
 			inputs = append(inputs, inputJob.GetOutputs()...)
 		}
@@ -430,7 +430,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 			return res, err
 		}
 
-		var inputs []pb.Location
+		var inputs []*pb.Location
 		for _, inputJob := range inputJobs {
 			inputs = append(inputs, inputJob.GetOutputs()...)
 		}
@@ -438,7 +438,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 		for i := 0; i < len(inputs); i++ {
 			output := executorHeap.GetExecutorLoc()
 			output.ChannelIndex = int32(0)
-			res = append(res, NewDistinctLocalJob(distinctLocalNode, []pb.Location{inputs[i]}, []pb.Location{output}))
+			res = append(res, NewDistinctLocalJob(distinctLocalNode, []*pb.Location{inputs[i]}, []*pb.Location{output}))
 		}
 		*jobs = append(*jobs, res...)
 		return res, nil
@@ -450,14 +450,14 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 			return res, err
 		}
 
-		var inputs []pb.Location
+		var inputs []*pb.Location
 		for _, inputJob := range inputJobs {
 			inputs = append(inputs, inputJob.GetOutputs()...)
 		}
 
 		loc := executorHeap.GetExecutorLoc()
 
-		var outputs []pb.Location
+		var outputs []*pb.Location
 		for i := 0; i < len(inputs); i++ {
 			loc.ChannelIndex = int32(i)
 			outputs = append(outputs, loc)
@@ -475,7 +475,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 			return res, err
 		}
 		output := executorHeap.GetExecutorLoc()
-		var inputs []pb.Location
+		var inputs []*pb.Location
 		for _, inputJob := range inputJobs {
 			inputs = append(inputs, inputJob.GetOutputs()...)
 		}
@@ -490,7 +490,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 			return res, err
 		}
 		output := executorHeap.GetExecutorLoc()
-		var inputs []pb.Location
+		var inputs []*pb.Location
 		for _, inputJob := range inputJobs {
 			inputs = append(inputs, inputJob.GetOutputs()...)
 		}
@@ -542,11 +542,11 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 		}
 
 		//union
-		var leftInputs []pb.Location
+		var leftInputs []*pb.Location
 		for _, leftInputJob := range leftInputJobs {
 			leftInputs = append(leftInputs, leftInputJob.GetOutputs()...)
 		}
-		var rightInputs []pb.Location
+		var rightInputs []*pb.Location
 		for _, rightInputJob := range rightInputJobs {
 			rightInputs = append(rightInputs, rightInputJob.GetOutputs()...)
 		}
@@ -570,7 +570,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 			return nil, err
 		}
 
-		var inputs []pb.Location
+		var inputs []*pb.Location
 		for _, inputJob := range inputJobs {
 			inputs = append(inputs, inputJob.GetOutputs()...)
 		}
@@ -582,7 +582,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]
 			localRes = append(localRes, NewOrderByLocalJob(orderByNode, input, output))
 		}
 
-		inputs = []pb.Location{}
+		inputs = []*pb.Location{}
 		for _, inputJob := range localRes {
 			inputs = append(inputs, inputJob.GetOutputs()...)
 		}

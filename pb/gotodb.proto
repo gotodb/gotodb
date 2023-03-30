@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+option go_package = "./;pb";
+
+package pb;
+
+service Worker {
+  rpc SendInstruction(Instruction) returns (Empty) {}
+  rpc SetupWriters(Location) returns (Empty) {}
+  rpc SetupReaders(Location) returns (Empty) {}
+  rpc Run(Location) returns (Empty) {}
+  rpc GetOutputChannelLocation(Location) returns (Location) {}
+}
+
+message Empty{}
+
+enum LogLevel {
+  INFO = 0;
+  WARN = 1;
+  ERR = 2;
+}
+
+message LogInfo {
+  LogLevel Level = 1;
+  bytes Info = 2;
+}
+
+enum TaskStatus{
+  TODO = 0;
+  RUNNING = 1;
+  ERROR = 2;
+  SUCCEED = 3;
+}
+
+
+message Instruction {
+  string TaskID = 2;
+  int32 TaskType = 3;
+  bytes EncodedStageJobBytes = 4;
+  bytes RuntimeBytes = 5;
+  Location Location = 6;
+}
+
+message Location {
+  string Name = 1;
+  string Address = 2;
+  int32 Port = 3;
+  int32 ChannelIndex = 4;
+}

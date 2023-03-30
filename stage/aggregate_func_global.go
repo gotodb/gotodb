@@ -8,9 +8,9 @@ import (
 )
 
 type AggregateFuncGlobalJob struct {
-	Location  pb.Location
-	Inputs    []pb.Location
-	Output    pb.Location
+	Location  *pb.Location
+	Inputs    []*pb.Location
+	Output    *pb.Location
 	FuncNodes []*operator.FuncCallNode
 	Metadata  *metadata.Metadata
 }
@@ -28,19 +28,19 @@ func (n *AggregateFuncGlobalJob) GetType() JobType {
 	return JobTypeAggregateFuncGlobal
 }
 
-func (n *AggregateFuncGlobalJob) GetInputs() []pb.Location {
+func (n *AggregateFuncGlobalJob) GetInputs() []*pb.Location {
 	return n.Inputs
 }
 
-func (n *AggregateFuncGlobalJob) GetOutputs() []pb.Location {
-	return []pb.Location{n.Output}
+func (n *AggregateFuncGlobalJob) GetOutputs() []*pb.Location {
+	return []*pb.Location{n.Output}
 }
 
-func (n *AggregateFuncGlobalJob) GetLocation() pb.Location {
+func (n *AggregateFuncGlobalJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewAggregateFuncGlobalJob(node *plan.AggregateFuncGlobalNode, inputs []pb.Location, output pb.Location) *AggregateFuncGlobalJob {
+func NewAggregateFuncGlobalJob(node *plan.AggregateFuncGlobalNode, inputs []*pb.Location, output *pb.Location) *AggregateFuncGlobalJob {
 	res := &AggregateFuncGlobalJob{
 		Location:  output,
 		Inputs:    inputs,

@@ -8,11 +8,11 @@ import (
 )
 
 type Item struct {
-	Location       pb.Location
+	Location       *pb.Location
 	ExecutorNumber int
 }
 
-func NewItem(loc pb.Location, num int) *Item {
+func NewItem(loc *pb.Location, num int) *Item {
 	return &Item{
 		Location:       loc,
 		ExecutorNumber: num,
@@ -21,13 +21,13 @@ func NewItem(loc pb.Location, num int) *Item {
 
 type Heap struct {
 	Items    []*Item
-	AgentMap map[string]pb.Location
+	AgentMap map[string]*pb.Location
 }
 
 func NewHeap() *Heap {
 	return &Heap{
 		Items:    []*Item{},
-		AgentMap: map[string]pb.Location{},
+		AgentMap: map[string]*pb.Location{},
 	}
 }
 
@@ -44,9 +44,9 @@ func (h *Heap) Pop() interface{} {
 	return x
 }
 
-func (h *Heap) GetExecutorLoc() pb.Location {
+func (h *Heap) GetExecutorLoc() *pb.Location {
 	item := heap.Pop(h).(*Item)
-	exe := pb.Location{
+	exe := &pb.Location{
 		Name:    "executor_" + uuid.NewV4().String(),
 		Address: item.Location.Address,
 		Port:    item.Location.Port,
@@ -58,8 +58,8 @@ func (h *Heap) GetExecutorLoc() pb.Location {
 	return exe
 }
 
-func (h *Heap) GetAgents() []pb.Location {
-	var res []pb.Location
+func (h *Heap) GetAgents() []*pb.Location {
+	var res []*pb.Location
 	for _, loc := range h.AgentMap {
 		res = append(res, loc)
 	}

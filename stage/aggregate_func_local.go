@@ -8,9 +8,9 @@ import (
 )
 
 type AggregateFuncLocalJob struct {
-	Location  pb.Location
-	Input     pb.Location
-	Output    pb.Location
+	Location  *pb.Location
+	Input     *pb.Location
+	Output    *pb.Location
 	FuncNodes []*operator.FuncCallNode
 	Metadata  *metadata.Metadata
 }
@@ -28,19 +28,19 @@ func (n *AggregateFuncLocalJob) GetType() JobType {
 	return JobTypeAggregateFuncLocal
 }
 
-func (n *AggregateFuncLocalJob) GetInputs() []pb.Location {
-	return []pb.Location{n.Input}
+func (n *AggregateFuncLocalJob) GetInputs() []*pb.Location {
+	return []*pb.Location{n.Input}
 }
 
-func (n *AggregateFuncLocalJob) GetOutputs() []pb.Location {
-	return []pb.Location{n.Output}
+func (n *AggregateFuncLocalJob) GetOutputs() []*pb.Location {
+	return []*pb.Location{n.Output}
 }
 
-func (n *AggregateFuncLocalJob) GetLocation() pb.Location {
+func (n *AggregateFuncLocalJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewAggregateFuncLocalJob(node *plan.AggregateFuncLocalNode, input pb.Location, output pb.Location) *AggregateFuncLocalJob {
+func NewAggregateFuncLocalJob(node *plan.AggregateFuncLocalNode, input *pb.Location, output *pb.Location) *AggregateFuncLocalJob {
 	res := &AggregateFuncLocalJob{
 		Location:  output,
 		Input:     input,

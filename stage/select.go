@@ -9,8 +9,8 @@ import (
 )
 
 type SelectJob struct {
-	Location      pb.Location
-	Input, Output pb.Location
+	Location      *pb.Location
+	Input, Output *pb.Location
 	SetQuantifier *gtype.QuantifierType
 	SelectItems   []*operator.SelectItemNode
 	Having        *operator.BooleanExpressionNode
@@ -22,19 +22,19 @@ func (n *SelectJob) GetType() JobType {
 	return JobTypeSelect
 }
 
-func (n *SelectJob) GetInputs() []pb.Location {
-	return []pb.Location{n.Input}
+func (n *SelectJob) GetInputs() []*pb.Location {
+	return []*pb.Location{n.Input}
 }
 
-func (n *SelectJob) GetOutputs() []pb.Location {
-	return []pb.Location{n.Output}
+func (n *SelectJob) GetOutputs() []*pb.Location {
+	return []*pb.Location{n.Output}
 }
 
-func (n *SelectJob) GetLocation() pb.Location {
+func (n *SelectJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewSelectJob(node *plan.SelectNode, input, output pb.Location) *SelectJob {
+func NewSelectJob(node *plan.SelectNode, input, output *pb.Location) *SelectJob {
 	return &SelectJob{
 		Location:      output,
 		Input:         input,

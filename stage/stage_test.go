@@ -35,7 +35,7 @@ func TestStage(t *testing.T) {
 	executorHeap := util.NewHeap()
 	heap.Init(executorHeap)
 	for i := 0; i < 100; i++ {
-		heap.Push(executorHeap, util.NewItem(pb.Location{Name: fmt.Sprintf("%v", i)}, 1))
+		heap.Push(executorHeap, util.NewItem(&pb.Location{Name: fmt.Sprintf("%v", i)}, 1))
 	}
 	var res []Job
 

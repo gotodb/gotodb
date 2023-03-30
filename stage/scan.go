@@ -9,14 +9,14 @@ import (
 )
 
 type ScanJob struct {
-	Location      pb.Location
+	Location      *pb.Location
 	Catalog       string
 	Schema        string
 	Table         string
 	Metadata      *metadata.Metadata
 	InputMetadata *metadata.Metadata
 	PartitionInfo *partition.Info
-	Outputs       []pb.Location
+	Outputs       []*pb.Location
 	Filters       []*operator.BooleanExpressionNode
 }
 
@@ -24,19 +24,19 @@ func (n *ScanJob) GetType() JobType {
 	return JobTypeScan
 }
 
-func (n *ScanJob) GetInputs() []pb.Location {
-	return []pb.Location{}
+func (n *ScanJob) GetInputs() []*pb.Location {
+	return []*pb.Location{}
 }
 
-func (n *ScanJob) GetOutputs() []pb.Location {
+func (n *ScanJob) GetOutputs() []*pb.Location {
 	return n.Outputs
 }
 
-func (n *ScanJob) GetLocation() pb.Location {
+func (n *ScanJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewScanJob(node *plan.ScanNode, parInfo *partition.Info, loc pb.Location, outputs []pb.Location) *ScanJob {
+func NewScanJob(node *plan.ScanNode, parInfo *partition.Info, loc *pb.Location, outputs []*pb.Location) *ScanJob {
 	parInfo.Encode()
 	return &ScanJob{
 		Location:      loc,

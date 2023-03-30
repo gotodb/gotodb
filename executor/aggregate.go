@@ -14,17 +14,15 @@ import (
 
 func (e *Executor) SetInstructionAggregate(instruction *pb.Instruction) (err error) {
 	var job stage.AggregateJob
-	if err = msgpack.Unmarshal(instruction.EncodedEPlanNodeBytes, &job); err != nil {
+	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	e.Instruction = instruction
 	e.StageJob = &job
 	e.InputLocations = []*pb.Location{}
-	for i := 0; i < len(job.Inputs); i++ {
-		loc := job.Inputs[i]
-		e.InputLocations = append(e.InputLocations, &loc)
-	}
-	e.OutputLocations = []*pb.Location{&job.Output}
+	e.InputLocations = job.GetInputs()
+	e.OutputLocations = job.GetOutputs()
+
 	return nil
 }
 

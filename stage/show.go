@@ -8,8 +8,8 @@ import (
 
 // ShowJob show catalogs/schemas/tables/columns/createJob table/createJob view
 type ShowJob struct {
-	Location    pb.Location
-	Output      pb.Location
+	Location    *pb.Location
+	Output      *pb.Location
 	Metadata    *metadata.Metadata
 	ShowType    plan.ShowNodeType
 	Catalog     string
@@ -23,19 +23,19 @@ func (n *ShowJob) GetType() JobType {
 	return JobTypeShow
 }
 
-func (n *ShowJob) GetInputs() []pb.Location {
-	return []pb.Location{}
+func (n *ShowJob) GetInputs() []*pb.Location {
+	return []*pb.Location{}
 }
 
-func (n *ShowJob) GetOutputs() []pb.Location {
-	return []pb.Location{n.Output}
+func (n *ShowJob) GetOutputs() []*pb.Location {
+	return []*pb.Location{n.Output}
 }
 
-func (n *ShowJob) GetLocation() pb.Location {
+func (n *ShowJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewShowJob(node *plan.ShowNode, output pb.Location) *ShowJob {
+func NewShowJob(node *plan.ShowNode, output *pb.Location) *ShowJob {
 	return &ShowJob{
 		Location:    output,
 		Output:      output,

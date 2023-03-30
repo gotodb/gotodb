@@ -17,9 +17,9 @@ func (e *Executor) SetupWriters(ctx context.Context, empty *pb.Empty) (*pb.Empty
 	logger.Infof("SetupWriters start")
 	var err error
 
-	ip := strings.Split(e.Address, ":")[0]
+	ip := strings.Split(e.Instruction.Location.Address, ":")[0]
 
-	for i := 0; i < len(e.OutputLocations); i++ {
+	for range e.StageJob.GetOutputs() {
 		pr, pw := io.Pipe()
 		e.Writers = append(e.Writers, pw)
 		listener, err := net.Listen("tcp", ip+":0")
@@ -71,25 +71,24 @@ func (e *Executor) SetupWriters(ctx context.Context, empty *pb.Empty) (*pb.Empty
 func (e *Executor) SetupReaders(ctx context.Context, empty *pb.Empty) (*pb.Empty, error) {
 	var err error
 	logger.Infof("SetupReaders start")
-
-	for i := 0; i < len(e.InputLocations); i++ {
+	for _, location := range e.StageJob.GetInputs() {
 		pr, pw := io.Pipe()
 		e.Readers = append(e.Readers, pr)
 
-		conn, err := grpc.Dial(e.InputLocations[i].GetURL(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err := grpc.Dial(location.GetURL(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
-			logger.Errorf("failed to connect to %v: %v", e.InputLocations[i], err)
+			logger.Errorf("failed to connect to %v: %v", location, err)
 			return empty, err
 		}
-		client := pb.NewGueryAgentClient(conn)
-		inputChannelLocation, err := client.GetOutputChannelLocation(context.Background(), e.InputLocations[i])
+		client := pb.NewWorkerClient(conn)
+		inputChannelLocation, err := client.GetOutputChannelLocation(context.Background(), location)
 
 		if err != nil {
-			logger.Errorf("failed to connect %v: %v", e.InputLocations[i], err)
+			logger.Errorf("failed to connect %v: %v", location, err)
 			return empty, err
 		}
 
-		conn.Close()
+		_ = conn.Close()
 
 		e.InputChannelLocations = append(e.InputChannelLocations, inputChannelLocation)
 		cconn, err := net.Dial("tcp", inputChannelLocation.GetURL())

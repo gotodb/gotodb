@@ -13,21 +13,14 @@ import (
 
 func (e *Executor) SetInstructionDuplicate(instruction *pb.Instruction) (err error) {
 	var job stage.DuplicateJob
-	if err = msgpack.Unmarshal(instruction.EncodedEPlanNodeBytes, &job); err != nil {
+	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	e.Instruction = instruction
 	e.StageJob = &job
-	e.InputLocations = []*pb.Location{}
-	for i := 0; i < len(job.Inputs); i++ {
-		loc := job.Inputs[i]
-		e.InputLocations = append(e.InputLocations, &loc)
-	}
-	e.OutputLocations = []*pb.Location{}
-	for i := 0; i < len(job.Outputs); i++ {
-		loc := job.Outputs[i]
-		e.OutputLocations = append(e.OutputLocations, &loc)
-	}
+	e.InputLocations = job.GetInputs()
+	e.OutputLocations = job.GetOutputs()
+
 	return nil
 }
 
