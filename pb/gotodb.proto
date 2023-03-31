@@ -9,7 +9,6 @@ service Worker {
   rpc SetupWriters(Location) returns (Empty) {}
   rpc SetupReaders(Location) returns (Empty) {}
   rpc Run(Location) returns (Empty) {}
-  rpc GetOutputChannelLocation(Location) returns (Location) {}
 }
 
 message Empty{}
@@ -45,5 +44,6 @@ message Location {
   string Name = 1;
   string Address = 2;
   int32 Port = 3;
-  int32 ChannelIndex = 4;
+  int32 RPCPort = 4;
+  int32 ChannelIndex = 5;
 }

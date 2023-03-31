@@ -9,11 +9,8 @@ import (
 	"github.com/gotodb/gotodb/stage"
 	"github.com/gotodb/gotodb/util"
 	"github.com/vmihailenco/msgpack"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"io"
 	"net"
-	"strings"
 	"sync"
 )
 
@@ -21,11 +18,11 @@ type Executor struct {
 	sync.Mutex
 	Name string
 
-	Instruction                                   *pb.Instruction
-	StageJob                                      stage.Job
-	InputChannelLocations, OutputChannelLocations []*pb.Location
-	Readers                                       []io.Reader
-	Writers                                       []io.Writer
+	Instruction    *pb.Instruction
+	StageJob       stage.Job
+	OutputConnChan []chan net.Conn
+	Readers        []io.Reader
+	Writers        []io.Writer
 
 	Status          pb.TaskStatus
 	IsStatusChanged bool
@@ -101,7 +98,6 @@ func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruct
 	logger.Infof("Instruction: %s", nodeType)
 	e.Status = pb.TaskStatus_RUNNING
 	e.IsStatusChanged = true
-
 	e.DoneChan = make(chan int)
 	switch nodeType {
 	case stage.JobTypeScan:
@@ -152,39 +148,20 @@ func (e *Executor) SetupWriters(ctx context.Context, empty *pb.Empty) (*pb.Empty
 	logger.Infof("SetupWriters start")
 	var err error
 
-	ip := strings.Split(e.Instruction.Location.Address, ":")[0]
+	//ip := strings.Split(e.Instruction.Location.Address, ":")[0]
 
 	for range e.StageJob.GetOutputs() {
 		pr, pw := io.Pipe()
 		e.Writers = append(e.Writers, pw)
-		listener, err := net.Listen("tcp", ip+":0")
-		if err != nil {
-			logger.Errorf("failed to open listener: %v", err)
-			return nil, fmt.Errorf("failed to open listener: %v", err)
-		}
-		e.OutputChannelLocations = append(e.OutputChannelLocations,
-			&pb.Location{
-				Name:    e.Name,
-				Address: util.GetHostFromAddress(listener.Addr().String()),
-				Port:    util.GetPortFromAddress(listener.Addr().String()),
-			},
-		)
+		outputConnChan := make(chan net.Conn)
+		e.OutputConnChan = append(e.OutputConnChan, outputConnChan)
 
 		go func() {
 			for {
 				select {
 				case <-e.DoneChan:
-					_ = listener.Close()
 					return
-
-				default:
-					conn, err := listener.Accept()
-					if err != nil {
-						logger.Errorf("failed to accept: %v", err)
-						continue
-					}
-					logger.Infof("connect %v", conn.RemoteAddr())
-
+				case conn := <-outputConnChan:
 					go func(w io.Writer) {
 						err := util.CopyBuffer(pr, w)
 						if err != nil && err != io.EOF {
@@ -199,7 +176,7 @@ func (e *Executor) SetupWriters(ctx context.Context, empty *pb.Empty) (*pb.Empty
 		}()
 	}
 
-	logger.Infof("SetupWriters Input=%v, Output=%v", e.InputChannelLocations, e.OutputChannelLocations)
+	logger.Infof("SetupWriters Output=%v", e.StageJob.GetOutputs())
 	return empty, err
 }
 
@@ -209,29 +186,15 @@ func (e *Executor) SetupReaders(ctx context.Context, empty *pb.Empty) (*pb.Empty
 	for _, location := range e.StageJob.GetInputs() {
 		pr, pw := io.Pipe()
 		e.Readers = append(e.Readers, pr)
-
-		conn, err := grpc.Dial(location.GetURL(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+		conn, err := net.Dial("tcp", location.GetURL())
 		if err != nil {
-			logger.Errorf("failed to connect to %v: %v", location, err)
+			logger.Errorf("failed to connect to input channel %v: %v", location, err)
 			return empty, err
 		}
-		client := pb.NewWorkerClient(conn)
-		inputChannelLocation, err := client.GetOutputChannelLocation(context.Background(), location)
+		logger.Infof("connect to %v", location)
+		bytes, _ := msgpack.Marshal(location)
 
-		if err != nil {
-			logger.Errorf("failed to connect %v: %v", location, err)
-			return empty, err
-		}
-
-		_ = conn.Close()
-
-		e.InputChannelLocations = append(e.InputChannelLocations, inputChannelLocation)
-		cconn, err := net.Dial("tcp", inputChannelLocation.GetURL())
-		if err != nil {
-			logger.Errorf("failed to connect to input channel %v: %v", inputChannelLocation, err)
-			return empty, err
-		}
-		logger.Infof("connect to %v", inputChannelLocation)
+		conn.Write(bytes)
 
 		go func(r io.Reader) {
 			err := util.CopyBuffer(r, pw)
@@ -242,10 +205,10 @@ func (e *Executor) SetupReaders(ctx context.Context, empty *pb.Empty) (*pb.Empty
 			if rc, ok := r.(io.ReadCloser); ok {
 				_ = rc.Close()
 			}
-		}(cconn)
+		}(conn)
 	}
 
-	logger.Infof("SetupReaders Input=%v, Output=%v", e.InputChannelLocations, e.OutputChannelLocations)
+	logger.Infof("SetupReaders Input=%v", e.StageJob.GetInputs())
 	return empty, err
 }
 
@@ -311,11 +274,4 @@ func (e *Executor) Run(ctx context.Context, empty *pb.Empty) (*pb.Empty, error) 
 		err = fmt.Errorf("unknown job type")
 	}
 	return res, nil
-}
-
-func (e *Executor) GetOutputChannelLocation(ctx context.Context, location *pb.Location) (*pb.Location, error) {
-	if int(location.ChannelIndex) >= len(e.OutputChannelLocations) {
-		return nil, fmt.Errorf("ChannelLocation %v not found: %v", location.ChannelIndex, location)
-	}
-	return e.OutputChannelLocations[location.ChannelIndex], nil
 }

@@ -26,7 +26,6 @@ type WorkerClient interface {
 	SetupWriters(ctx context.Context, in *Location, opts ...grpc.CallOption) (*Empty, error)
 	SetupReaders(ctx context.Context, in *Location, opts ...grpc.CallOption) (*Empty, error)
 	Run(ctx context.Context, in *Location, opts ...grpc.CallOption) (*Empty, error)
-	GetOutputChannelLocation(ctx context.Context, in *Location, opts ...grpc.CallOption) (*Location, error)
 }
 
 type workerClient struct {
@@ -73,15 +72,6 @@ func (c *workerClient) Run(ctx context.Context, in *Location, opts ...grpc.CallO
 	return out, nil
 }
 
-func (c *workerClient) GetOutputChannelLocation(ctx context.Context, in *Location, opts ...grpc.CallOption) (*Location, error) {
-	out := new(Location)
-	err := c.cc.Invoke(ctx, "/pb.Worker/GetOutputChannelLocation", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // WorkerServer is the server API for Worker service.
 // All implementations must embed UnimplementedWorkerServer
 // for forward compatibility
@@ -90,7 +80,6 @@ type WorkerServer interface {
 	SetupWriters(context.Context, *Location) (*Empty, error)
 	SetupReaders(context.Context, *Location) (*Empty, error)
 	Run(context.Context, *Location) (*Empty, error)
-	GetOutputChannelLocation(context.Context, *Location) (*Location, error)
 	mustEmbedUnimplementedWorkerServer()
 }
 
@@ -109,9 +98,6 @@ func (UnimplementedWorkerServer) SetupReaders(context.Context, *Location) (*Empt
 }
 func (UnimplementedWorkerServer) Run(context.Context, *Location) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Run not implemented")
-}
-func (UnimplementedWorkerServer) GetOutputChannelLocation(context.Context, *Location) (*Location, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetOutputChannelLocation not implemented")
 }
 func (UnimplementedWorkerServer) mustEmbedUnimplementedWorkerServer() {}
 
@@ -198,24 +184,6 @@ func _Worker_Run_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Worker_GetOutputChannelLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Location)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WorkerServer).GetOutputChannelLocation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.Worker/GetOutputChannelLocation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WorkerServer).GetOutputChannelLocation(ctx, req.(*Location))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Worker_ServiceDesc is the grpc.ServiceDesc for Worker service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -238,10 +206,6 @@ var Worker_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Run",
 			Handler:    _Worker_Run_Handler,
-		},
-		{
-			MethodName: "GetOutputChannelLocation",
-			Handler:    _Worker_GetOutputChannelLocation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

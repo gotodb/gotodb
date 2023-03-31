@@ -20,7 +20,6 @@
 package main
 
 import (
-	"container/heap"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -38,16 +37,51 @@ import (
 	"github.com/gotodb/gotodb/util"
 	uuid "github.com/satori/go.uuid"
 	"github.com/vmihailenco/msgpack"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"io"
+	"math/rand"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
+var etcdCfg = clientv3.Config{
+	Endpoints: []string{
+		"http://localhost:2379",
+	},
+	DialTimeout:          time.Second * 30,
+	DialKeepAliveTimeout: time.Second * 30,
+}
+
+type WorkerNodes map[string]*pb.Location
+
+var workerNode = make(WorkerNodes)
+
+func (n WorkerNodes) GetExecutorLoc() *pb.Location {
+	if len(workerNode) == 0 {
+		return nil
+	}
+	num := len(workerNode)
+	keys := make([]string, num)
+	for v := range workerNode {
+		keys = append(keys, v)
+	}
+	randomKey := keys[rand.Intn(len(keys))]
+
+	return &pb.Location{
+		Name:    "executor_" + uuid.NewV4().String(),
+		Address: workerNode[randomKey].Address,
+		Port:    workerNode[randomKey].Port,
+		RPCPort: workerNode[randomKey].RPCPort,
+	}
+}
+
 func main() {
+	ServiceDiscovery()
 	sqlStr := "select a.var1, a.var2, a.data_source from test.test.csv as a limit 10"
 	//sqlStr := "show COLUMNS from test.test.csv"
 	inputStream := antlr.NewInputStream(sqlStr)
@@ -90,13 +124,8 @@ func main() {
 		return
 	}
 
-	executorHeap := util.NewHeap()
-	heap.Init(executorHeap)
-	heap.Push(executorHeap, util.NewItem(&pb.Location{Name: "localhost", Address: "localhost", Port: 50051}, 1))
-
 	var stageJobs []stage.Job
-
-	aggJob, err := stage.CreateJob(logicalTree, &stageJobs, executorHeap, 1)
+	aggJob, err := stage.CreateJob(logicalTree, &stageJobs, workerNode, 1)
 	if err != nil {
 		panic(err)
 		return
@@ -124,18 +153,20 @@ func main() {
 			RuntimeBytes:         runtimeBuf,
 			Location:             job.GetLocation(),
 		})
-		if _, ok := grpcConn[job.GetLocation().GetURL()]; !ok {
-			_grpc, err := grpc.Dial(job.GetLocation().GetURL(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+		url := job.GetLocation().GetRPC()
+		if _, ok := grpcConn[url]; !ok {
+			_grpc, err := grpc.Dial(url, grpc.WithTransportCredentials(insecure.NewCredentials()))
 			if err != nil {
 				logger.Errorf("failed to dial: %v", err)
 				break
 			}
-			grpcConn[job.GetLocation().GetURL()] = pb.NewWorkerClient(_grpc)
+			grpcConn[url] = pb.NewWorkerClient(_grpc)
 		}
 
 	}
 	for _, instruction := range instructions {
-		client := grpcConn[instruction.GetLocation().GetURL()]
+		client := grpcConn[instruction.GetLocation().GetRPC()]
 		if _, err = client.SendInstruction(context.Background(), instruction); err != nil {
 			logger.Errorf("failed to SendInstruction: %v", err)
 			break
@@ -147,7 +178,7 @@ func main() {
 	}
 	var wg sync.WaitGroup
 	for _, instruction := range instructions {
-		client := grpcConn[instruction.GetLocation().GetURL()]
+		client := grpcConn[instruction.GetLocation().GetRPC()]
 		if _, err = client.SetupReaders(context.Background(), instruction.GetLocation()); err != nil {
 			logger.Errorf("failed to SetupReaders: %v", err)
 			break
@@ -166,25 +197,16 @@ func main() {
 	)
 	md := &metadata.Metadata{}
 	aggLoc := aggJob.GetLocation()
-	conn, err := grpc.Dial(aggLoc.GetURL(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return
-	}
-	client := pb.NewWorkerClient(conn)
-	inputChannelLocation, err := client.GetOutputChannelLocation(context.Background(), aggLoc)
-	if err != nil {
-		logger.Errorf("failed to GetOutputChannelLocation: %v", err)
-		return
-	}
-	conn.Close()
 
-	cconn, err := net.Dial("tcp", inputChannelLocation.GetURL())
+	conn, err := net.Dial("tcp", aggLoc.GetURL())
 	if err != nil {
-		logger.Errorf("failed to connect to input channel %v: %v", inputChannelLocation, err)
+		logger.Errorf("failed to connect to input channel %v: %v", aggLoc, err)
 		return
 	}
+	bytes, _ := msgpack.Marshal(aggLoc)
+	conn.Write(bytes)
 
-	if err = util.ReadObject(cconn, md); err != nil {
+	if err = util.ReadObject(conn, md); err != nil {
 		logger.Errorf("read md err: %v", err)
 		return
 	}
@@ -196,7 +218,7 @@ func main() {
 
 	fmt.Println(string(msg))
 
-	rbReader := row.NewRowsBuffer(md, cconn, nil)
+	rbReader := row.NewRowsBuffer(md, conn, nil)
 
 	for {
 		r, err = rbReader.ReadRow()
@@ -220,4 +242,76 @@ func main() {
 		fmt.Println(string(msg))
 	}
 	wg.Wait()
+}
+
+var serviceLocker = sync.Mutex{}
+
+// ServiceDiscovery 服务发现
+func ServiceDiscovery() {
+	cli, err := clientv3.New(etcdCfg)
+	if err != nil {
+		panic(err)
+	}
+	ctx := context.Background()
+	// 获取当前所有服务入口
+	getRes, err := cli.Get(ctx, "worker", clientv3.WithPrefix())
+	if err != nil {
+		logger.Errorf("read line: %v", err)
+		return
+	}
+	serviceLocker.Lock()
+	for _, v := range getRes.Kvs {
+		key := string(v.Key)
+		s := strings.Split(string(v.Value), ":")
+		rpcPort, _ := strconv.Atoi(s[1])
+		tcpPort, _ := strconv.Atoi(s[2])
+		workerNode[key] = &pb.Location{
+			Name:    key,
+			Address: s[0],
+			Port:    int32(tcpPort),
+			RPCPort: int32(rpcPort),
+		}
+	}
+	serviceLocker.Unlock()
+	go func() {
+		ch := cli.Watch(ctx, "worker", clientv3.WithPrefix(), clientv3.WithPrevKV())
+		for v := range ch {
+			for _, v := range v.Events {
+				key := string(v.Kv.Key)
+				s := string(v.Kv.Value)
+				preEndpoint := ""
+				if v.PrevKv != nil {
+					preEndpoint = string(v.PrevKv.Value)
+				}
+				switch v.Type {
+				// PUT
+				case 0:
+					serviceLocker.Lock()
+					s := strings.Split(s, ":")
+					rpcPort, _ := strconv.Atoi(s[1])
+					tcpPort, _ := strconv.Atoi(s[2])
+					workerNode[key] = &pb.Location{
+						Name:    key,
+						Address: s[0],
+						Port:    int32(tcpPort),
+						RPCPort: int32(rpcPort),
+					}
+					serviceLocker.Unlock()
+					fmt.Printf(
+						"[service_endpoint_change] put endpoint, key: %s, endpoint: %s\n",
+						key, s,
+					)
+				// DELETE
+				case 1:
+					serviceLocker.Lock()
+					delete(workerNode, key)
+					serviceLocker.Unlock()
+					fmt.Printf(
+						"[service_endpoint_change] delete endpoint, key: %s, endpoint: %s\n",
+						key, preEndpoint,
+					)
+				}
+			}
+		}
+	}()
 }

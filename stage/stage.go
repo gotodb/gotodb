@@ -9,7 +9,6 @@ import (
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/plan"
 	"github.com/gotodb/gotodb/plan/operator"
-	"github.com/gotodb/gotodb/util"
 )
 
 type JobType int32
@@ -95,7 +94,11 @@ type Job interface {
 	GetLocation() *pb.Location
 }
 
-func CreateJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) (Job, error) {
+type Worker interface {
+	GetExecutorLoc() *pb.Location
+}
+
+func CreateJob(node plan.Node, jobs *[]Job, executorHeap Worker, pn int) (Job, error) {
 	inputJobs, err := createJob(node, jobs, executorHeap, pn)
 	if err != nil {
 		return nil, err
@@ -111,7 +114,7 @@ func CreateJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) (Jo
 	return aggJob, err
 }
 
-func createJob(node plan.Node, jobs *[]Job, executorHeap *util.Heap, pn int) ([]Job, error) {
+func createJob(node plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job, error) {
 	var res []Job
 	switch node.(type) {
 	case *plan.ShowNode:
