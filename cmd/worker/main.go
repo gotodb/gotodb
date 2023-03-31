@@ -43,6 +43,7 @@ func (s *server) SendInstruction(ctx context.Context, instruction *pb.Instructio
 	exec := executor.New(instruction.Location.Name)
 	_, err := exec.SendInstruction(ctx, instruction)
 	if err != nil {
+		executor.Delete(instruction.Location.Name)
 		return empty, err
 	}
 	return empty, err
@@ -53,6 +54,7 @@ func (s *server) SetupWriters(ctx context.Context, loc *pb.Location) (*pb.Empty,
 	exec := executor.Get(loc.Name)
 	_, err := exec.SetupWriters(ctx, nil)
 	if err != nil {
+		executor.Delete(loc.Name)
 		return empty, err
 	}
 	return empty, err
@@ -63,6 +65,7 @@ func (s *server) SetupReaders(ctx context.Context, loc *pb.Location) (*pb.Empty,
 	exec := executor.Get(loc.Name)
 	_, err := exec.SetupReaders(ctx, nil)
 	if err != nil {
+		executor.Delete(loc.Name)
 		return empty, err
 	}
 	return empty, err
@@ -80,6 +83,7 @@ func (s *server) GetOutputChannelLocation(ctx context.Context, loc *pb.Location)
 func (s *server) Run(ctx context.Context, loc *pb.Location) (*pb.Empty, error) {
 	empty := new(pb.Empty)
 	exec := executor.Get(loc.Name)
+	defer executor.Delete(loc.Name)
 	_, err := exec.Run(ctx, nil)
 	if err != nil {
 		return empty, err

@@ -51,6 +51,10 @@ func Get(name string) *Executor {
 	return executors[name]
 }
 
+func Delete(name string) {
+	delete(executors, name)
+}
+
 func (e *Executor) AddLogInfo(info interface{}, level pb.LogLevel) {
 	if info == nil {
 		return

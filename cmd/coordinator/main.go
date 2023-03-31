@@ -220,7 +220,4 @@ func main() {
 		fmt.Println(string(msg))
 	}
 	wg.Wait()
-
-	// In order to switch coroutines
-	time.Sleep(30 * time.Second)
 }
