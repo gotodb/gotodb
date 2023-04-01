@@ -20,7 +20,6 @@ func (e *Executor) SetInstructionShow(instruction *pb.Instruction) error {
 		return err
 	}
 	e.StageJob = &job
-	e.Instruction = instruction
 	return nil
 }
 
@@ -50,14 +49,14 @@ func (e *Executor) RunShow() (err error) {
 	var showReader func() (*row.Row, error)
 	//writer rows
 	switch job.ShowType {
-	case plan.SHOWCATALOGS:
-	case plan.SHOWSCHEMAS:
+	case plan.ShowCatalogs:
+	case plan.ShowSchemas:
 		showReader = ctr.ShowSchemas(job.Catalog, job.Schema, job.Table, job.LikePattern, job.Escape)
-	case plan.SHOWTABLES:
+	case plan.ShowTables:
 		showReader = ctr.ShowTables(job.Catalog, job.Schema, job.Table, job.LikePattern, job.Escape)
-	case plan.SHOWCOLUMNS:
+	case plan.ShowColumns:
 		showReader = ctr.ShowColumns(job.Catalog, job.Schema, job.Table)
-	case plan.SHOWPARTITIONS:
+	case plan.ShowPartitions:
 		showReader = ctr.ShowPartitions(job.Catalog, job.Schema, job.Table)
 	}
 

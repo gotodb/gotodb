@@ -27,18 +27,15 @@ type Executor struct {
 	Status          pb.TaskStatus
 	IsStatusChanged bool
 	Infos           []*pb.LogInfo
-
-	DoneChan chan int
 }
 
 var executors = make(map[string]*Executor)
 
 func New(name string) *Executor {
 	res := &Executor{
-		Name:     name,
-		DoneChan: make(chan int),
-		Infos:    []*pb.LogInfo{},
-		Status:   pb.TaskStatus_TODO,
+		Name:   name,
+		Infos:  []*pb.LogInfo{},
+		Status: pb.TaskStatus_TODO,
 	}
 	executors[name] = res
 	return res
@@ -77,12 +74,6 @@ func (e *Executor) Clear() {
 	if e.Status != pb.TaskStatus_ERROR {
 		e.Status = pb.TaskStatus_SUCCEED
 	}
-
-	select {
-	case <-e.DoneChan:
-	default:
-		close(e.DoneChan)
-	}
 }
 
 func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruction) (*pb.Empty, error) {
@@ -96,9 +87,9 @@ func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruct
 
 	nodeType := stage.JobType(instruction.TaskType)
 	logger.Infof("Instruction: %s", nodeType)
+	e.Instruction = instruction
 	e.Status = pb.TaskStatus_RUNNING
 	e.IsStatusChanged = true
-	e.DoneChan = make(chan int)
 	switch nodeType {
 	case stage.JobTypeScan:
 		return res, e.SetInstructionScan(instruction)
@@ -157,21 +148,13 @@ func (e *Executor) SetupWriters(ctx context.Context, empty *pb.Empty) (*pb.Empty
 		e.OutputConnChan = append(e.OutputConnChan, outputConnChan)
 
 		go func() {
-			for {
-				select {
-				case <-e.DoneChan:
-					return
-				case conn := <-outputConnChan:
-					go func(w io.Writer) {
-						err := util.CopyBuffer(pr, w)
-						if err != nil && err != io.EOF {
-							logger.Errorf("failed to CopyBuffer: %v", err)
-						}
-						if wc, ok := w.(io.WriteCloser); ok {
-							_ = wc.Close()
-						}
-					}(conn)
-				}
+			w := <-outputConnChan
+			err := util.CopyBuffer(pr, w)
+			if err != nil && err != io.EOF {
+				logger.Errorf("failed to CopyBuffer: %v", err)
+			}
+			if wc, ok := w.(io.WriteCloser); ok {
+				_ = wc.Close()
 			}
 		}()
 	}

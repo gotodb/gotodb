@@ -11,9 +11,9 @@ type JoinType int32
 
 const (
 	_ JoinType = iota
-	LEFTJOIN
-	RIGHTJOIN
-	INNERJOIN
+	LeftJoin
+	RightJoin
+	InnerJoin
 )
 
 type JoinNode struct {

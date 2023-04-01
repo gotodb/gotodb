@@ -16,7 +16,6 @@ func (e *Executor) SetInstructionDuplicate(instruction *pb.Instruction) (err err
 	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
-	e.Instruction = instruction
 	e.StageJob = &job
 
 	return nil

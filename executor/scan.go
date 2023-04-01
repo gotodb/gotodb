@@ -20,9 +20,7 @@ func (e *Executor) SetInstructionScan(instruction *pb.Instruction) error {
 		return err
 	}
 	job.PartitionInfo.Decode() //partition info must decode firstly
-
 	e.StageJob = &job
-	e.Instruction = instruction
 	return nil
 }
 

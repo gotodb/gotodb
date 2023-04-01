@@ -21,7 +21,6 @@ func (e *Executor) SetInstructionHashJoin(instruction *pb.Instruction) (err erro
 	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
-	e.Instruction = instruction
 	e.StageJob = &job
 	return nil
 }
@@ -86,9 +85,9 @@ func (e *Executor) RunHashJoin() (err error) {
 	rowsMap := make(map[string][]int)
 
 	switch job.JoinType {
-	case plan.INNERJOIN:
+	case plan.InnerJoin:
 		fallthrough
-	case plan.LEFTJOIN:
+	case plan.LeftJoin:
 		//read right
 		var wg sync.WaitGroup
 		var mutex sync.Mutex
@@ -176,7 +175,7 @@ func (e *Executor) RunHashJoin() (err error) {
 							}
 						}
 
-						if job.JoinType == plan.LEFTJOIN && joinNum == 0 {
+						if job.JoinType == plan.LeftJoin && joinNum == 0 {
 							joinRow := row.NewRow(r.Vals...)
 							joinRow.AppendVals(make([]interface{}, len(mds[1].GetColumnNames()))...)
 							if err = rbWriter.WriteRow(joinRow); err != nil {
@@ -193,7 +192,7 @@ func (e *Executor) RunHashJoin() (err error) {
 
 		wg.Wait()
 
-	case plan.RIGHTJOIN:
+	case plan.RightJoin:
 
 	}
 

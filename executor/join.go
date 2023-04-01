@@ -18,7 +18,6 @@ func (e *Executor) SetInstructionJoin(instruction *pb.Instruction) (err error) {
 	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
-	e.Instruction = instruction
 	e.StageJob = &job
 	return nil
 }
@@ -63,9 +62,9 @@ func (e *Executor) RunJoin() (err error) {
 	var r *row.Row
 	rs := make([]*row.Row, 0)
 	switch job.JoinType {
-	case plan.INNERJOIN:
+	case plan.InnerJoin:
 		fallthrough
-	case plan.LEFTJOIN:
+	case plan.LeftJoin:
 		for {
 			r, err = rightRbReader.ReadRow()
 			if err == io.EOF {
@@ -102,7 +101,7 @@ func (e *Executor) RunJoin() (err error) {
 					return err
 				}
 			}
-			if job.JoinType == plan.LEFTJOIN && joinNum == 0 {
+			if job.JoinType == plan.LeftJoin && joinNum == 0 {
 				joinRow := row.NewRow(r.Vals...)
 				joinRow.AppendVals(make([]interface{}, len(mds[1].GetColumnNames()))...)
 				if err = rbWriter.WriteRow(joinRow); err != nil {
@@ -111,7 +110,7 @@ func (e *Executor) RunJoin() (err error) {
 			}
 		}
 
-	case plan.RIGHTJOIN:
+	case plan.RightJoin:
 	}
 
 	logger.Infof("RunJoin finished")

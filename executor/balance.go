@@ -15,7 +15,6 @@ func (e *Executor) SetInstructionBalance(instruction *pb.Instruction) (err error
 	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
-	e.Instruction = instruction
 	e.StageJob = &job
 	return nil
 }

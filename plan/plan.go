@@ -272,11 +272,11 @@ func NewNodeFromRelation(runtime *config.Runtime, t parser.IRelationContext) Nod
 		joinText := tt.JoinType().(*parser.JoinTypeContext).GetText()
 		var joinType JoinType
 		if joinText == "" || joinText[0:1] == "I" {
-			joinType = INNERJOIN
+			joinType = InnerJoin
 		} else if joinText[0:1] == "L" {
-			joinType = LEFTJOIN
+			joinType = LeftJoin
 		} else if joinText[0:1] == "R" {
-			joinType = RIGHTJOIN
+			joinType = RightJoin
 		}
 		joinCriteriaNode := operator.NewJoinCriteriaNode(runtime, tt.JoinCriteria())
 		res := NewJoinNode(runtime, leftNode, rightNode, joinType, joinCriteriaNode)

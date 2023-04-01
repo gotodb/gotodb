@@ -11,33 +11,33 @@ type ShowNodeType int32
 
 const (
 	_ ShowNodeType = iota
-	SHOWCATALOGS
-	SHOWSCHEMAS
-	SHOWTABLES
-	SHOWCOLUMNS
-	SHOWSTATS
-	SHOWPARTITIONS
-	SHOWCREATETABLE
-	SHOWCREATEVIEW
+	ShowCatalogs
+	ShowSchemas
+	ShowTables
+	ShowColumns
+	ShowStats
+	ShowPartitions
+	ShowCreateTable
+	ShowCreateView
 )
 
 func (s ShowNodeType) String() string {
 	switch s {
-	case SHOWCATALOGS:
+	case ShowCatalogs:
 		return "SHOWCATALOGS"
-	case SHOWSCHEMAS:
+	case ShowSchemas:
 		return "SHOWSCHEMAS"
-	case SHOWTABLES:
+	case ShowTables:
 		return "SHOWTABLES"
-	case SHOWCOLUMNS:
+	case ShowColumns:
 		return "SHOWCOLUMNS"
-	case SHOWSTATS:
+	case ShowStats:
 		return "SHOWSTATS"
-	case SHOWPARTITIONS:
+	case ShowPartitions:
 		return "SHOWPARTITIONS"
-	case SHOWCREATETABLE:
+	case ShowCreateTable:
 		return "SHOWCREATETABLE"
-	case SHOWCREATEVIEW:
+	case ShowCreateView:
 		return "SHOWCREATEVIEW"
 	}
 	return "UNKNOWNSHOWTYPE"
@@ -59,7 +59,7 @@ type ShowNode struct {
 
 func NewShowNodeTables(_ *config.Runtime, catalog, schema string, like, escape *string) *ShowNode {
 	return &ShowNode{
-		ShowType:    SHOWTABLES,
+		ShowType:    ShowTables,
 		Catalog:     catalog,
 		Schema:      schema,
 		LikePattern: like,
@@ -69,7 +69,7 @@ func NewShowNodeTables(_ *config.Runtime, catalog, schema string, like, escape *
 
 func NewShowNodeSchemas(_ *config.Runtime, catalog string, like, escape *string) *ShowNode {
 	return &ShowNode{
-		ShowType:    SHOWSCHEMAS,
+		ShowType:    ShowSchemas,
 		Catalog:     catalog,
 		LikePattern: like,
 		Escape:      escape,
@@ -78,7 +78,7 @@ func NewShowNodeSchemas(_ *config.Runtime, catalog string, like, escape *string)
 
 func NewShowNodeColumns(_ *config.Runtime, catalog, schema, table string) *ShowNode {
 	return &ShowNode{
-		ShowType: SHOWCOLUMNS,
+		ShowType: ShowColumns,
 		Catalog:  catalog,
 		Schema:   schema,
 		Table:    table,
@@ -87,7 +87,7 @@ func NewShowNodeColumns(_ *config.Runtime, catalog, schema, table string) *ShowN
 
 func NewShowNodePartitions(_ *config.Runtime, catalog, schema, table string) *ShowNode {
 	return &ShowNode{
-		ShowType: SHOWPARTITIONS,
+		ShowType: ShowPartitions,
 		Catalog:  catalog,
 		Schema:   schema,
 		Table:    table,
@@ -101,19 +101,19 @@ func (n *ShowNode) GetType() NodeType {
 func (n *ShowNode) SetMetadata() error {
 	res := metadata.NewMetadata()
 	switch n.ShowType {
-	case SHOWCATALOGS:
-	case SHOWTABLES:
+	case ShowCatalogs:
+	case ShowTables:
 		col := metadata.NewColumnMetadata(gtype.STRING, n.Catalog, n.Schema, "*", "table")
 		res.AppendColumn(col)
-	case SHOWSCHEMAS:
+	case ShowSchemas:
 		col := metadata.NewColumnMetadata(gtype.STRING, n.Catalog, "*", "*", "schema")
 		res.AppendColumn(col)
-	case SHOWCOLUMNS:
+	case ShowColumns:
 		col := metadata.NewColumnMetadata(gtype.STRING, n.Catalog, n.Schema, n.Table, "NAME")
 		res.AppendColumn(col)
 		col = metadata.NewColumnMetadata(gtype.STRING, n.Catalog, n.Schema, n.Table, "TYPE")
 		res.AppendColumn(col)
-	case SHOWPARTITIONS:
+	case ShowPartitions:
 		ctr, err := connector.NewConnector(n.Catalog, n.Schema, n.Table)
 		if err != nil {
 			return err

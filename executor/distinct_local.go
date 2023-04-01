@@ -17,7 +17,6 @@ func (e *Executor) SetInstructionDistinctLocal(instruction *pb.Instruction) (err
 	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
-	e.Instruction = instruction
 	e.StageJob = &job
 
 	return nil
