@@ -16,7 +16,7 @@
  *
  */
 
-// Package main implements a server for Greeter service.
+// Package main implements a worker for Greeter service.
 package main
 
 import (
@@ -31,31 +31,31 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 	"time"
 )
 
 var (
-	port    = flag.Int("port", 50051, "The rpc server port")
-	tcpPort = flag.Int("tcp port", 50052, "The tcp server port")
+	ip      = flag.String("ip", "127.0.0.1", "The worker ip")
+	rpcPort = flag.Int("port", 50051, "The worker rpc port")
+	tcpPort = flag.Int("tcp port", 50052, "The worker tcp port")
 )
 
 var hostname string
-
-var address = "127.0.0.1"
 
 var etcdCfg = clientv3.Config{
 	Endpoints: []string{
 		"http://localhost:2379",
 	},
-	DialTimeout:          time.Second * 30,
-	DialKeepAliveTimeout: time.Second * 30,
+	DialTimeout:          time.Second * 5,
+	DialKeepAliveTimeout: time.Second * 5,
 }
 
-type server struct {
+type worker struct {
 	pb.UnimplementedWorkerServer
 }
 
-func (s *server) SendInstruction(ctx context.Context, instruction *pb.Instruction) (*pb.Empty, error) {
+func (s *worker) SendInstruction(ctx context.Context, instruction *pb.Instruction) (*pb.Empty, error) {
 	empty := new(pb.Empty)
 	exec := executor.New(instruction.Location.Name)
 	_, err := exec.SendInstruction(ctx, instruction)
@@ -66,124 +66,144 @@ func (s *server) SendInstruction(ctx context.Context, instruction *pb.Instructio
 	return empty, err
 }
 
-func (s *server) SetupWriters(ctx context.Context, loc *pb.Location) (*pb.Empty, error) {
+func (s *worker) SetupWriters(ctx context.Context, loc *pb.Location) (*pb.Empty, error) {
 	empty := new(pb.Empty)
-	exec := executor.Get(loc.Name)
-	_, err := exec.SetupWriters(ctx, nil)
+	exec, err := executor.Get(loc.Name)
 	if err != nil {
+		return empty, err
+	}
+
+	if _, err := exec.SetupWriters(ctx, nil); err != nil {
 		executor.Delete(loc.Name)
 		return empty, err
 	}
 	return empty, err
 }
 
-func (s *server) SetupReaders(ctx context.Context, loc *pb.Location) (*pb.Empty, error) {
+func (s *worker) SetupReaders(ctx context.Context, loc *pb.Location) (*pb.Empty, error) {
 	empty := new(pb.Empty)
-	exec := executor.Get(loc.Name)
-	_, err := exec.SetupReaders(ctx, nil)
+	exec, err := executor.Get(loc.Name)
 	if err != nil {
+		return empty, err
+	}
+
+	if _, err := exec.SetupReaders(ctx, nil); err != nil {
 		executor.Delete(loc.Name)
 		return empty, err
 	}
 	return empty, err
 }
 
-func (s *server) Run(ctx context.Context, loc *pb.Location) (*pb.Empty, error) {
+func (s *worker) Run(ctx context.Context, loc *pb.Location) (*pb.Empty, error) {
 	empty := new(pb.Empty)
-	exec := executor.Get(loc.Name)
+	exec, err := executor.Get(loc.Name)
+	if err != nil {
+		return empty, err
+	}
 	defer executor.Delete(loc.Name)
-	_, err := exec.Run(ctx, nil)
-	if err != nil {
+
+	if _, err := exec.Run(ctx, nil); err != nil {
 		return empty, err
 	}
 	return empty, err
 }
 
-func assign(conn net.Conn) {
-	//创建消息缓冲区
-	buffer := make([]byte, 10240)
-	for {
-		n, err := conn.Read(buffer)
-		if err != nil {
-			_ = fmt.Errorf("%v", err)
-			_ = conn.Close()
-			return
-		}
-		var loc *pb.Location
-		if err := msgpack.Unmarshal(buffer[0:n], &loc); err != nil {
-			fmt.Printf("%v", err)
-			_ = conn.Close()
-			return
-		}
-		fmt.Printf("接收到长度:%d, 内容:%v", n, loc)
-
-		exec := executor.Get(loc.Name)
-		exec.OutputConnChan[loc.ChannelIndex] <- conn
+func dispatch(conn net.Conn) {
+	buffer := make([]byte, 1024)
+	n, err := conn.Read(buffer)
+	if err != nil {
+		fmt.Printf("fail to read message: %v\n", err)
+		_ = conn.Close()
+		return
 	}
+	var loc *pb.Location
+	if err := msgpack.Unmarshal(buffer[0:n], &loc); err != nil {
+		fmt.Printf("fail to unmarshal message: %v\n", err)
+		_ = conn.Close()
+		return
+	}
+	fmt.Printf("接收到长度:%d, 内容:%v", n, loc)
+
+	exec, err := executor.Get(loc.Name)
+	if err != nil {
+		fmt.Printf("fail to get executor: %v\n", err)
+		_ = conn.Close()
+		return
+	}
+
+	exec.OutputConnChan[loc.ChannelIndex] <- conn
 }
 
 func main() {
 	flag.Parse()
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		listener, err := net.Listen("tcp", fmt.Sprintf(":%d", *tcpPort))
 		if err != nil {
-			log.Fatalf("failed to listen: %v", err)
+			log.Fatalf("failed to listen tcp: %v", err)
 		}
 		for {
-			//循环接入所有客户端得到专线连接
 			conn, err := listener.Accept()
 			if err != nil {
-				log.Fatalf("failed to accept: %v", err)
+				fmt.Printf("failed to accept: %v\n", err)
+				continue
 			}
-			fmt.Printf("来自连接: %s", conn.RemoteAddr())
-			//开辟独立协程与该客聊天
-			go assign(conn)
+			go dispatch(conn)
 		}
 	}()
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-	// 服务注册
+	wg.Add(1)
 	go func() {
-		ServiceRegistry(*port, *tcpPort)
+		defer wg.Done()
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *rpcPort))
+		if err != nil {
+			log.Fatalf("failed to listen rpc: %v", err)
+		}
+		// 服务注册
+
+		s := grpc.NewServer()
+		pb.RegisterWorkerServer(s, &worker{})
+		if err := s.Serve(lis); err != nil {
+			log.Fatalf("failed to serve: %v", err)
+		}
 	}()
-	s := grpc.NewServer()
-	pb.RegisterWorkerServer(s, &server{})
-	log.Printf("server listening at %v", lis.Addr())
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ServiceRegistry(*rpcPort, *tcpPort)
+	}()
+
+	wg.Wait()
 }
 
 func ServiceRegistry(rpcPort int, tcpPort int) {
 	hostname, _ = os.Hostname()
 	cli, err := clientv3.New(etcdCfg)
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to new etcd client: %v", err)
 	}
-	key := fmt.Sprintf("%s/%s-%d", "worker", hostname, os.Getpid())
-	endpoint := fmt.Sprintf("%s:%d:%d", address, rpcPort, tcpPort)
+
 	ctx := context.Background()
-	// 过期时间: 3秒钟
-	// 创建租约
 	lease, err := cli.Grant(ctx, 3)
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to grant lease: %v", err)
 	}
-	// put kv
+
+	key := fmt.Sprintf("%s/%s-%d", "worker", hostname, os.Getpid())
+	endpoint := fmt.Sprintf("%s:%d:%d", *ip, rpcPort, tcpPort)
 	_, err = cli.Put(ctx, key, endpoint, clientv3.WithLease(lease.ID))
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to regiseter worker: %v", err)
 	}
-	// 保持租约不过期
+
 	klRes, err := cli.KeepAlive(ctx, lease.ID)
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to keep alive with etcd: %v", err)
 	}
-	// 监听续约情况
+
 	for range klRes {
 	}
-	fmt.Println("stop keeping lease alive")
 }
