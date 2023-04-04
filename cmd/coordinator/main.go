@@ -87,7 +87,7 @@ func main() {
 		return
 	}
 
-	runtime := config.NewConfigRuntime()
+	runtime := config.NewRuntime()
 	logicalTree := plan.NewNodeFromSingleStatement(runtime, tree)
 
 	//SetMetaData

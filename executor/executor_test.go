@@ -37,16 +37,9 @@ func (e *Executor) setupWriters() {
 	for _, location := range e.StageJob.GetOutputs() {
 		file, _ := os.Create(fmt.Sprintf("%s/%s.txt", tempDir, location.Name))
 		e.Writers = append(e.Writers, file)
-		e.OutputChannelLocations = append(e.OutputChannelLocations,
-			&pb.Location{
-				Name:    location.Name,
-				Address: location.Address,
-				Port:    location.Port,
-			},
-		)
 	}
 
-	logger.Infof("SetupWriters Input=%v, Output=%v", e.InputChannelLocations, e.OutputChannelLocations)
+	logger.Infof("SetupWriters Output=%v", e.StageJob.GetOutputs())
 }
 
 func (e *Executor) setupReaders() {
@@ -57,14 +50,9 @@ func (e *Executor) setupReaders() {
 			logger.Errorf("failed to open file: %v", err)
 		}
 		e.Readers = append(e.Readers, file)
-		e.InputChannelLocations = append(e.InputChannelLocations, &pb.Location{
-			Name:    location.Name,
-			Address: location.Address,
-			Port:    location.Port,
-		})
 	}
 
-	logger.Infof("SetupReaders Input=%v, Output=%v", e.InputChannelLocations, e.OutputChannelLocations)
+	logger.Infof("SetupReaders Input=%v", e.StageJob.GetInputs())
 }
 
 func TestExecutor(t *testing.T) {
@@ -81,7 +69,7 @@ func TestExecutor(t *testing.T) {
 		return
 	}
 
-	runtime := config.NewConfigRuntime()
+	runtime := config.NewRuntime()
 	logicalTree := plan.NewNodeFromSingleStatement(runtime, tree)
 
 	//SetMetaData

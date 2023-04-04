@@ -24,7 +24,7 @@ func TestStage(t *testing.T) {
 		t.Error(errListener)
 		return
 	}
-	logicalTree := plan.NewNodeFromSingleStatement(config.NewConfigRuntime(), tree)
+	logicalTree := plan.NewNodeFromSingleStatement(config.NewRuntime(), tree)
 
 	//SetMetaData
 	if err := logicalTree.SetMetadata(); err != nil {

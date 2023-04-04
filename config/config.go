@@ -15,6 +15,13 @@ type Config struct {
 	Worker         Worker         `yaml:"worker"`
 }
 
+type Runtime struct {
+	Catalog        string `yaml:"catalog"`
+	Schema         string `yaml:"schema"`
+	Table          string `yaml:"table"`
+	ParallelNumber int    `yaml:"parallel-number"`
+}
+
 type Etcd struct {
 	Endpoint             []string `yaml:"endpoint"`
 	DialTimeout          int      `yaml:"dial-timeout"`
@@ -54,6 +61,14 @@ func NewEtcd() clientv3.Config {
 		DialKeepAliveTimeout: time.Duration(Conf.Etcd.DialKeepAliveTimeout) * time.Second,
 		Username:             Conf.Etcd.Username,
 		Password:             Conf.Etcd.Password,
+	}
+}
+
+func NewRuntime() *Runtime {
+	return &Runtime{
+		Catalog:        "default",
+		Schema:         "default",
+		ParallelNumber: 4,
 	}
 }
 
