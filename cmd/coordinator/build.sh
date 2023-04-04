@@ -6,5 +6,5 @@ env GOOS=linux go build -o coordinator main.go
 
 docker build -t zhenorzz/gotodb  .
 
-#docker push zhenorzz/gotodb:latest
+docker push zhenorzz/gotodb:latest
 

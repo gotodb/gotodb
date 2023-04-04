@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/executor"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/vmihailenco/msgpack"
@@ -17,10 +18,7 @@ import (
 )
 
 var (
-	ip           = flag.String("ip", "127.0.0.1", "The worker ip")
-	tcpPort      = flag.Int("tcp-port", 50051, "The worker tcp port")
-	rpcPort      = flag.Int("rpc-port", 50052, "The worker rpc port")
-	etcdEndpoint = flag.String("etcd-endpoint", "http://127.0.0.1:2379", "The etcd endpoint")
+	configFile = flag.String("c", "config.yaml", "The configure file")
 )
 
 var hostname string
@@ -116,12 +114,15 @@ func dispatch(conn net.Conn) {
 
 func main() {
 	flag.Parse()
+	if err := config.Load(*configFile); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println("start gotodb worker")
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		listener, err := net.Listen("tcp", fmt.Sprintf(":%d", *tcpPort))
+		listener, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Conf.Worker.TCPPort))
 		if err != nil {
 			log.Fatalf("failed to listen tcp: %v", err)
 		}
@@ -138,7 +139,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *rpcPort))
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Conf.Worker.RPCPort))
 		if err != nil {
 			log.Fatalf("failed to listen rpc: %v", err)
 		}
@@ -154,17 +155,16 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		workerRegistry(*rpcPort, *tcpPort)
+		workerRegistry()
 	}()
 
 	wg.Wait()
 	fmt.Println("stop gotodb worker")
 }
 
-func workerRegistry(rpcPort int, tcpPort int) {
+func workerRegistry() {
 	hostname, _ = os.Hostname()
-	etcdCfg.Endpoints = []string{*etcdEndpoint}
-	cli, err := clientv3.New(etcdCfg)
+	cli, err := clientv3.New(config.NewEtcd())
 	if err != nil {
 		log.Fatalf("failed to new etcd client: %v", err)
 	}
@@ -176,7 +176,7 @@ func workerRegistry(rpcPort int, tcpPort int) {
 	}
 
 	key := fmt.Sprintf("%s/%s-%d", "worker", hostname, os.Getpid())
-	endpoint := fmt.Sprintf("%s:%d:%d", *ip, rpcPort, tcpPort)
+	endpoint := fmt.Sprintf("%s:%d:%d", config.Conf.Worker.IP, config.Conf.Worker.RPCPort, config.Conf.Worker.TCPPort)
 	_, err = cli.Put(ctx, key, endpoint, clientv3.WithLease(lease.ID))
 	if err != nil {
 		log.Fatalf("failed to regiseter worker: %v", err)

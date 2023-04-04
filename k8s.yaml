@@ -3,6 +3,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: gotodb
+
 ---
 apiVersion: v1
 kind: Service
@@ -18,6 +19,7 @@ spec:
       name: peer
   selector:
     app: etcd
+
 ---
 apiVersion: v1
 kind: Service
@@ -33,6 +35,7 @@ spec:
       targetPort: 2379
   selector:
     app: etcd
+
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -81,6 +84,42 @@ spec:
                 --initial-cluster ${PEERS} \
                 --initial-cluster-state new \
                 --data-dir /var/run/etcd/default.etcd
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gotodb
+  namespace: gotodb
+data:
+  config.yaml: |-
+    runtime:
+      catalog: test
+      schema: test
+      parallel-number: 4
+
+    file-connector:
+      file.info.student:
+        catalog: file
+        schema: info
+        table: student
+        file-type: csv
+        column-names: [id,name,age]
+        column-types: [INT64,STRING,INT32]
+        paths: [./db/file/info/student/]
+
+    etcd:
+      endpoint: [${ETCD_ENDPOINT}]
+      dial-timeout: 5
+      dial-keepalive-timeout: 5
+      username:
+      password:
+
+    worker:
+      ip: ${HOSTNAME}
+      tcp-port: ${WORKER_TCP_PORT}
+      rpc-port: ${WORKER_RPC_PORT}
+
 ---
 apiVersion: v1
 kind: Service
@@ -96,11 +135,11 @@ spec:
       name: rpc
   selector:
     app: worker
+
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  namespace: gotodb
   name: worker
   labels:
     app: worker
@@ -119,7 +158,21 @@ spec:
       initContainers:
         - name: init-etcd
           image: curlimages/curl:7.68.0
-          command: [ 'sh', '-c', 'until curl -L http://etcd:2379/version; do echo waiting for etcd; sleep 2; done;' ]
+          command: ['sh', '-c', 'until curl -L http://etcd:2379/version; do echo waiting for etcd; sleep 2; done;']
+        - name: init-config
+          image: dibi/envsubst
+          env:
+            - name: ETCD_ENDPOINT
+              value: "http://etcd:2379"
+            - name: WORKER_TCP_PORT
+              value: "50051"
+            - name: WORKER_RPC_PORT
+              value: "50052"
+          volumeMounts:
+            - name: config
+              mountPath: /processed
+            - name: configmap
+              mountPath: /workdir
       containers:
         - name: worker
           image: zhenorzz/gotodb-worker:latest
@@ -128,21 +181,23 @@ spec:
               name: worker-tcp
             - containerPort: 50052
               name: worker-rpc
-          command:
-            - /bin/sh
-            - -c
-            - |
-              exec /opt/gotodb/worker \
-                --etcd-endpoint=http://etcd:2379 \
-                --ip=${HOSTNAME}.worker
           volumeMounts:
             - mountPath: /tmp
               name: tmp
+            - mountPath: /opt/gotodb/config.yaml
+              name: config
+              subPath: config.yaml
       volumes:
         - name: tmp
           hostPath:
             path: /tmp
             type: Directory
+        - name: configmap
+          configMap:
+            name: gotodb
+        - name: config
+          emptyDir: {}
+
 ---
 apiVersion: batch/v1
 kind: Job
@@ -158,16 +213,37 @@ spec:
         - name: init-etcd
           image: curlimages/curl:7.68.0
           command: [ 'sh', '-c', 'until curl -L http://etcd:2379/version; do echo waiting for etcd; sleep 2; done;' ]
+        - name: init-config
+          image: dibi/envsubst
+          env:
+            - name: ETCD_ENDPOINT
+              value: "http://etcd:2379"
+            - name: WORKER_TCP_PORT
+              value: "50051"
+            - name: WORKER_RPC_PORT
+              value: "50052"
+          volumeMounts:
+            - name: config
+              mountPath: /processed
+            - name: configmap
+              mountPath: /workdir
       containers:
         - name: coordinator
           image: zhenorzz/gotodb:latest
-          args: ["-etcd-endpoint=http://etcd:2379"]
           volumeMounts:
             - mountPath: /tmp
               name: tmp
+            - mountPath: /opt/gotodb/config.yaml
+              name: config
+              subPath: config.yaml
       restartPolicy: Never
       volumes:
         - name: tmp
           hostPath:
             path: /tmp
             type: Directory
+        - name: configmap
+          configMap:
+            name: gotodb
+        - name: config
+          emptyDir: { }

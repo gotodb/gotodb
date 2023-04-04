@@ -32,8 +32,8 @@ type Etcd struct {
 
 type Worker struct {
 	IP      string `yaml:"ip"`
-	TCPPort string `yaml:"tcp-port"`
-	RPCPort string `yaml:"rpc-port"`
+	TCPPort int    `yaml:"tcp-port"`
+	RPCPort int    `yaml:"rpc-port"`
 }
 
 var Conf Config
