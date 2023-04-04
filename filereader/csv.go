@@ -42,7 +42,7 @@ func (csv *CSV) TypeConvert(rg *row.RowsGroup) (*row.RowsGroup, error) {
 		colTypes[i], _ = csv.Metadata.GetTypeByIndex(csv.Indexes[i])
 	}
 
-	for i := 0; i < int(config.Conf.Runtime.ParallelNumber); i++ {
+	for i := 0; i < config.Conf.Runtime.ParallelNumber; i++ {
 		go func() {
 			for {
 				j, ok := <-jobs
@@ -64,7 +64,7 @@ func (csv *CSV) TypeConvert(rg *row.RowsGroup) (*row.RowsGroup, error) {
 		jobs <- i
 	}
 	close(jobs)
-	for i := 0; i < int(config.Conf.Runtime.ParallelNumber); i++ {
+	for i := 0; i < config.Conf.Runtime.ParallelNumber; i++ {
 		<-done
 	}
 	return rg, nil

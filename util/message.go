@@ -11,7 +11,32 @@ import (
 
 const (
 	MessageEOF = math.MinInt32
+	BufferSize = 1024 * 512
 )
+
+func CopyBuffer(src io.Reader, dst io.Writer) (err error) {
+	buf := make([]byte, BufferSize)
+
+	for {
+		nr, er := src.Read(buf)
+		if nr > 0 {
+			nw, ew := dst.Write(buf[0:nr])
+			if ew != nil {
+				err = ew
+				break
+			}
+			if nr != nw {
+				err = io.ErrShortWrite
+				break
+			}
+		}
+		if er != nil {
+			err = er
+			break
+		}
+	}
+	return err
+}
 
 func ReadMessage(reader io.Reader) (res []byte, err error) {
 	var length int32

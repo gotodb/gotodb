@@ -80,7 +80,7 @@ func (e *Executor) RunScan() (err error) {
 	jobs := make(chan *row.RowsGroup)
 	var wg sync.WaitGroup
 
-	for i := 0; i < int(config.Conf.Runtime.ParallelNumber); i++ {
+	for i := 0; i < config.Conf.Runtime.ParallelNumber; i++ {
 		wg.Add(1)
 		go func(parallelNumber int) {
 			defer func() {

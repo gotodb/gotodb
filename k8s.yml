@@ -116,6 +116,10 @@ spec:
       labels:
         app: worker
     spec:
+      initContainers:
+        - name: init-etcd
+          image: curlimages/curl:7.68.0
+          command: [ 'sh', '-c', 'until curl -L http://etcd:2379/version; do echo waiting for etcd; sleep 2; done;' ]
       containers:
         - name: worker
           image: zhenorzz/gotodb-worker:latest
@@ -150,6 +154,10 @@ metadata:
 spec:
   template:
     spec:
+      initContainers:
+        - name: init-etcd
+          image: curlimages/curl:7.68.0
+          command: [ 'sh', '-c', 'until curl -L http://etcd:2379/version; do echo waiting for etcd; sleep 2; done;' ]
       containers:
         - name: coordinator
           image: zhenorzz/gotodb:latest

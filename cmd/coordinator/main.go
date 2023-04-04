@@ -23,6 +23,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"io"
+	"log"
 	"math/rand"
 	"net"
 	"strconv"
@@ -32,14 +33,8 @@ import (
 )
 
 var (
-	etcdEndpoint = flag.String("etcd-endpoint", "http://127.0.0.1:2379", "The etcd endpoint")
+	configFile = flag.String("c", "config.yaml", "The configure file")
 )
-
-var etcdCfg = clientv3.Config{
-	Endpoints:            []string{},
-	DialTimeout:          time.Second * 5,
-	DialKeepAliveTimeout: time.Second * 5,
-}
 
 type WorkerNodes map[string]*pb.Location
 
@@ -74,8 +69,11 @@ func (n WorkerNodes) HasExecutor() bool {
 
 func main() {
 	flag.Parse()
+	if err := config.Load(*configFile); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println("start gotodb coordinator")
-	ServiceDiscovery()
+	workerDiscovery()
 	sqlStr := "select a.var1, a.var2, a.data_source from test.test.csv as a limit 10"
 	//sqlStr := "show COLUMNS from test.test.csv"
 	inputStream := antlr.NewInputStream(sqlStr)
@@ -240,10 +238,8 @@ func main() {
 
 var serviceLocker = sync.Mutex{}
 
-// ServiceDiscovery 服务发现
-func ServiceDiscovery() {
-	etcdCfg.Endpoints = []string{*etcdEndpoint}
-	cli, err := clientv3.New(etcdCfg)
+func workerDiscovery() {
+	cli, err := clientv3.New(config.NewEtcd())
 	if err != nil {
 		panic(err)
 	}

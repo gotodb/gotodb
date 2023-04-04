@@ -1,0 +1,26 @@
+runtime:
+  catalog: test
+  schema: test
+  parallel-number: 4
+
+file-connector:
+  file.info.student:
+    catalog: file
+    schema: info
+    table: student
+    file-type: csv
+    column-names: [ id,name,age ]
+    column-types: [ INT64,STRING,INT32 ]
+    paths: [ ./db/file/info/student/ ]
+
+etcd:
+  endpoint: [http://127.0.0.1:2379]
+  dial-timeout: 5
+  dial-keepalive-timeout: 5
+  username:
+  password:
+
+worker:
+  ip: 127.0.0.1
+  tcp-port: 50051
+  rpc-port: 50052

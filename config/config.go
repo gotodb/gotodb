@@ -1,34 +1,60 @@
 package config
 
 import (
-	"encoding/json"
+	clientv3 "go.etcd.io/etcd/client/v3"
+	"gopkg.in/yaml.v3"
 	"log"
 	"os"
+	"time"
 )
 
 type Config struct {
-	File                 string
-	Runtime              *Runtime
-	FileConnectorConfigs FileConnectorConfigs
+	Etcd           Etcd           `yaml:"etcd"`
+	Runtime        *Runtime       `yaml:"runtime"`
+	FileConnectors FileConnectors `yaml:"file-connector"`
+	Worker         Worker         `yaml:"worker"`
+}
+
+type Etcd struct {
+	Endpoint             []string `yaml:"endpoint"`
+	DialTimeout          int      `yaml:"dial-timeout"`
+	DialKeepAliveTimeout int      `yaml:"dial-keepalive-timeout"`
+	Username             string   `yaml:"username"`
+	Password             string   `yaml:"password"`
+}
+
+type Worker struct {
+	IP      string `yaml:"ip"`
+	TCPPort string `yaml:"tcp-port"`
+	RPCPort string `yaml:"rpc-port"`
 }
 
 var Conf Config
 
-func LoadConfig(fileName string) error {
+func Load(fileName string) error {
 	var data []byte
 	var err error
 	if data, err = os.ReadFile(fileName); err != nil {
-		log.Fatalf("Fail to load the configure file, due to %v ", err.Error())
+		log.Fatalf("fail to load the configure file, due to %v ", err.Error())
 		return err
 	}
 
-	if err = json.Unmarshal(data, &Conf); err != nil {
-		log.Fatalf("Fail to load the configure file, due to %v", err.Error())
+	if err = yaml.Unmarshal(data, &Conf); err != nil {
+		log.Fatalf("fail to unmarshal the configure file, due to %v", err.Error())
 		return err
 	}
-	Conf.File = fileName
 
 	return nil
+}
+
+func NewEtcd() clientv3.Config {
+	return clientv3.Config{
+		Endpoints:            Conf.Etcd.Endpoint,
+		DialTimeout:          time.Duration(Conf.Etcd.DialTimeout) * time.Second,
+		DialKeepAliveTimeout: time.Duration(Conf.Etcd.DialKeepAliveTimeout) * time.Second,
+		Username:             Conf.Etcd.Username,
+		Password:             Conf.Etcd.Password,
+	}
 }
 
 func WildcardMatch(s, p string) bool {

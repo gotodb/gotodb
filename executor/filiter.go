@@ -52,7 +52,7 @@ func (e *Executor) RunFilter() (err error) {
 		}
 	}
 
-	for i := 0; i < int(config.Conf.Runtime.ParallelNumber); i++ {
+	for i := 0; i < config.Conf.Runtime.ParallelNumber; i++ {
 		wg.Add(1)
 		go func() {
 			defer func() {

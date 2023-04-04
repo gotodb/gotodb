@@ -15,7 +15,7 @@ import (
 )
 
 type File struct {
-	Config        *config.FileConnectorConfig
+	Config        *config.FileConnector
 	Metadata      *metadata.Metadata
 	FileReader    filereader.FileReader
 	FileType      filesystem.FileType
@@ -30,7 +30,7 @@ func NewFileConnector(catalog, schema, table string) (*File, error) {
 	var err error
 	res := &File{}
 	key := strings.Join([]string{catalog, schema, table}, ".")
-	conf := config.Conf.FileConnectorConfigs.GetConfig(key)
+	conf := config.Conf.FileConnectors.GetConfig(key)
 	if conf == nil {
 		return nil, fmt.Errorf("file connector: table not found")
 	}
@@ -41,7 +41,7 @@ func NewFileConnector(catalog, schema, table string) (*File, error) {
 	return res, err
 }
 
-func NewFileMetadata(conf *config.FileConnectorConfig) (*metadata.Metadata, error) {
+func NewFileMetadata(conf *config.FileConnector) (*metadata.Metadata, error) {
 	res := metadata.NewMetadata()
 	if len(conf.ColumnNames) != len(conf.ColumnTypes) {
 		return res, fmt.Errorf("file config error: ColumnNames and ColumnTypes not match")
@@ -78,7 +78,7 @@ func (c *File) GetPartitionInfo() (*partition.Info, error) {
 func (c *File) setPartitionInfo() error {
 	parMD := metadata.NewMetadata()
 	c.PartitionInfo = partition.NewInfo(parMD)
-	for _, loc := range c.Config.PathList {
+	for _, loc := range c.Config.Paths {
 		fs, err := filesystem.List(loc)
 		if err != nil {
 			return err
@@ -104,7 +104,7 @@ func (c *File) GetReader(file *filesystem.FileLocation, md *metadata.Metadata) f
 func (c *File) ShowTables(catalog, schema, _ string, _, _ *string) func() (*row.Row, error) {
 	var err error
 	var rs []*row.Row
-	for key := range config.Conf.FileConnectorConfigs {
+	for key := range config.Conf.FileConnectors {
 		ns := strings.Split(key, ".")
 		if len(ns) < 3 {
 			err = fmt.Errorf("config name error: key")
@@ -134,7 +134,7 @@ func (c *File) ShowTables(catalog, schema, _ string, _, _ *string) func() (*row.
 func (c *File) ShowSchemas(catalog, _, _ string, _, _ *string) func() (*row.Row, error) {
 	var err error
 	var rs []*row.Row
-	for key := range config.Conf.FileConnectorConfigs {
+	for key := range config.Conf.FileConnectors {
 		ns := strings.Split(key, ".")
 		if len(ns) < 3 {
 			err = fmt.Errorf("config name error: key")
@@ -164,7 +164,7 @@ func (c *File) ShowSchemas(catalog, _, _ string, _, _ *string) func() (*row.Row,
 func (c *File) ShowColumns(catalog, schema, table string) func() (*row.Row, error) {
 	var err error
 	var rs []*row.Row
-	conf := config.Conf.FileConnectorConfigs.GetConfig(fmt.Sprintf("%s.%s.%s.", catalog, schema, table))
+	conf := config.Conf.FileConnectors.GetConfig(fmt.Sprintf("%s.%s.%s.", catalog, schema, table))
 	if conf != nil {
 		if len(conf.ColumnNames) != len(conf.ColumnTypes) {
 			err = fmt.Errorf("column names doesn't match column types")

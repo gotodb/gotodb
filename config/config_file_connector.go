@@ -1,17 +1,17 @@
 package config
 
-type FileConnectorConfig struct {
-	Catalog     string
-	Schema      string
-	Table       string
-	FileType    string
-	ColumnNames []string
-	ColumnTypes []string
-	PathList    []string
+type FileConnector struct {
+	Catalog     string   `yaml:"catalog"`
+	Schema      string   `yaml:"schema"`
+	Table       string   `yaml:"table"`
+	FileType    string   `yaml:"file-type"`
+	ColumnNames []string `yaml:"column-names"`
+	ColumnTypes []string `yaml:"column-types"`
+	Paths       []string `yaml:"paths"`
 }
-type FileConnectorConfigs map[string]*FileConnectorConfig
+type FileConnectors map[string]*FileConnector
 
-func (c FileConnectorConfigs) GetConfig(name string) *FileConnectorConfig {
+func (c FileConnectors) GetConfig(name string) *FileConnector {
 	for pattern, config := range c {
 		if WildcardMatch(name, pattern) {
 			return config

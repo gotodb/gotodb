@@ -154,14 +154,14 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ServiceRegistry(*rpcPort, *tcpPort)
+		workerRegistry(*rpcPort, *tcpPort)
 	}()
 
 	wg.Wait()
 	fmt.Println("stop gotodb worker")
 }
 
-func ServiceRegistry(rpcPort int, tcpPort int) {
+func workerRegistry(rpcPort int, tcpPort int) {
 	hostname, _ = os.Hostname()
 	etcdCfg.Endpoints = []string{*etcdEndpoint}
 	cli, err := clientv3.New(etcdCfg)

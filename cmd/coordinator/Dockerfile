@@ -3,11 +3,6 @@ FROM alpine
 
 LABEL maintainer="zhenorzz"
 
-RUN apk update && \
-    apk add --no-cache \
-    curl \
-    && rm -rf /var/cache/apk/*
-
 ADD coordinator /opt/gotodb/
 
 RUN chmod a+x /opt/gotodb/coordinator
