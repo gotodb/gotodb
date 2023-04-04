@@ -1,22 +1,3 @@
-/*
- *
- * Copyright 2015 gRPC authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
-// Package main implements a worker for Greeter service.
 package main
 
 import (
@@ -36,17 +17,16 @@ import (
 )
 
 var (
-	ip      = flag.String("ip", "127.0.0.1", "The worker ip")
-	rpcPort = flag.Int("port", 50051, "The worker rpc port")
-	tcpPort = flag.Int("tcp port", 50052, "The worker tcp port")
+	ip           = flag.String("ip", "127.0.0.1", "The worker ip")
+	tcpPort      = flag.Int("tcp-port", 50051, "The worker tcp port")
+	rpcPort      = flag.Int("rpc-port", 50052, "The worker rpc port")
+	etcdEndpoint = flag.String("etcd-endpoint", "http://127.0.0.1:2379", "The etcd endpoint")
 )
 
 var hostname string
 
 var etcdCfg = clientv3.Config{
-	Endpoints: []string{
-		"http://localhost:2379",
-	},
+	Endpoints:            []string{},
 	DialTimeout:          time.Second * 5,
 	DialKeepAliveTimeout: time.Second * 5,
 }
@@ -136,6 +116,7 @@ func dispatch(conn net.Conn) {
 
 func main() {
 	flag.Parse()
+	fmt.Println("start gotodb worker")
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -177,10 +158,12 @@ func main() {
 	}()
 
 	wg.Wait()
+	fmt.Println("stop gotodb worker")
 }
 
 func ServiceRegistry(rpcPort int, tcpPort int) {
 	hostname, _ = os.Hostname()
+	etcdCfg.Endpoints = []string{*etcdEndpoint}
 	cli, err := clientv3.New(etcdCfg)
 	if err != nil {
 		log.Fatalf("failed to new etcd client: %v", err)

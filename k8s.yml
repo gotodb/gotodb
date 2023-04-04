@@ -1,0 +1,165 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gotodb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: gotodb
+  name: etcd
+spec:
+  clusterIP: None
+  ports:
+    - port: 2379
+      name: client
+    - port: 2380
+      name: peer
+  selector:
+    app: etcd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: gotodb
+  name: etcd-client
+spec:
+  type: LoadBalancer
+  ports:
+    - name: etcd-client
+      port: 2379
+      protocol: TCP
+      targetPort: 2379
+  selector:
+    app: etcd
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: gotodb
+  name: etcd
+  labels:
+    app: etcd
+spec:
+  serviceName: etcd
+  replicas: 1
+  selector:
+    matchLabels:
+      app: etcd
+  template:
+    metadata:
+      name: etcd
+      labels:
+        app: etcd
+    spec:
+      volumes:
+        - name: etcd-storage
+          emptyDir: {}
+      containers:
+        - name: etcd
+          image: quay.io/coreos/etcd:latest
+          ports:
+            - containerPort: 2379
+              name: client
+            - containerPort: 2380
+              name: peer
+          volumeMounts:
+            - name: etcd-storage
+              mountPath: /var/run/etcd/default.etcd
+          command:
+            - /bin/sh
+            - -c
+            - |
+              PEERS="etcd-0=http://${HOSTNAME}:2380"
+              exec etcd --name ${HOSTNAME} \
+                --listen-peer-urls http://0.0.0.0:2380 \
+                --listen-client-urls http://0.0.0.0:2379 \
+                --advertise-client-urls http://${HOSTNAME}.etcd:2379 \
+                --initial-advertise-peer-urls http://${HOSTNAME}:2380 \
+                --initial-cluster-token etcd-cluster-1 \
+                --initial-cluster ${PEERS} \
+                --initial-cluster-state new \
+                --data-dir /var/run/etcd/default.etcd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: gotodb
+  name: worker
+spec:
+  clusterIP: None
+  ports:
+    - port: 50051
+      name: tcp
+    - port: 50052
+      name: rpc
+  selector:
+    app: worker
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: gotodb
+  name: worker
+  labels:
+    app: worker
+spec:
+  serviceName: worker
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      name: worker
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: zhenorzz/gotodb-worker:latest
+          ports:
+            - containerPort: 50051
+              name: worker-tcp
+            - containerPort: 50052
+              name: worker-rpc
+          command:
+            - /bin/sh
+            - -c
+            - |
+              exec /opt/gotodb/worker \
+                --etcd-endpoint=http://etcd:2379 \
+                --ip=${HOSTNAME}.worker
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+      volumes:
+        - name: tmp
+          hostPath:
+            path: /tmp
+            type: Directory
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  namespace: gotodb
+  name: coordinator
+  labels:
+    app: coordinator
+spec:
+  template:
+    spec:
+      containers:
+        - name: coordinator
+          image: zhenorzz/gotodb:latest
+          args: ["-etcd-endpoint=http://etcd:2379"]
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+      restartPolicy: Never
+      volumes:
+        - name: tmp
+          hostPath:
+            path: /tmp
+            type: Directory

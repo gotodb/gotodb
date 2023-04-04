@@ -20,3 +20,6 @@
 
 # Go workspace file
 go.work
+
+cmd/coordinator/coordinator
+cmd/worker/worker

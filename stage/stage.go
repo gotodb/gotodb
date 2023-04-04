@@ -95,10 +95,14 @@ type Job interface {
 }
 
 type Worker interface {
+	HasExecutor() bool
 	GetExecutorLoc() *pb.Location
 }
 
 func CreateJob(node plan.Node, jobs *[]Job, executorHeap Worker, pn int) (Job, error) {
+	if !executorHeap.HasExecutor() {
+		return nil, fmt.Errorf("there are no available executor")
+	}
 	inputJobs, err := createJob(node, jobs, executorHeap, pn)
 	if err != nil {
 		return nil, err

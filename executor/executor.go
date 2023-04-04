@@ -41,8 +41,12 @@ func New(name string) *Executor {
 	return res
 }
 
-func Get(name string) *Executor {
-	return executors[name]
+func Get(name string) (*Executor, error) {
+	if exec, ok := executors[name]; !ok {
+		return nil, fmt.Errorf("executor not exists: %s", name)
+	} else {
+		return exec, nil
+	}
 }
 
 func Delete(name string) {
@@ -138,8 +142,6 @@ func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruct
 func (e *Executor) SetupWriters(ctx context.Context, empty *pb.Empty) (*pb.Empty, error) {
 	logger.Infof("SetupWriters start")
 	var err error
-
-	//ip := strings.Split(e.Instruction.Location.Address, ":")[0]
 
 	for range e.StageJob.GetOutputs() {
 		pr, pw := io.Pipe()
