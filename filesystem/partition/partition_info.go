@@ -4,6 +4,7 @@ import (
 	"github.com/gotodb/gotodb/filesystem"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
+	"strconv"
 )
 
 type Info struct {
@@ -12,19 +13,17 @@ type Info struct {
 	Locations  []string
 	FileTypes  []filesystem.FileType
 	FileLists  [][]*filesystem.FileLocation
-
 	//for no partition
 	FileList []*filesystem.FileLocation
 }
 
-func NewInfo(md *metadata.Metadata) *Info {
+func New(md *metadata.Metadata) *Info {
 	res := &Info{
 		Metadata:  md,
 		Locations: []string{},
 		FileTypes: []filesystem.FileType{},
 		FileLists: [][]*filesystem.FileLocation{},
-
-		FileList: []*filesystem.FileLocation{},
+		FileList:  []*filesystem.FileLocation{},
 	}
 	for i := 0; i < md.GetColumnNumber(); i++ {
 		t, _ := md.GetTypeByIndex(i)
@@ -73,7 +72,12 @@ func (p *Info) GetPartitionFiles(i int) []*filesystem.FileLocation {
 	return p.FileLists[i]
 }
 
-func (p *Info) GetNoPartititonFiles() []*filesystem.FileLocation {
+func (p *Info) GetNoPartitionFiles(parallelNumber int) []*filesystem.FileLocation {
+	if len(p.FileList) > 0 && p.FileList[0].FileType == filesystem.HTTP {
+		for i := 1; i < parallelNumber; i++ {
+			p.FileList = append(p.FileList, &filesystem.FileLocation{Location: strconv.Itoa(i), FileType: filesystem.HTTP})
+		}
+	}
 	return p.FileList
 }
 

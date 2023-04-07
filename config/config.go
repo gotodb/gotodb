@@ -12,6 +12,7 @@ type Config struct {
 	Etcd           Etcd           `yaml:"etcd"`
 	Runtime        *Runtime       `yaml:"runtime"`
 	FileConnectors FileConnectors `yaml:"file-connector"`
+	HttpConnectors HttpConnectors `yaml:"http-connector"`
 	Worker         Worker         `yaml:"worker"`
 }
 
@@ -48,6 +49,16 @@ func Load(fileName string) error {
 
 	if err = yaml.Unmarshal(data, &Conf); err != nil {
 		log.Fatalf("fail to unmarshal the configure file, due to %v", err.Error())
+		return err
+	}
+
+	if err = Conf.FileConnectors.Check(); err != nil {
+		log.Fatalf("%v", err)
+		return err
+	}
+
+	if err = Conf.HttpConnectors.Check(); err != nil {
+		log.Fatalf("%v", err)
 		return err
 	}
 

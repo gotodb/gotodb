@@ -32,10 +32,6 @@ func (e *Executor) RunShow() (err error) {
 	}()
 
 	job := e.StageJob.(*stage.ShowJob)
-	ctr, err := connector.NewConnector(job.Catalog, job.Schema, job.Table)
-	if err != nil {
-		return err
-	}
 
 	md := job.Metadata
 	writer := e.Writers[0]
@@ -46,14 +42,15 @@ func (e *Executor) RunShow() (err error) {
 
 	rbWriter := row.NewRowsBuffer(md, nil, writer)
 
+	ctr := connector.NewEmptyConnector(job.Catalog)
 	var showReader func() (*row.Row, error)
 	//writer rows
 	switch job.ShowType {
 	case plan.ShowCatalogs:
 	case plan.ShowSchemas:
-		showReader = ctr.ShowSchemas(job.Catalog, job.Schema, job.Table, job.LikePattern, job.Escape)
+		showReader = ctr.ShowSchemas(job.Catalog, job.LikePattern, job.Escape)
 	case plan.ShowTables:
-		showReader = ctr.ShowTables(job.Catalog, job.Schema, job.Table, job.LikePattern, job.Escape)
+		showReader = ctr.ShowTables(job.Catalog, job.Schema, job.LikePattern, job.Escape)
 	case plan.ShowColumns:
 		showReader = ctr.ShowColumns(job.Catalog, job.Schema, job.Table)
 	case plan.ShowPartitions:

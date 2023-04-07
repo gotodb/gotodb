@@ -11,10 +11,19 @@ file-connector:
     file-type: csv
     column-names: [ id,name,age ]
     column-types: [ INT64,STRING,INT32 ]
-    paths: [ ./db/file/info/student/ ]
+    paths: [ ../db/file/info/student/ ]
+
+http-connector:
+  http.toutiao.*:
+    catalog: http
+    schema: toutiao
+    table: "*"
+    data-path:
+    column-names: [ etcdserver, etcdcluster, options, _ ]
+    column-types: [ STRING, STRING, STRING, STRING ]
 
 etcd:
-  endpoint: [http://127.0.0.1:2379]
+  endpoint: [ http://127.0.0.1:2379 ]
   dial-timeout: 5
   dial-keepalive-timeout: 5
   username:

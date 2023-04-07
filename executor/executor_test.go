@@ -56,8 +56,13 @@ func (e *Executor) setupReaders() {
 }
 
 func TestExecutor(t *testing.T) {
-	sqlStr := "select sum(a.var1), a.var2, a.data_source from test.test.csv as a limit 10"
-	//sqlStr := "show COLUMNS from test.test.csv"
+	config.Load("../config.yaml")
+	//sqlStr := "/*+par=1*/select * from file.info.student"
+	sqlStr := "/*+par=1*/select * from http.toutiao.info where options = '{ \"url\": \"http://127.0.0.1:2379/version\" }'"
+	//sqlStr := "select sum(a.var1), a.var2, a.data_source from test.test.csv as a limit 10"
+	//sqlStr := "show Schemas from file"
+	//sqlStr := "show tables from file.info"
+	//sqlStr := "show Columns from file.info.student"
 	inputStream := antlr.NewInputStream(sqlStr)
 	lexer := parser.NewSqlLexer(parser.NewCaseChangingStream(inputStream, true))
 	p := parser.NewSqlParser(antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel))

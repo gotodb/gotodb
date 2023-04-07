@@ -13,6 +13,7 @@ const (
 	CSV
 	PARQUET
 	ORC
+	HTTP
 )
 
 func StringToFileType(ts string) FileType {
@@ -23,6 +24,8 @@ func StringToFileType(ts string) FileType {
 		return PARQUET
 	case "ORC":
 		return ORC
+	case "HTTP":
+		return HTTP
 	default:
 		return UNKNOWNFILETYPE
 	}
@@ -69,7 +72,7 @@ func Open(filepath string) (VirtualFile, error) {
 			return fs.Open(fileLocation)
 		}
 	}
-	return nil, fmt.Errorf("Unknown file %s", filepath)
+	return nil, fmt.Errorf("unknown file %s", filepath)
 }
 
 func List(filepath string) ([]*FileLocation, error) {
@@ -81,7 +84,7 @@ func List(filepath string) ([]*FileLocation, error) {
 			return fs.List(fileLocation)
 		}
 	}
-	return nil, fmt.Errorf("Unknown file %s", filepath)
+	return nil, fmt.Errorf("unknown file %s", filepath)
 }
 
 func IsDir(filepath string) bool {

@@ -2,6 +2,7 @@ package connector
 
 import (
 	"fmt"
+	"github.com/gotodb/gotodb/plan/operator"
 	"io"
 	"os"
 	"strings"
@@ -91,6 +92,10 @@ func GenerateTestMetadata(columns []string, table string) *metadata.Metadata {
 	return res
 }
 
+func NewTestConnectorEmpty() *Test {
+	return &Test{}
+}
+
 func NewTestConnector(catalog, schema, table string) (*Test, error) {
 	var res *Test
 	res = &Test{
@@ -107,7 +112,7 @@ func (c *Test) GetMetadata() (*metadata.Metadata, error) {
 
 func (c *Test) GetPartitionInfo() (*partition.Info, error) {
 	if c.PartitionInfo == nil {
-		c.PartitionInfo = partition.NewInfo(metadata.NewMetadata())
+		c.PartitionInfo = partition.New(metadata.NewMetadata())
 		if c.Table == "csv" {
 			c.PartitionInfo.FileList = []*filesystem.FileLocation{
 				{
@@ -141,7 +146,7 @@ func (c *Test) GetPartitionInfo() (*partition.Info, error) {
 	return c.PartitionInfo, nil
 }
 
-func (c *Test) GetReader(file *filesystem.FileLocation, md *metadata.Metadata) func(indexes []int) (*row.RowsGroup, error) {
+func (c *Test) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) func(indexes []int) (*row.RowsGroup, error) {
 	reader, err := filereader.NewReader(file, md)
 	return func(indexes []int) (*row.RowsGroup, error) {
 		if err != nil {
@@ -151,7 +156,7 @@ func (c *Test) GetReader(file *filesystem.FileLocation, md *metadata.Metadata) f
 	}
 }
 
-func (c *Test) ShowTables(_, _, _ string, _, _ *string) func() (*row.Row, error) {
+func (c *Test) ShowTables(_, _ string, _, _ *string) func() (*row.Row, error) {
 	var err error
 	tables := []string{"csv", "parquet", "orc"}
 	var rs []*row.Row
@@ -173,7 +178,7 @@ func (c *Test) ShowTables(_, _, _ string, _, _ *string) func() (*row.Row, error)
 	}
 }
 
-func (c *Test) ShowSchemas(_, _, _ string, _, _ *string) func() (*row.Row, error) {
+func (c *Test) ShowSchemas(_ string, _, _ *string) func() (*row.Row, error) {
 	var err error
 
 	r := row.NewRow()

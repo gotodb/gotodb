@@ -13,7 +13,8 @@ import (
 )
 
 func TestStage(t *testing.T) {
-	sqlStr := "select * from test.test.csv"
+	config.Load("../config.yaml")
+	sqlStr := "select * from file.info.student where id = 1 and options = '{ \"age\":30 }'"
 	inputStream := antlr.NewInputStream(sqlStr)
 	lexer := parser.NewSqlLexer(parser.NewCaseChangingStream(inputStream, true))
 	p := parser.NewSqlParser(antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel))
@@ -39,7 +40,7 @@ func TestStage(t *testing.T) {
 	}
 	var res []Job
 
-	aggJob, err := CreateJob(logicalTree, &res, executorHeap, 1)
+	aggJob, err := CreateJob(logicalTree, &res, executorHeap, 4)
 	if err != nil {
 		t.Error(err)
 		return

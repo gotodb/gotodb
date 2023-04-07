@@ -125,8 +125,8 @@ func (e *Executor) RunScan() (err error) {
 
 	// no partitions
 	if !job.PartitionInfo.IsPartition() {
-		for _, file := range job.PartitionInfo.GetNoPartititonFiles() {
-			reader := ctr.GetReader(file, inputMetadata)
+		for _, file := range job.PartitionInfo.FileList {
+			reader := ctr.GetReader(file, inputMetadata, job.Filters)
 			if err != nil {
 				break
 			}
@@ -172,7 +172,7 @@ func (e *Executor) RunScan() (err error) {
 			}
 
 			for _, file := range job.PartitionInfo.GetPartitionFiles(i) {
-				reader := ctr.GetReader(file, inputMetadata)
+				reader := ctr.GetReader(file, inputMetadata, job.Filters)
 				if err != nil {
 					break
 				}

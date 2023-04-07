@@ -5,18 +5,17 @@ import (
 	"strings"
 )
 
-type FileConnector struct {
+type HttpConnector struct {
 	Catalog     string   `yaml:"catalog"`
 	Schema      string   `yaml:"schema"`
 	Table       string   `yaml:"table"`
-	FileType    string   `yaml:"file-type"`
+	DataPath    string   `yaml:"data-path"`
 	ColumnNames []string `yaml:"column-names"`
 	ColumnTypes []string `yaml:"column-types"`
-	Paths       []string `yaml:"paths"`
 }
-type FileConnectors map[string]*FileConnector
+type HttpConnectors map[string]*HttpConnector
 
-func (c FileConnectors) GetConfig(name string) *FileConnector {
+func (c HttpConnectors) GetConfig(name string) *HttpConnector {
 	for pattern, config := range c {
 		if WildcardMatch(name, pattern) {
 			return config
@@ -25,7 +24,7 @@ func (c FileConnectors) GetConfig(name string) *FileConnector {
 	return nil
 }
 
-func (c FileConnectors) Check() error {
+func (c HttpConnectors) Check() error {
 	for pattern, conf := range c {
 		ns := strings.Split(pattern, ".")
 		if len(ns) < 3 {

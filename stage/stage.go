@@ -141,7 +141,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job,
 		parInfos := make([]*partition.Info, pn)
 		recMap := make([]map[int]int, pn)
 		for i := 0; i < pn; i++ {
-			parInfos[i] = partition.NewInfo(scanNode.PartitionInfo.Metadata)
+			parInfos[i] = partition.New(scanNode.PartitionInfo.Metadata)
 			recMap[i] = map[int]int{}
 		}
 
@@ -193,9 +193,8 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job,
 					k = k % pn
 				}
 			}
-
 		} else {
-			for i, file := range scanNode.PartitionInfo.GetNoPartititonFiles() {
+			for i, file := range scanNode.PartitionInfo.GetNoPartitionFiles(pn) {
 				parInfos[i%pn].FileList = append(parInfos[i%pn].FileList, file)
 			}
 		}
