@@ -140,6 +140,7 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
+  namespace: gotodb
   name: worker
   labels:
     app: worker
