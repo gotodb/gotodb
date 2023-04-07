@@ -116,7 +116,7 @@ data:
       password:
 
     worker:
-      ip: ${HOSTNAME}
+      ip: ${HOSTNAME}${SERVICE_NAME}
       tcp-port: ${WORKER_TCP_PORT}
       rpc-port: ${WORKER_RPC_PORT}
 
@@ -163,6 +163,8 @@ spec:
         - name: init-config
           image: dibi/envsubst
           env:
+            - name: SERVICE_NAME
+              value: ".worker"
             - name: ETCD_ENDPOINT
               value: "http://etcd:2379"
             - name: WORKER_TCP_PORT
