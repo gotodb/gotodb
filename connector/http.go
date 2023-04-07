@@ -138,6 +138,7 @@ func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, f
 					rg.Vals[index] = append(rg.Vals[index], nil)
 				}
 			}
+			rg.RowsNumber++
 		case []map[string]interface{}:
 			for _, r := range result.([]map[string]interface{}) {
 				for _, index := range indexes {
@@ -148,10 +149,10 @@ func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, f
 						rg.Vals[index] = append(rg.Vals[index], nil)
 					}
 				}
+				rg.RowsNumber++
 			}
 		}
 
-		rg.RowsNumber++
 		result = nil
 		return rg, nil
 	}
