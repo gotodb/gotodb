@@ -12,7 +12,7 @@ import (
 
 type Connector interface {
 	GetMetadata() (*metadata.Metadata, error)
-	GetPartitionInfo() (*partition.Info, error)
+	GetPartitionInfo(parallelNumber int) (*partition.Info, error)
 	GetReader(file *filesystem.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) func(indexes []int) (*row.RowsGroup, error)
 
 	ShowTables(catalog, schema string, like, escape *string) func() (*row.Row, error)

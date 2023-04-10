@@ -138,30 +138,34 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job,
 			output.ChannelIndex = int32(0)
 			outputs = append(outputs, output)
 		}
+		scanNodePar, err := scanNode.Connector.GetPartitionInfo(pn)
+		if err != nil {
+			return res, err
+		}
 
 		parInfos := make([]*partition.Info, pn)
 		recMap := make([]map[int]int, pn)
 		for i := 0; i < pn; i++ {
-			parInfos[i] = partition.New(scanNode.PartitionInfo.Metadata)
+			parInfos[i] = partition.New(scanNodePar.Metadata)
 			recMap[i] = map[int]int{}
 		}
 
 		k := 0
-		if scanNode.PartitionInfo.IsPartition() {
-			partitionNum := scanNode.PartitionInfo.GetPartitionNum()
+		if scanNodePar.IsPartition() {
+			partitionNum := scanNodePar.GetPartitionNum()
 			var parFilters []*operator.BooleanExpressionNode
 			for _, f := range scanNode.Filters {
 				cols, err := f.GetColumns()
 				if err != nil {
 					return res, err
 				}
-				if scanNode.PartitionInfo.Metadata.Contains(cols) {
+				if scanNodePar.Metadata.Contains(cols) {
 					parFilters = append(parFilters, f)
 				}
 			}
 
 			for i := 0; i < partitionNum; i++ {
-				prg := scanNode.PartitionInfo.GetPartitionRowGroup(i)
+				prg := scanNodePar.GetPartitionRowGroup(i)
 				flag := true
 				for _, exp := range parFilters {
 					if r, err := exp.Result(prg); err != nil {
@@ -176,9 +180,9 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job,
 				}
 
 				row, _ := prg.Read()
-				location := scanNode.PartitionInfo.GetLocation(i)
-				fileType := scanNode.PartitionInfo.GetFileType(i)
-				files := scanNode.PartitionInfo.GetPartitionFiles(i)
+				location := scanNodePar.GetLocation(i)
+				fileType := scanNodePar.GetFileType(i)
+				files := scanNodePar.GetPartitionFiles(i)
 				for _, file := range files {
 					if _, ok := recMap[k][i]; !ok {
 						recMap[k][i] = parInfos[k].GetPartitionNum()
@@ -195,7 +199,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job,
 				}
 			}
 		} else {
-			for i, file := range scanNode.PartitionInfo.GetNoPartitionFiles(pn) {
+			for i, file := range scanNodePar.GetNoPartitionFiles() {
 				parInfos[i%pn].FileList = append(parInfos[i%pn].FileList, file)
 			}
 		}
@@ -386,18 +390,18 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job,
 			rightShuffleJobs = append(rightShuffleJobs, NewShuffleNode([]*pb.Location{input}, outputs, keyExps))
 		}
 
-		leftInputss, rightInputss := make([][]*pb.Location, pn), make([][]*pb.Location, pn)
-		for _, node := range leftShuffleJobs {
-			outputs := node.GetOutputs()
+		leftJoinInputs, rightJoinInputs := make([][]*pb.Location, pn), make([][]*pb.Location, pn)
+		for _, job := range leftShuffleJobs {
+			outputs := job.GetOutputs()
 			for i, output := range outputs {
-				leftInputss[i] = append(leftInputss[i], output)
+				leftJoinInputs[i] = append(leftJoinInputs[i], output)
 			}
 		}
 
-		for _, node := range rightShuffleJobs {
-			outputs := node.GetOutputs()
+		for _, job := range rightShuffleJobs {
+			outputs := job.GetOutputs()
 			for i, output := range outputs {
-				rightInputss[i] = append(rightInputss[i], output)
+				rightJoinInputs[i] = append(rightJoinInputs[i], output)
 			}
 		}
 
@@ -405,7 +409,7 @@ func createJob(node plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job,
 		for i := 0; i < pn; i++ {
 			output := executorHeap.GetExecutorLoc()
 			output.ChannelIndex = 0
-			res = append(res, NewEPlanHashJoinJob(hashJoinNode, leftInputss[i], rightInputss[i], output))
+			res = append(res, NewHashJoinJob(hashJoinNode, leftJoinInputs[i], rightJoinInputs[i], output))
 		}
 		*jobs = append(*jobs, leftShuffleJobs...)
 		*jobs = append(*jobs, rightShuffleJobs...)

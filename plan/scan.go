@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/connector"
-	"github.com/gotodb/gotodb/filesystem/partition"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/plan/operator"
 )
@@ -16,7 +15,7 @@ type ScanNode struct {
 	Name          string
 	Metadata      *metadata.Metadata
 	InputMetadata *metadata.Metadata
-	PartitionInfo *partition.Info
+	Connector     connector.Connector
 	Output        Node
 	Filters       []*operator.BooleanExpressionNode
 }
@@ -77,12 +76,11 @@ func (n *ScanNode) SetMetadata() error {
 	if err != nil {
 		return err
 	}
+	n.Connector = ctr
 	n.Metadata = md.Copy()
 	n.Metadata.Reset()
 	n.InputMetadata = md.Copy()
 	n.InputMetadata.Reset()
-
-	n.PartitionInfo, err = ctr.GetPartitionInfo()
 
 	return err
 }

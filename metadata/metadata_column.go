@@ -39,13 +39,8 @@ func NewColumnMetadata(t gtype.Type, metrics ...string) *ColumnMetadata {
 }
 
 func (c *ColumnMetadata) Copy() *ColumnMetadata {
-	return &ColumnMetadata{
-		Catalog:    c.Catalog,
-		Schema:     c.Schema,
-		Table:      c.Table,
-		ColumnName: c.ColumnName,
-		ColumnType: c.ColumnType,
-	}
+	value := *c
+	return &value
 }
 
 func (c *ColumnMetadata) GetName() string {

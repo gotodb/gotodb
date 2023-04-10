@@ -118,12 +118,11 @@ func (n *ShowNode) SetMetadata() error {
 		if err != nil {
 			return err
 		}
-		parInfo, err := ctr.GetPartitionInfo()
+		parInfo, err := ctr.GetPartitionInfo(1)
 		if err != nil {
 			return err
 		}
 		res = parInfo.Metadata
-
 	}
 
 	n.Metadata = res

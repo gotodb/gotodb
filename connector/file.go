@@ -62,7 +62,7 @@ func (c *File) GetMetadata() (*metadata.Metadata, error) {
 	return c.Metadata, nil
 }
 
-func (c *File) GetPartitionInfo() (*partition.Info, error) {
+func (c *File) GetPartitionInfo(_ int) (*partition.Info, error) {
 	if c.PartitionInfo == nil {
 		c.PartitionInfo = partition.New(metadata.NewMetadata())
 		for _, loc := range c.Config.Paths {

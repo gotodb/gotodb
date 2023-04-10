@@ -36,7 +36,7 @@ func (n *HashJoinJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewEPlanHashJoinJob(node *plan.HashJoinNode, leftInputs, rightInputs []*pb.Location, output *pb.Location) *HashJoinJob {
+func NewHashJoinJob(node *plan.HashJoinNode, leftInputs, rightInputs []*pb.Location, output *pb.Location) *HashJoinJob {
 	return &HashJoinJob{
 		Location:     output,
 		LeftInputs:   leftInputs,

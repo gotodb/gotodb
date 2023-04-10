@@ -110,7 +110,7 @@ func (c *Test) GetMetadata() (*metadata.Metadata, error) {
 	return c.Metadata, nil
 }
 
-func (c *Test) GetPartitionInfo() (*partition.Info, error) {
+func (c *Test) GetPartitionInfo(_ int) (*partition.Info, error) {
 	if c.PartitionInfo == nil {
 		c.PartitionInfo = partition.New(metadata.NewMetadata())
 		if c.Table == "csv" {

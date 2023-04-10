@@ -6,6 +6,7 @@ import (
 	"github.com/gotodb/gotodb/plan/operator"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
@@ -63,10 +64,12 @@ func (c *Http) GetMetadata() (*metadata.Metadata, error) {
 	return c.Metadata, nil
 }
 
-func (c *Http) GetPartitionInfo() (*partition.Info, error) {
+func (c *Http) GetPartitionInfo(parallelNumber int) (*partition.Info, error) {
 	if c.PartitionInfo == nil {
 		c.PartitionInfo = partition.New(metadata.NewMetadata())
-		c.PartitionInfo.FileList = append(c.PartitionInfo.FileList, &filesystem.FileLocation{Location: "0", FileType: c.FileType})
+		for i := 0; i < parallelNumber; i++ {
+			c.PartitionInfo.FileList = append(c.PartitionInfo.FileList, &filesystem.FileLocation{Location: strconv.Itoa(i), FileType: filesystem.HTTP})
+		}
 	}
 	return c.PartitionInfo, nil
 }

@@ -55,14 +55,35 @@ func (e *Executor) setupReaders() {
 	logger.Infof("SetupReaders Input=%v", e.StageJob.GetInputs())
 }
 
-func TestExecutor(t *testing.T) {
+func TestSelect(t *testing.T) {
+	sql := "/*+partition_number=1*/select * from http.toutiao.info where options = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue?recursive=true&sorted=true\", \"dataPath\": \"node.nodes\" }'"
+	executor(t, sql)
+}
+
+func TestShowSchemas(t *testing.T) {
+	sql := "show Schemas from file"
+	executor(t, sql)
+}
+
+func TestShowTables(t *testing.T) {
+	sql := "show tables from file.info"
+	executor(t, sql)
+}
+
+func TestShowColumns(t *testing.T) {
+	sql := "show Columns from file.info.student"
+	executor(t, sql)
+}
+
+func TestShowPartitions(t *testing.T) {
+	sql := "show partitions from file.info.student"
+	executor(t, sql)
+}
+
+func executor(t *testing.T, sqlStr string) {
 	config.Load("../config.yaml")
 	//sqlStr := "/*+par=1*/select * from file.info.student"
-	sqlStr := "/*+partition_number=1*/select * from http.toutiao.info where options = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue?recursive=true&sorted=true\", \"dataPath\": \"node.nodes\" }'"
 	//sqlStr := "select sum(a.var1), a.var2, a.data_source from test.test.csv as a limit 10"
-	//sqlStr := "show Schemas from file"
-	//sqlStr := "show tables from file.info"
-	//sqlStr := "show Columns from file.info.student"
 	inputStream := antlr.NewInputStream(sqlStr)
 	lexer := parser.NewSqlLexer(parser.NewCaseChangingStream(inputStream, true))
 	p := parser.NewSqlParser(antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel))
