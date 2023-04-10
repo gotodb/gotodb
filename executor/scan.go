@@ -93,20 +93,18 @@ func (e *Executor) RunScan() (err error) {
 				rg, ok := <-jobs
 				if ok {
 					for _, filter := range job.Filters { //TODO: improve performance, add flag in RowsGroup?
-						flagsi, err := filter.Result(rg)
+						iFlags, err := filter.Result(rg)
 						if err != nil {
 							e.AddLogInfo(err, pb.LogLevel_ERR)
 							break
 						}
-						flags := flagsi.([]interface{})
-						rgtmp := row.NewRowsGroup(job.Metadata)
-
-						for i, flag := range flags {
+						rgTmp := row.NewRowsGroup(job.Metadata)
+						for i, flag := range iFlags.([]interface{}) {
 							if flag.(bool) {
-								rgtmp.AppendRowVals(rg.GetRowVals(i)...)
+								rgTmp.AppendRowVals(rg.GetRowVals(i)...)
 							}
 						}
-						rg = rgtmp
+						rg = rgTmp
 					}
 
 					if err := rbWriters[k].Write(rg); err != nil {

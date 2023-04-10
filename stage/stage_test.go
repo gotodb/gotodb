@@ -38,13 +38,12 @@ func TestStage(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		heap.Push(executorHeap, util.NewItem(&pb.Location{Name: fmt.Sprintf("%v", i)}, 1))
 	}
-	var res []Job
 
-	aggJob, err := CreateJob(logicalTree, &res, executorHeap, 4)
+	jobs, err := CreateJob(logicalTree, executorHeap, 4)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	t.Logf("%+v", &aggJob)
+	t.Logf("%+v", &jobs)
 	t.Logf("%+v", &logicalTree)
 }

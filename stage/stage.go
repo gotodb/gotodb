@@ -99,10 +99,11 @@ type Worker interface {
 	GetExecutorLoc() *pb.Location
 }
 
-func CreateJob(node plan.Node, jobs *[]Job, executorHeap Worker, pn int) (Job, error) {
+func CreateJob(node plan.Node, executorHeap Worker, pn int) ([]Job, error) {
 	if !executorHeap.HasExecutor() {
 		return nil, fmt.Errorf("there are no available executor")
 	}
+	jobs := new([]Job)
 	inputJobs, err := createJob(node, jobs, executorHeap, pn)
 	if err != nil {
 		return nil, err
@@ -115,7 +116,7 @@ func CreateJob(node plan.Node, jobs *[]Job, executorHeap Worker, pn int) (Job, e
 	}
 	aggJob := NewAggregateJob(inputs, output)
 	*jobs = append(*jobs, aggJob)
-	return aggJob, err
+	return *jobs, err
 }
 
 func createJob(node plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job, error) {

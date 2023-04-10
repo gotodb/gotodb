@@ -108,9 +108,8 @@ func TestExecutor(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		heap.Push(executorHeap, util.NewItem(&pb.Location{Name: fmt.Sprintf("%v", i)}, 1))
 	}
-	var stageJobs []stage.Job
 
-	aggJob, err := stage.CreateJob(logicalTree, &stageJobs, executorHeap, 1)
+	stageJobs, err := stage.CreateJob(logicalTree, executorHeap, 1)
 	if err != nil {
 		t.Error(err)
 		return
@@ -119,6 +118,7 @@ func TestExecutor(t *testing.T) {
 		buf        []byte
 		runtimeBuf []byte
 		taskId     = fmt.Sprintf("%v_%v", time.Now().Format("20060102150405"), uuid.NewV4().String())
+		aggJob     stage.Job
 	)
 
 	for _, job := range stageJobs {
@@ -165,6 +165,7 @@ func TestExecutor(t *testing.T) {
 				time.Sleep(100 * time.Millisecond)
 			}
 		}
+		aggJob = job
 	}
 	var (
 		msg []byte

@@ -116,8 +116,7 @@ func main() {
 		return
 	}
 
-	var stageJobs []stage.Job
-	aggJob, err := stage.CreateJob(logicalTree, &stageJobs, workerNode, 1)
+	stageJobs, err := stage.CreateJob(logicalTree, workerNode, 1)
 	if err != nil {
 		panic(err)
 		return
@@ -126,6 +125,7 @@ func main() {
 		buf        []byte
 		runtimeBuf []byte
 		taskId     = fmt.Sprintf("%v_%v", time.Now().Format("20060102150405"), uuid.NewV4().String())
+		aggJob     stage.Job
 	)
 
 	var instructions []*pb.Instruction
@@ -155,7 +155,7 @@ func main() {
 			}
 			grpcConn[url] = pb.NewWorkerClient(_grpc)
 		}
-
+		aggJob = job
 	}
 	for _, instruction := range instructions {
 		client := grpcConn[instruction.GetLocation().GetRPC()]
