@@ -84,6 +84,7 @@ func executor(t *testing.T, sqlStr string) {
 	config.Load("../config.yaml")
 	//sqlStr := "/*+par=1*/select * from file.info.student"
 	//sqlStr := "select sum(a.var1), a.var2, a.data_source from test.test.csv as a limit 10"
+	hint := optimizer.ParseHint(sqlStr)
 	inputStream := antlr.NewInputStream(sqlStr)
 	lexer := parser.NewSqlLexer(parser.NewCaseChangingStream(inputStream, true))
 	p := parser.NewSqlParser(antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel))
@@ -130,11 +131,17 @@ func executor(t *testing.T, sqlStr string) {
 		heap.Push(executorHeap, util.NewItem(&pb.Location{Name: fmt.Sprintf("%v", i)}, 1))
 	}
 
-	stageJobs, err := stage.CreateJob(logicalTree, executorHeap, 1)
+	partitionNumber := config.Conf.Runtime.ParallelNumber
+	if hint.PartitionNumber > 0 {
+		partitionNumber = hint.PartitionNumber
+	}
+
+	stageJobs, err := stage.CreateJob(logicalTree, executorHeap, partitionNumber)
 	if err != nil {
 		t.Error(err)
 		return
 	}
+
 	var (
 		buf        []byte
 		runtimeBuf []byte

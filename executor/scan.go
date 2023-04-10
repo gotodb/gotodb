@@ -1,7 +1,6 @@
 package executor
 
 import (
-	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/connector"
 	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/pb"
@@ -80,14 +79,12 @@ func (e *Executor) RunScan() (err error) {
 	jobs := make(chan *row.RowsGroup)
 	var wg sync.WaitGroup
 
-	for i := 0; i < config.Conf.Runtime.ParallelNumber; i++ {
+	for _, rbWriter := range rbWriters {
 		wg.Add(1)
-		go func(parallelNumber int) {
+		go func(rbWriter *row.RowsBuffer) {
 			defer func() {
 				wg.Done()
 			}()
-
-			k := parallelNumber % len(e.Writers)
 
 			for {
 				rg, ok := <-jobs
@@ -107,18 +104,16 @@ func (e *Executor) RunScan() (err error) {
 						rg = rgTmp
 					}
 
-					if err := rbWriters[k].Write(rg); err != nil {
+					if err := rbWriter.Write(rg); err != nil {
 						e.AddLogInfo(err, pb.LogLevel_ERR)
 						break
 					}
-					k++
-					k = k % len(e.Writers)
 
 				} else {
 					break
 				}
 			}
-		}(i)
+		}(rbWriter)
 	}
 
 	// no partitions

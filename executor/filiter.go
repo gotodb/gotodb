@@ -61,7 +61,6 @@ func (e *Executor) RunFilter() (err error) {
 
 			for {
 				r, ok := <-jobs
-				//log.Println("========Filiter", row, ok)
 				if ok {
 					rg := row.NewRowsGroup(md)
 					rg.Write(r)
