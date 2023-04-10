@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/filesystem"
@@ -78,15 +79,17 @@ func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, f
 	var str string
 	var stop error
 	for _, filter := range filters {
-		if filter.Name == "options" {
+		if filter.Name == "_http" {
 			str = filter.Predicated.Predicate.RightValueExpression.PrimaryExpression.StringValue.Str
 			break
 		}
 	}
 
 	type Options struct {
-		Url      string `json:"url"`
-		DataPath string `json:"dataPath"`
+		Url      string        `json:"url"`
+		DataPath string        `json:"dataPath"`
+		Timeout  time.Duration `json:"timeout"`
+		Method   string        `json:"method"`
 	}
 
 	var options Options
@@ -96,7 +99,15 @@ func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, f
 		if stop != nil {
 			return nil, stop
 		}
-		resp, err := http.Get(options.Url)
+		client := &http.Client{}
+		if options.Timeout > 0 {
+			client.Timeout = options.Timeout * time.Millisecond
+		}
+		req, err := http.NewRequest(strings.ToUpper(options.Method), options.Url, nil)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := client.Do(req)
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +115,7 @@ func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, f
 		if err != nil {
 			return nil, err
 		}
-
+		_ = resp.Body.Close()
 		var iResp interface{}
 		switch resp.Header.Get("Content-Type") {
 		case "application/json":
@@ -141,7 +152,7 @@ func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, f
 				}
 				for _, index := range indexes {
 					col := rg.Metadata.Columns[index]
-					if col.ColumnName == "options" {
+					if col.ColumnName == "_http" {
 						rg.Vals[index] = append(rg.Vals[index], str)
 					} else if col.ColumnName == "_" {
 						rg.Vals[index] = append(rg.Vals[index], string(respBody))

@@ -41,6 +41,17 @@ func (s *worker) SendInstruction(ctx context.Context, instruction *pb.Instructio
 		executor.Delete(instruction.Location.Name)
 		return empty, err
 	}
+
+	if _, err := exec.SetupWriters(ctx, nil); err != nil {
+		executor.Delete(instruction.Location.Name)
+		return empty, err
+	}
+
+	if _, err := exec.SetupReaders(ctx, nil); err != nil {
+		executor.Delete(instruction.Location.Name)
+		return empty, err
+	}
+
 	return empty, err
 }
 

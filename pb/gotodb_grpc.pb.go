@@ -23,8 +23,6 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type WorkerClient interface {
 	SendInstruction(ctx context.Context, in *Instruction, opts ...grpc.CallOption) (*Empty, error)
-	SetupWriters(ctx context.Context, in *Location, opts ...grpc.CallOption) (*Empty, error)
-	SetupReaders(ctx context.Context, in *Location, opts ...grpc.CallOption) (*Empty, error)
 	Run(ctx context.Context, in *Location, opts ...grpc.CallOption) (*Empty, error)
 }
 
@@ -45,24 +43,6 @@ func (c *workerClient) SendInstruction(ctx context.Context, in *Instruction, opt
 	return out, nil
 }
 
-func (c *workerClient) SetupWriters(ctx context.Context, in *Location, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.Worker/SetupWriters", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *workerClient) SetupReaders(ctx context.Context, in *Location, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.Worker/SetupReaders", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *workerClient) Run(ctx context.Context, in *Location, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.Worker/Run", in, out, opts...)
@@ -77,8 +57,6 @@ func (c *workerClient) Run(ctx context.Context, in *Location, opts ...grpc.CallO
 // for forward compatibility
 type WorkerServer interface {
 	SendInstruction(context.Context, *Instruction) (*Empty, error)
-	SetupWriters(context.Context, *Location) (*Empty, error)
-	SetupReaders(context.Context, *Location) (*Empty, error)
 	Run(context.Context, *Location) (*Empty, error)
 	mustEmbedUnimplementedWorkerServer()
 }
@@ -89,12 +67,6 @@ type UnimplementedWorkerServer struct {
 
 func (UnimplementedWorkerServer) SendInstruction(context.Context, *Instruction) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendInstruction not implemented")
-}
-func (UnimplementedWorkerServer) SetupWriters(context.Context, *Location) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetupWriters not implemented")
-}
-func (UnimplementedWorkerServer) SetupReaders(context.Context, *Location) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetupReaders not implemented")
 }
 func (UnimplementedWorkerServer) Run(context.Context, *Location) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Run not implemented")
@@ -130,42 +102,6 @@ func _Worker_SendInstruction_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Worker_SetupWriters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Location)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WorkerServer).SetupWriters(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.Worker/SetupWriters",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WorkerServer).SetupWriters(ctx, req.(*Location))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Worker_SetupReaders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Location)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WorkerServer).SetupReaders(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.Worker/SetupReaders",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WorkerServer).SetupReaders(ctx, req.(*Location))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Worker_Run_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Location)
 	if err := dec(in); err != nil {
@@ -194,14 +130,6 @@ var Worker_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendInstruction",
 			Handler:    _Worker_SendInstruction_Handler,
-		},
-		{
-			MethodName: "SetupWriters",
-			Handler:    _Worker_SetupWriters_Handler,
-		},
-		{
-			MethodName: "SetupReaders",
-			Handler:    _Worker_SetupReaders_Handler,
 		},
 		{
 			MethodName: "Run",

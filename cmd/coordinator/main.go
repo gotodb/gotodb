@@ -44,8 +44,7 @@ func (n WorkerNodes) GetExecutorLoc() *pb.Location {
 	if len(workerNode) == 0 {
 		return nil
 	}
-	num := len(workerNode)
-	keys := make([]string, num)
+	var keys []string
 	for v := range workerNode {
 		keys = append(keys, v)
 	}
@@ -74,8 +73,9 @@ func main() {
 	}
 	fmt.Println("start gotodb coordinator")
 	workerDiscovery()
-	sqlStr := "select a.var1, a.var2, a.data_source from test.test.csv as a limit 10"
+	sqlStr := "/*+partition_number=4*/select * from http.toutiao.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue?recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }'"
 	//sqlStr := "show COLUMNS from test.test.csv"
+	hint := optimizer.ParseHint(sqlStr)
 	inputStream := antlr.NewInputStream(sqlStr)
 	lexer := parser.NewSqlLexer(parser.NewCaseChangingStream(inputStream, true))
 	p := parser.NewSqlParser(antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel))
@@ -116,7 +116,11 @@ func main() {
 		return
 	}
 
-	stageJobs, err := stage.CreateJob(logicalTree, workerNode, 1)
+	partitionNumber := config.Conf.Runtime.ParallelNumber
+	if hint.PartitionNumber > 0 {
+		partitionNumber = hint.PartitionNumber
+	}
+	stageJobs, err := stage.CreateJob(logicalTree, workerNode, partitionNumber)
 	if err != nil {
 		panic(err)
 		return
@@ -163,18 +167,10 @@ func main() {
 			logger.Errorf("failed to SendInstruction: %v", err)
 			break
 		}
-		if _, err = client.SetupWriters(context.Background(), instruction.GetLocation()); err != nil {
-			logger.Errorf("failed to SetupWriters: %v", err)
-			break
-		}
 	}
 	var wg sync.WaitGroup
 	for _, instruction := range instructions {
 		client := grpcConn[instruction.GetLocation().GetRPC()]
-		if _, err = client.SetupReaders(context.Background(), instruction.GetLocation()); err != nil {
-			logger.Errorf("failed to SetupReaders: %v", err)
-			break
-		}
 		wg.Add(1)
 		go func(instruction *pb.Instruction) {
 			defer wg.Done()

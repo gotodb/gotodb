@@ -6,8 +6,6 @@ package pb;
 
 service Worker {
   rpc SendInstruction(Instruction) returns (Empty) {}
-  rpc SetupWriters(Location) returns (Empty) {}
-  rpc SetupReaders(Location) returns (Empty) {}
   rpc Run(Location) returns (Empty) {}
 }
 

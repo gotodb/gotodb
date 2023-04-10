@@ -179,7 +179,10 @@ func (e *Executor) SetupReaders(ctx context.Context, empty *pb.Empty) (*pb.Empty
 		logger.Infof("connect to %v", location)
 		bytes, _ := msgpack.Marshal(location)
 
-		conn.Write(bytes)
+		if _, err := conn.Write(bytes); err != nil {
+			logger.Errorf("failed to write to input channel %v: %v", location, err)
+			return empty, err
+		}
 
 		go func(r io.Reader) {
 			err := util.CopyBuffer(r, pw)
