@@ -73,6 +73,7 @@ func (c *Http) GetPartitionInfo() (*partition.Info, error) {
 
 func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) func(indexes []int) (*row.RowsGroup, error) {
 	var str string
+	var stop error
 	for _, filter := range filters {
 		if filter.Name == "options" {
 			str = filter.Predicated.Predicate.RightValueExpression.PrimaryExpression.StringValue.Str
@@ -81,69 +82,67 @@ func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, f
 	}
 
 	type Options struct {
-		Url string `json:"url"`
+		Url      string `json:"url"`
+		DataPath string `json:"dataPath"`
 	}
 
 	var options Options
-
-	if err := json.Unmarshal([]byte(str), &options); err != nil {
-		return func(indexes []int) (*row.RowsGroup, error) {
-			return nil, err
-		}
-	}
-
-	resp, err := http.Get(options.Url)
-	if err != nil {
-		return func(indexes []int) (*row.RowsGroup, error) {
-			return nil, err
-		}
-	}
-	content, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return func(indexes []int) (*row.RowsGroup, error) {
-			return nil, err
-		}
-	}
-
-	var result interface{}
-	err = json.Unmarshal(content, &result)
-	if err != nil {
-		return func(indexes []int) (*row.RowsGroup, error) {
-			return nil, err
-		}
-	}
+	stop = json.Unmarshal([]byte(str), &options)
 
 	return func(indexes []int) (*row.RowsGroup, error) {
-		if result == nil {
-			return nil, io.EOF
+		if stop != nil {
+			return nil, stop
 		}
-		rg := row.NewRowsGroup(md.SelectColumnsByIndexes(indexes))
+		resp, err := http.Get(options.Url)
+		if err != nil {
+			return nil, err
+		}
+		respBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
 
-		for _, index := range indexes {
-			col := rg.Metadata.Columns[index]
-			if col.ColumnName == "options" {
-				rg.Vals[index] = append(rg.Vals[index], str)
-			} else if col.ColumnName == "_" {
-				rg.Vals[index] = append(rg.Vals[index], string(content))
+		var iResp interface{}
+		switch resp.Header.Get("Content-Type") {
+		case "application/json":
+			if err := json.Unmarshal(respBody, &iResp); err != nil {
+				return nil, err
 			}
 		}
 
-		switch result.(type) {
-		case map[string]interface{}:
-			for _, index := range indexes {
-				col := rg.Metadata.Columns[index]
-				if value, ok := result.(map[string]interface{})[col.ColumnName]; ok {
-					rg.Vals[index] = append(rg.Vals[index], gtype.ToType(value, md.Columns[index].ColumnType))
-				} else {
-					rg.Vals[index] = append(rg.Vals[index], nil)
+		rg := row.NewRowsGroup(md.SelectColumnsByIndexes(indexes))
+		var iData = iResp
+		if options.DataPath != "" {
+			dataPaths := strings.Split(options.DataPath, ".")
+			for _, path := range dataPaths {
+				if data, ok := iData.(map[string]interface{}); !ok {
+					return rg, fmt.Errorf("response data type error, not json object %v", iResp)
+				} else if iData, ok = data[path]; !ok {
+					return rg, fmt.Errorf("response data path error, %v not exsits data path %s", iResp, path)
 				}
 			}
-			rg.RowsNumber++
-		case []map[string]interface{}:
-			for _, r := range result.([]map[string]interface{}) {
+
+		}
+
+	typeAssert:
+		switch iData.(type) {
+		case map[string]interface{}:
+			iData = []interface{}{iData}
+			goto typeAssert
+		case []interface{}:
+			for _, item := range iData.([]interface{}) {
+				var data map[string]interface{}
+				var ok bool
+				if data, ok = item.(map[string]interface{}); !ok {
+					return rg, fmt.Errorf("response data type error, can not assert %v", item)
+				}
 				for _, index := range indexes {
 					col := rg.Metadata.Columns[index]
-					if value, ok := r[col.ColumnName]; ok {
+					if col.ColumnName == "options" {
+						rg.Vals[index] = append(rg.Vals[index], str)
+					} else if col.ColumnName == "_" {
+						rg.Vals[index] = append(rg.Vals[index], string(respBody))
+					} else if value, ok := data[col.ColumnName]; ok {
 						rg.Vals[index] = append(rg.Vals[index], gtype.ToType(value, md.Columns[index].ColumnType))
 					} else {
 						rg.Vals[index] = append(rg.Vals[index], nil)
@@ -153,7 +152,7 @@ func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, f
 			}
 		}
 
-		result = nil
+		stop = io.EOF
 		return rg, nil
 	}
 }

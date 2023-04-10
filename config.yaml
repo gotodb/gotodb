@@ -19,7 +19,7 @@ http-connector:
     schema: toutiao
     table: "*"
     data-path:
-    column-names: [ etcdserver, etcdcluster, options, _ ]
+    column-names: [ key, value, options, _ ]
     column-types: [ STRING, STRING, STRING, STRING ]
 
 etcd:
