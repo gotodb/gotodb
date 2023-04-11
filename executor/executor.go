@@ -70,7 +70,10 @@ func (e *Executor) AddLogInfo(info interface{}, level pb.LogLevel) {
 
 func (e *Executor) Clear() {
 	for _, writer := range e.Writers {
-		if w, ok := writer.(io.WriteCloser); ok {
+		switch w := writer.(type) {
+		case io.WriteCloser:
+			_ = w.Close()
+		case net.Conn:
 			_ = w.Close()
 		}
 	}

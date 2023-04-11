@@ -31,7 +31,6 @@ func (e *Executor) RunScan() (err error) {
 	defer func() {
 		for i := 0; i < len(e.Writers); i++ {
 			util.WriteEOFMessage(e.Writers[i])
-			e.Writers[i].(io.WriteCloser).Close()
 		}
 	}()
 

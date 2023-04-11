@@ -74,8 +74,8 @@ func Query(w http.ResponseWriter, req *http.Request) {
 	var query struct {
 		SQL string `json:"sql"`
 	}
-	err := json.NewDecoder(req.Body).Decode(&query)
-	if err == nil && query.SQL != "" {
+
+	if err := json.NewDecoder(req.Body).Decode(&query); err == nil && query.SQL != "" {
 		sqlStr = query.SQL
 	}
 
@@ -88,36 +88,35 @@ func Query(w http.ResponseWriter, req *http.Request) {
 	p.AddErrorListener(errListener)
 	tree := p.SingleStatement()
 	if errListener.HasError() {
-		fmt.Fprintf(w, "%v", errListener)
+		_, _ = fmt.Fprintf(w, "%v", errListener)
 		return
 	}
 
 	runtime := config.NewRuntime()
 	logicalTree := plan.NewNodeFromSingleStatement(runtime, tree)
 
-	//SetMetaData
 	if err := logicalTree.SetMetadata(); err != nil {
-		fmt.Fprintf(w, "%v", err)
+		_, _ = fmt.Fprintf(w, "%v", err)
 		return
 	}
 
 	if err := optimizer.DeleteRenameNode(logicalTree); err != nil {
-		fmt.Fprintf(w, "%v", err)
+		_, _ = fmt.Fprintf(w, "%v", err)
 		return
 	}
 
 	if err := optimizer.FilterColumns(logicalTree, []string{}); err != nil {
-		fmt.Fprintf(w, "%v", err)
+		_, _ = fmt.Fprintf(w, "%v", err)
 		return
 	}
 
 	if err := optimizer.PredicatePushDown(logicalTree, []*operator.BooleanExpressionNode{}); err != nil {
-		fmt.Fprintf(w, "%v", err)
+		_, _ = fmt.Fprintf(w, "%v", err)
 		return
 	}
 
 	if err := optimizer.ExtractAggFunc(logicalTree); err != nil {
-		fmt.Fprintf(w, "%v", err)
+		_, _ = fmt.Fprintf(w, "%v", err)
 		return
 	}
 
@@ -127,7 +126,7 @@ func Query(w http.ResponseWriter, req *http.Request) {
 	}
 	stageJobs, err := stage.CreateJob(logicalTree, workerNode, partitionNumber)
 	if err != nil {
-		fmt.Fprintf(w, "%v", err)
+		_, _ = fmt.Fprintf(w, "%v", err)
 		return
 	}
 	var (
@@ -159,7 +158,7 @@ func Query(w http.ResponseWriter, req *http.Request) {
 		if _, ok := grpcConn[url]; !ok {
 			_grpc, err := grpc.Dial(url, grpc.WithTransportCredentials(insecure.NewCredentials()))
 			if err != nil {
-				logger.Errorf("failed to dial: %v", err)
+				_, _ = fmt.Fprintf(w, "failed to dial: %v", err)
 				break
 			}
 			grpcConn[url] = pb.NewWorkerClient(_grpc)
@@ -169,7 +168,7 @@ func Query(w http.ResponseWriter, req *http.Request) {
 	for _, instruction := range instructions {
 		client := grpcConn[instruction.GetLocation().GetRPC()]
 		if _, err = client.SendInstruction(context.Background(), instruction); err != nil {
-			logger.Errorf("failed to SendInstruction: %v", err)
+			_, _ = fmt.Fprintf(w, "failed to SendInstruction: %v", err)
 			break
 		}
 	}
@@ -193,19 +192,22 @@ func Query(w http.ResponseWriter, req *http.Request) {
 
 	conn, err := net.Dial("tcp", aggLoc.GetURL())
 	if err != nil {
-		logger.Errorf("failed to connect to input channel %v: %v", aggLoc, err)
+		_, _ = fmt.Fprintf(w, "failed to connect to input channel %v: %v", aggLoc, err)
 		return
 	}
 	bytes, _ := msgpack.Marshal(aggLoc)
-	conn.Write(bytes)
+	if _, err = conn.Write(bytes); err != nil {
+		_, _ = fmt.Fprintf(w, "write loc err: %v", err)
+		return
+	}
 
 	if err = util.ReadObject(conn, md); err != nil {
-		logger.Errorf("read md err: %v", err)
+		_, _ = fmt.Fprintf(w, "read md err: %v", err)
 		return
 	}
 
 	if msg, err = json.MarshalIndent(md, "", "    "); err != nil {
-		logger.Errorf("json marshal: %v", err)
+		_, _ = fmt.Fprintf(w, "json marshal: %v", err)
 		return
 	}
 
@@ -231,9 +233,7 @@ func Query(w http.ResponseWriter, req *http.Request) {
 		for i := 0; i < len(r.Vals); i++ {
 			res = append(res, fmt.Sprintf("%v", r.Vals[i]))
 		}
-		msg = []byte(strings.Join(res, ","))
-		msg = append(msg, []byte("\n")...)
-
+		msg = []byte(strings.Join(res, ",") + "\n")
 		w.Write(msg)
 	}
 	wg.Wait()
@@ -271,7 +271,6 @@ func workerDiscovery() {
 	for _, v := range getRes.Kvs {
 		key := string(v.Key)
 		s := strings.Split(string(v.Value), ":")
-		println(s)
 		rpcPort, _ := strconv.Atoi(s[1])
 		tcpPort, _ := strconv.Atoi(s[2])
 		workerNode[key] = &pb.Location{
