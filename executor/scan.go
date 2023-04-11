@@ -14,11 +14,14 @@ import (
 
 func (e *Executor) SetInstructionScan(instruction *pb.Instruction) error {
 	var job stage.ScanJob
-	var err error
-	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
+	if err := msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
-	job.PartitionInfo.Decode() //partition info must decode firstly
+
+	if err := job.PartitionInfo.Decode(); err != nil {
+		return err
+	} //partition info must decode firstly
+
 	e.StageJob = &job
 	return nil
 }

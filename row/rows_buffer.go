@@ -40,92 +40,92 @@ func NewRowsBuffer(md *metadata.Metadata, reader io.Reader, writer io.Writer) *R
 	return res
 }
 
-func (self *RowsBuffer) ClearValues() {
-	colNum := self.MD.GetColumnNumber()
-	self.ValueBuffers = make([][]interface{}, colNum)
-	self.ValueNilFlags = make([][]interface{}, colNum)
+func (rb *RowsBuffer) ClearValues() {
+	colNum := rb.MD.GetColumnNumber()
+	rb.ValueBuffers = make([][]interface{}, colNum)
+	rb.ValueNilFlags = make([][]interface{}, colNum)
 
-	keyNum := self.MD.GetKeyNumber()
-	self.KeyBuffers = make([][]interface{}, keyNum)
-	self.KeyNilFlags = make([][]interface{}, keyNum)
-	self.Index = 0
-	self.RowsNumber = 0
+	keyNum := rb.MD.GetKeyNumber()
+	rb.KeyBuffers = make([][]interface{}, keyNum)
+	rb.KeyNilFlags = make([][]interface{}, keyNum)
+	rb.Index = 0
+	rb.RowsNumber = 0
 
 }
 
-func (self *RowsBuffer) Flush() error {
-	self.Lock()
-	defer self.Unlock()
-	if err := self.writeRows(); err != nil {
+func (rb *RowsBuffer) Flush() error {
+	rb.Lock()
+	defer rb.Unlock()
+	if err := rb.writeRows(); err != nil {
 		return err
 	}
-	if err := util.WriteEOFMessage(self.Writer); err != nil {
+	if err := util.WriteEOFMessage(rb.Writer); err != nil {
 		return err
 	}
 	return nil
 }
 
-//Write rows
-func (self *RowsBuffer) writeRows() error {
-	defer self.ClearValues()
-	ln := len(self.ValueBuffers)
+// Write rows
+func (rb *RowsBuffer) writeRows() error {
+	defer rb.ClearValues()
+	ln := len(rb.ValueBuffers)
 
 	//for 0 cols, just need send the number of rows
 	if ln <= 0 {
-		buf := gtype.EncodeValues([]interface{}{int64(self.RowsNumber)}, gtype.INT64)
-		return util.WriteMessage(self.Writer, buf)
+		buf := gtype.EncodeValues([]interface{}{int64(rb.RowsNumber)}, gtype.INT64)
+		return util.WriteMessage(rb.Writer, buf)
 	}
 
 	//for several cols
 	for i := 0; i < ln; i++ {
-		col := self.ValueNilFlags[i]
+		col := rb.ValueNilFlags[i]
 		buf := gtype.EncodeBool(col)
-		if err := util.WriteMessage(self.Writer, buf); err != nil {
+		if err := util.WriteMessage(rb.Writer, buf); err != nil {
 			return err
 		}
 
-		col = self.ValueBuffers[i]
-		t, err := self.MD.GetTypeByIndex(i)
+		col = rb.ValueBuffers[i]
+		t, err := rb.MD.GetTypeByIndex(i)
 		if err != nil {
 			return err
 		}
 		buf = gtype.EncodeValues(col, t)
-		if err := util.WriteMessage(self.Writer, buf); err != nil {
+		if err := util.WriteMessage(rb.Writer, buf); err != nil {
 			return err
 		}
 	}
 
-	ln = len(self.KeyBuffers)
+	ln = len(rb.KeyBuffers)
 	for i := 0; i < ln; i++ {
-		col := self.KeyNilFlags[i]
+		col := rb.KeyNilFlags[i]
 		buf := gtype.EncodeBool(col)
-		if err := util.WriteMessage(self.Writer, buf); err != nil {
+		if err := util.WriteMessage(rb.Writer, buf); err != nil {
 			return err
 		}
 
-		col = self.KeyBuffers[i]
-		t, err := self.MD.GetKeyTypeByIndex(i)
+		col = rb.KeyBuffers[i]
+		t, err := rb.MD.GetKeyTypeByIndex(i)
 		if err != nil {
 			return err
 		}
 		buf = gtype.EncodeValues(col, t)
-		if err := util.WriteMessage(self.Writer, buf); err != nil {
+		if err := util.WriteMessage(rb.Writer, buf); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-//read rows
-func (self *RowsBuffer) readRows() error {
+// read rows
+func (rb *RowsBuffer) readRows() error {
 	defer func() {
-		self.Index = 0
+		rb.Index = 0
 	}()
 
-	colNum := self.MD.GetColumnNumber()
+	colNum := rb.MD.GetColumnNumber()
 	//for 0 cols
 	if colNum <= 0 {
-		buf, err := util.ReadMessage(self.Reader)
+		buf, err := util.ReadMessage(rb.Reader)
 		if err != nil {
 			return err
 		}
@@ -133,27 +133,27 @@ func (self *RowsBuffer) readRows() error {
 		if err != nil || len(vals) <= 0 {
 			return err
 		}
-		self.RowsNumber = int(vals[0].(int64))
+		rb.RowsNumber = int(vals[0].(int64))
 	}
 
 	//for cols
 	for i := 0; i < colNum; i++ {
-		buf, err := util.ReadMessage(self.Reader)
+		buf, err := util.ReadMessage(rb.Reader)
 		if err != nil {
 			return err
 		}
 
-		self.ValueNilFlags[i], err = gtype.DecodeBOOL(bytes.NewReader(buf))
+		rb.ValueNilFlags[i], err = gtype.DecodeBOOL(bytes.NewReader(buf))
 		if err != nil {
 			return err
 		}
 
-		buf, err = util.ReadMessage(self.Reader)
+		buf, err = util.ReadMessage(rb.Reader)
 		if err != nil {
 			return err
 		}
 
-		t, err := self.MD.GetTypeByIndex(i)
+		t, err := rb.MD.GetTypeByIndex(i)
 		if err != nil {
 			return err
 		}
@@ -162,34 +162,34 @@ func (self *RowsBuffer) readRows() error {
 			return err
 		}
 
-		self.ValueBuffers[i] = make([]interface{}, len(self.ValueNilFlags[i]))
+		rb.ValueBuffers[i] = make([]interface{}, len(rb.ValueNilFlags[i]))
 		k := 0
-		for j := 0; j < len(self.ValueNilFlags[i]) && k < len(values); j++ {
-			if self.ValueNilFlags[i][j].(bool) {
-				self.ValueBuffers[i][j] = values[k]
+		for j := 0; j < len(rb.ValueNilFlags[i]) && k < len(values); j++ {
+			if rb.ValueNilFlags[i][j].(bool) {
+				rb.ValueBuffers[i][j] = values[k]
 				k++
 			} else {
-				self.ValueBuffers[i][j] = nil
+				rb.ValueBuffers[i][j] = nil
 			}
 		}
 
-		self.RowsNumber = len(self.ValueNilFlags[i])
+		rb.RowsNumber = len(rb.ValueNilFlags[i])
 
 	}
 
-	keyNum := self.MD.GetKeyNumber()
+	keyNum := rb.MD.GetKeyNumber()
 	for i := 0; i < keyNum; i++ {
-		buf, err := util.ReadMessage(self.Reader)
+		buf, err := util.ReadMessage(rb.Reader)
 		if err != nil {
 			return err
 		}
-		self.KeyNilFlags[i], err = gtype.DecodeBOOL(bytes.NewReader(buf))
+		rb.KeyNilFlags[i], err = gtype.DecodeBOOL(bytes.NewReader(buf))
 		if err != nil {
 			return err
 		}
 
-		buf, err = util.ReadMessage(self.Reader)
-		t, err := self.MD.GetKeyTypeByIndex(i)
+		buf, err = util.ReadMessage(rb.Reader)
+		t, err := rb.MD.GetKeyTypeByIndex(i)
 		if err != nil {
 			return err
 		}
@@ -198,14 +198,14 @@ func (self *RowsBuffer) readRows() error {
 			return err
 		}
 
-		self.KeyBuffers[i] = make([]interface{}, len(self.KeyNilFlags[i]))
+		rb.KeyBuffers[i] = make([]interface{}, len(rb.KeyNilFlags[i]))
 		k := 0
-		for j := 0; j < len(self.KeyNilFlags[i]) && k < len(keys); j++ {
-			if self.KeyNilFlags[i][j].(bool) {
-				self.KeyBuffers[i][j] = keys[k]
+		for j := 0; j < len(rb.KeyNilFlags[i]) && k < len(keys); j++ {
+			if rb.KeyNilFlags[i][j].(bool) {
+				rb.KeyBuffers[i][j] = keys[k]
 				k++
 			} else {
-				self.KeyBuffers[i][j] = nil
+				rb.KeyBuffers[i][j] = nil
 			}
 		}
 	}
@@ -214,31 +214,31 @@ func (self *RowsBuffer) readRows() error {
 
 }
 
-func (self *RowsBuffer) WriteRow(rows ...*Row) error {
-	self.Lock()
-	defer self.Unlock()
+func (rb *RowsBuffer) WriteRow(rows ...*Row) error {
+	rb.Lock()
+	defer rb.Unlock()
 	for _, row := range rows {
 		for i, val := range row.Vals {
 			if val != nil {
-				self.ValueBuffers[i] = append(self.ValueBuffers[i], val)
-				self.ValueNilFlags[i] = append(self.ValueNilFlags[i], true)
+				rb.ValueBuffers[i] = append(rb.ValueBuffers[i], val)
+				rb.ValueNilFlags[i] = append(rb.ValueNilFlags[i], true)
 			} else {
-				self.ValueNilFlags[i] = append(self.ValueNilFlags[i], false)
+				rb.ValueNilFlags[i] = append(rb.ValueNilFlags[i], false)
 			}
 		}
 
 		for i, key := range row.Keys {
 			if key != nil {
-				self.KeyBuffers[i] = append(self.KeyBuffers[i], key)
-				self.KeyNilFlags[i] = append(self.KeyNilFlags[i], true)
+				rb.KeyBuffers[i] = append(rb.KeyBuffers[i], key)
+				rb.KeyNilFlags[i] = append(rb.KeyNilFlags[i], true)
 			} else {
-				self.KeyNilFlags[i] = append(self.KeyNilFlags[i], false)
+				rb.KeyNilFlags[i] = append(rb.KeyNilFlags[i], false)
 			}
 		}
-		self.RowsNumber++
+		rb.RowsNumber++
 
-		if self.RowsNumber >= self.BufferSize {
-			if err := self.writeRows(); err != nil {
+		if rb.RowsNumber >= rb.BufferSize {
+			if err := rb.writeRows(); err != nil {
 				return err
 			}
 		}
@@ -246,42 +246,42 @@ func (self *RowsBuffer) WriteRow(rows ...*Row) error {
 	return nil
 }
 
-func (self *RowsBuffer) ReadRow() (*Row, error) {
-	self.Lock()
-	defer self.Unlock()
+func (rb *RowsBuffer) ReadRow() (*Row, error) {
+	rb.Lock()
+	defer rb.Unlock()
 
-	for self.Index >= self.RowsNumber {
-		self.ClearValues()
-		if err := self.readRows(); err != nil {
+	for rb.Index >= rb.RowsNumber {
+		rb.ClearValues()
+		if err := rb.readRows(); err != nil {
 			return nil, err
 		}
 	}
 
 	row := RowPool.Get().(*Row)
 	row.Clear()
-	row.Vals = make([]interface{}, len(self.ValueBuffers))
-	for i, col := range self.ValueBuffers {
-		row.Vals[i] = col[self.Index]
+	row.Vals = make([]interface{}, len(rb.ValueBuffers))
+	for i, col := range rb.ValueBuffers {
+		row.Vals[i] = col[rb.Index]
 	}
 
-	row.Keys = make([]interface{}, len(self.KeyBuffers))
-	for i, col := range self.KeyBuffers {
-		row.Keys[i] = col[self.Index]
+	row.Keys = make([]interface{}, len(rb.KeyBuffers))
+	for i, col := range rb.KeyBuffers {
+		row.Keys[i] = col[rb.Index]
 	}
-	self.Index++
+	rb.Index++
 	return row, nil
 }
 
-func (self *RowsBuffer) Write(rg *RowsGroup) error {
-	self.Lock()
-	defer self.Unlock()
+func (rb *RowsBuffer) Write(rg *RowsGroup) error {
+	rb.Lock()
+	defer rb.Unlock()
 	for i, vs := range rg.Vals {
 		for _, v := range vs {
 			if v != nil {
-				self.ValueBuffers[i] = append(self.ValueBuffers[i], v)
-				self.ValueNilFlags[i] = append(self.ValueNilFlags[i], true)
+				rb.ValueBuffers[i] = append(rb.ValueBuffers[i], v)
+				rb.ValueNilFlags[i] = append(rb.ValueNilFlags[i], true)
 			} else {
-				self.ValueNilFlags[i] = append(self.ValueNilFlags[i], false)
+				rb.ValueNilFlags[i] = append(rb.ValueNilFlags[i], false)
 			}
 		}
 	}
@@ -289,49 +289,49 @@ func (self *RowsBuffer) Write(rg *RowsGroup) error {
 	for i, ks := range rg.Keys {
 		for _, k := range ks {
 			if k != nil {
-				self.KeyBuffers[i] = append(self.KeyBuffers[i], k)
-				self.KeyNilFlags[i] = append(self.KeyNilFlags[i], true)
+				rb.KeyBuffers[i] = append(rb.KeyBuffers[i], k)
+				rb.KeyNilFlags[i] = append(rb.KeyNilFlags[i], true)
 			} else {
-				self.KeyNilFlags[i] = append(self.KeyNilFlags[i], false)
+				rb.KeyNilFlags[i] = append(rb.KeyNilFlags[i], false)
 			}
 		}
 	}
-	self.RowsNumber += rg.RowsNumber
+	rb.RowsNumber += rg.RowsNumber
 
-	if self.RowsNumber >= self.BufferSize {
-		if err := self.writeRows(); err != nil {
+	if rb.RowsNumber >= rb.BufferSize {
+		if err := rb.writeRows(); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (self *RowsBuffer) Read() (*RowsGroup, error) {
-	self.Lock()
-	defer self.Unlock()
+func (rb *RowsBuffer) Read() (*RowsGroup, error) {
+	rb.Lock()
+	defer rb.Unlock()
 
-	for self.Index >= self.RowsNumber {
-		self.ClearValues()
-		if err := self.readRows(); err != nil {
+	for rb.Index >= rb.RowsNumber {
+		rb.ClearValues()
+		if err := rb.readRows(); err != nil {
 			return nil, err
 		}
 	}
 
-	rg := NewRowsGroup(self.MD)
-	readSize := self.BufferSize
-	if readSize > self.RowsNumber-self.Index {
-		readSize = self.RowsNumber - self.Index
+	rg := NewRowsGroup(rb.MD)
+	readSize := rb.BufferSize
+	if readSize > rb.RowsNumber-rb.Index {
+		readSize = rb.RowsNumber - rb.Index
 	}
 
 	for i := 0; i < len(rg.Vals); i++ {
-		rg.Vals[i] = append(rg.Vals[i], self.ValueBuffers[i][self.Index:self.Index+readSize]...)
+		rg.Vals[i] = append(rg.Vals[i], rb.ValueBuffers[i][rb.Index:rb.Index+readSize]...)
 	}
 
 	for i := 0; i < len(rg.Keys); i++ {
-		rg.Keys[i] = append(rg.Keys[i], self.KeyBuffers[i][self.Index:self.Index+readSize]...)
+		rg.Keys[i] = append(rg.Keys[i], rb.KeyBuffers[i][rb.Index:rb.Index+readSize]...)
 	}
 
-	self.Index += readSize
+	rb.Index += readSize
 	rg.RowsNumber = readSize
 
 	return rg, nil

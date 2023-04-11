@@ -7,7 +7,6 @@ import (
 	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/stage"
-	"github.com/gotodb/gotodb/util"
 	"github.com/vmihailenco/msgpack"
 	"io"
 	"net"
@@ -18,11 +17,10 @@ type Executor struct {
 	sync.Mutex
 	Name string
 
-	Instruction    *pb.Instruction
-	StageJob       stage.Job
-	OutputConnChan []chan net.Conn
-	Readers        []io.Reader
-	Writers        []io.Writer
+	Instruction *pb.Instruction
+	StageJob    stage.Job
+	Readers     []io.Reader
+	Writers     []io.Writer
 
 	Status          pb.TaskStatus
 	IsStatusChanged bool
@@ -80,12 +78,10 @@ func (e *Executor) Clear() {
 	}
 }
 
-func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruction) (*pb.Empty, error) {
-	res := &pb.Empty{}
-
+func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruction) error {
 	var runtime config.Runtime
 	if err := msgpack.Unmarshal(instruction.RuntimeBytes, &runtime); err != nil {
-		return res, err
+		return err
 	}
 	config.Conf.Runtime = &runtime
 
@@ -94,110 +90,71 @@ func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruct
 	e.Instruction = instruction
 	e.Status = pb.TaskStatus_RUNNING
 	e.IsStatusChanged = true
+	var err error
 	switch nodeType {
 	case stage.JobTypeScan:
-		return res, e.SetInstructionScan(instruction)
+		err = e.SetInstructionScan(instruction)
 	case stage.JobTypeSelect:
-		return res, e.SetInstructionSelect(instruction)
+		err = e.SetInstructionSelect(instruction)
 	case stage.JobTypeGroupBy:
-		return res, e.SetInstructionGroupBy(instruction)
+		err = e.SetInstructionGroupBy(instruction)
 	case stage.JobTypeJoin:
-		return res, e.SetInstructionJoin(instruction)
+		err = e.SetInstructionJoin(instruction)
 	case stage.JobTypeHashJoin:
-		return res, e.SetInstructionHashJoin(instruction)
+		err = e.SetInstructionHashJoin(instruction)
 	case stage.JobTypeShuffle:
-		return res, e.SetInstructionShuffle(instruction)
+		err = e.SetInstructionShuffle(instruction)
 	case stage.JobTypeDuplicate:
-		return res, e.SetInstructionDuplicate(instruction)
+		err = e.SetInstructionDuplicate(instruction)
 	case stage.JobTypeAggregate:
-		return res, e.SetInstructionAggregate(instruction)
+		err = e.SetInstructionAggregate(instruction)
 	case stage.JobTypeAggregateFuncGlobal:
-		return res, e.SetInstructionAggregateFuncGlobal(instruction)
+		err = e.SetInstructionAggregateFuncGlobal(instruction)
 	case stage.JobTypeAggregateFuncLocal:
-		return res, e.SetInstructionAggregateFuncLocal(instruction)
+		err = e.SetInstructionAggregateFuncLocal(instruction)
 	case stage.JobTypeLimit:
-		return res, e.SetInstructionLimit(instruction)
+		err = e.SetInstructionLimit(instruction)
 	case stage.JobTypeFilter:
-		return res, e.SetInstructionFilter(instruction)
+		err = e.SetInstructionFilter(instruction)
 	case stage.JobTypeUnion:
-		return res, e.SetInstructionUnion(instruction)
+		err = e.SetInstructionUnion(instruction)
 	case stage.JobTypeOrderByLocal:
-		return res, e.SetInstructionOrderByLocal(instruction)
+		err = e.SetInstructionOrderByLocal(instruction)
 	case stage.JobTypeOrderBy:
-		return res, e.SetInstructionOrderBy(instruction)
+		err = e.SetInstructionOrderBy(instruction)
 	case stage.JobTypeShow:
-		return res, e.SetInstructionShow(instruction)
+		err = e.SetInstructionShow(instruction)
 	case stage.JobTypeBalance:
-		return res, e.SetInstructionBalance(instruction)
+		err = e.SetInstructionBalance(instruction)
 	case stage.JobTypeDistinctLocal:
-		return res, e.SetInstructionDistinctLocal(instruction)
+		err = e.SetInstructionDistinctLocal(instruction)
 	case stage.JobTypeDistinctGlobal:
-		return res, e.SetInstructionDistinctGlobal(instruction)
+		err = e.SetInstructionDistinctGlobal(instruction)
 	default:
 		e.Status = pb.TaskStatus_TODO
-		return res, fmt.Errorf("unknown node type")
+		err = fmt.Errorf("unknown node type")
 	}
-}
-
-func (e *Executor) SetupWriters(ctx context.Context, empty *pb.Empty) (*pb.Empty, error) {
-	logger.Infof("SetupWriters start")
-	var err error
-
-	for range e.StageJob.GetOutputs() {
-		pr, pw := io.Pipe()
-		e.Writers = append(e.Writers, pw)
-		outputConnChan := make(chan net.Conn)
-		e.OutputConnChan = append(e.OutputConnChan, outputConnChan)
-
-		go func() {
-			w := <-outputConnChan
-			err := util.CopyBuffer(pr, w)
-			if err != nil && err != io.EOF {
-				logger.Errorf("failed to CopyBuffer: %v", err)
-			}
-			if wc, ok := w.(io.WriteCloser); ok {
-				_ = wc.Close()
-			}
-		}()
+	if err != nil {
+		return err
 	}
-
-	logger.Infof("SetupWriters Output=%v", e.StageJob.GetOutputs())
-	return empty, err
-}
-
-func (e *Executor) SetupReaders(ctx context.Context, empty *pb.Empty) (*pb.Empty, error) {
-	var err error
-	logger.Infof("SetupReaders start")
+	e.Writers = make([]io.Writer, len(e.StageJob.GetOutputs()))
 	for _, location := range e.StageJob.GetInputs() {
-		pr, pw := io.Pipe()
-		e.Readers = append(e.Readers, pr)
 		conn, err := net.Dial("tcp", location.GetURL())
 		if err != nil {
 			logger.Errorf("failed to connect to input channel %v: %v", location, err)
-			return empty, err
+			return err
 		}
 		logger.Infof("connect to %v", location)
 		bytes, _ := msgpack.Marshal(location)
 
 		if _, err := conn.Write(bytes); err != nil {
 			logger.Errorf("failed to write to input channel %v: %v", location, err)
-			return empty, err
+			return err
 		}
-
-		go func(r io.Reader) {
-			err := util.CopyBuffer(r, pw)
-			if err != nil && err != io.EOF {
-				logger.Errorf("failed to CopyBuffer: %v", err)
-			}
-			_ = pw.Close()
-			if rc, ok := r.(io.ReadCloser); ok {
-				_ = rc.Close()
-			}
-		}(conn)
+		e.Readers = append(e.Readers, conn)
 	}
-
 	logger.Infof("SetupReaders Input=%v", e.StageJob.GetInputs())
-	return empty, err
+	return nil
 }
 
 func (e *Executor) Run(ctx context.Context, empty *pb.Empty) (*pb.Empty, error) {

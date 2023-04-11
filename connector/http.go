@@ -87,7 +87,7 @@ func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, f
 	_, _ = fmt.Sscanf(file.Location, "%d/%d", part, partitionNumber)
 
 	type Options struct {
-		Url         string        `json:"url"`
+		URL         string        `json:"url"`
 		URI         string        `json:"uri"`
 		DataPath    string        `json:"dataPath"`
 		Timeout     time.Duration `json:"timeout"`
@@ -204,7 +204,14 @@ func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, f
 			client.Timeout = options.Timeout * time.Millisecond
 		}
 
-		u := fmt.Sprintf("%s?%s", options.Url, options.URI)
+		separator := "?"
+		if strings.HasSuffix(options.URL, "?") {
+			separator = "&"
+		} else if strings.HasSuffix(options.URL, "&") || options.URI == "" {
+			separator = ""
+		}
+
+		u := options.URL + separator + options.URI
 		req, err := http.NewRequest(strings.ToUpper(options.Method), u, strings.NewReader(body))
 		if err != nil {
 			return nil, err

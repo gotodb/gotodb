@@ -23,12 +23,6 @@ var (
 
 var hostname string
 
-var etcdCfg = clientv3.Config{
-	Endpoints:            []string{},
-	DialTimeout:          time.Second * 5,
-	DialKeepAliveTimeout: time.Second * 5,
-}
-
 type worker struct {
 	pb.UnimplementedWorkerServer
 }
@@ -36,50 +30,12 @@ type worker struct {
 func (s *worker) SendInstruction(ctx context.Context, instruction *pb.Instruction) (*pb.Empty, error) {
 	empty := new(pb.Empty)
 	exec := executor.New(instruction.Location.Name)
-	_, err := exec.SendInstruction(ctx, instruction)
+	err := exec.SendInstruction(ctx, instruction)
 	if err != nil {
 		executor.Delete(instruction.Location.Name)
 		return empty, err
 	}
 
-	if _, err := exec.SetupWriters(ctx, nil); err != nil {
-		executor.Delete(instruction.Location.Name)
-		return empty, err
-	}
-
-	if _, err := exec.SetupReaders(ctx, nil); err != nil {
-		executor.Delete(instruction.Location.Name)
-		return empty, err
-	}
-
-	return empty, err
-}
-
-func (s *worker) SetupWriters(ctx context.Context, loc *pb.Location) (*pb.Empty, error) {
-	empty := new(pb.Empty)
-	exec, err := executor.Get(loc.Name)
-	if err != nil {
-		return empty, err
-	}
-
-	if _, err := exec.SetupWriters(ctx, nil); err != nil {
-		executor.Delete(loc.Name)
-		return empty, err
-	}
-	return empty, err
-}
-
-func (s *worker) SetupReaders(ctx context.Context, loc *pb.Location) (*pb.Empty, error) {
-	empty := new(pb.Empty)
-	exec, err := executor.Get(loc.Name)
-	if err != nil {
-		return empty, err
-	}
-
-	if _, err := exec.SetupReaders(ctx, nil); err != nil {
-		executor.Delete(loc.Name)
-		return empty, err
-	}
 	return empty, err
 }
 
@@ -91,7 +47,7 @@ func (s *worker) Run(ctx context.Context, loc *pb.Location) (*pb.Empty, error) {
 	}
 	defer executor.Delete(loc.Name)
 
-	if _, err := exec.Run(ctx, nil); err != nil {
+	if _, err := exec.Run(ctx, empty); err != nil {
 		return empty, err
 	}
 	return empty, err
@@ -120,7 +76,7 @@ func dispatch(conn net.Conn) {
 		return
 	}
 
-	exec.OutputConnChan[loc.ChannelIndex] <- conn
+	exec.Writers[loc.ChannelIndex] = conn
 }
 
 func main() {
@@ -136,6 +92,7 @@ func main() {
 		listener, err := net.Listen("tcp", fmt.Sprintf(":%d", config.Conf.Worker.TCPPort))
 		if err != nil {
 			log.Fatalf("failed to listen tcp: %v", err)
+			return
 		}
 		for {
 			conn, err := listener.Accept()
@@ -143,6 +100,12 @@ func main() {
 				fmt.Printf("failed to accept: %v\n", err)
 				continue
 			}
+
+			if err := conn.SetDeadline(time.Now().Add(5 * time.Minute)); err != nil {
+				fmt.Printf("connection dead line: %v", err)
+				return
+			}
+
 			go dispatch(conn)
 		}
 	}()
