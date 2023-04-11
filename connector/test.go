@@ -146,14 +146,14 @@ func (c *Test) GetPartitionInfo(_ int) (*partition.Info, error) {
 	return c.PartitionInfo, nil
 }
 
-func (c *Test) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) func(indexes []int) (*row.RowsGroup, error) {
+func (c *Test) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, _ []*operator.BooleanExpressionNode) (IndexReader, error) {
 	reader, err := filereader.NewReader(file, md)
-	return func(indexes []int) (*row.RowsGroup, error) {
-		if err != nil {
-			return nil, err
-		}
-		return reader.Read(indexes)
+	if err != nil {
+		return nil, err
 	}
+	return func(indexes []int) (*row.RowsGroup, error) {
+		return reader.Read(indexes)
+	}, nil
 }
 
 func (c *Test) ShowTables(_, _ string, _, _ *string) func() (*row.Row, error) {

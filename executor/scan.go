@@ -119,12 +119,14 @@ func (e *Executor) RunScan() (err error) {
 	// no partitions
 	if !job.PartitionInfo.IsPartition() {
 		for _, file := range job.PartitionInfo.FileList {
-			reader := ctr.GetReader(file, inputMetadata, job.Filters)
+			var reader connector.IndexReader
+			reader, err = ctr.GetReader(file, inputMetadata, job.Filters)
 			if err != nil {
 				break
 			}
 			for err == nil {
-				rg, err := reader(colIndexes)
+				var rg *row.RowsGroup
+				rg, err = reader(colIndexes)
 				if err == io.EOF {
 					err = nil
 					break
@@ -165,12 +167,14 @@ func (e *Executor) RunScan() (err error) {
 			}
 
 			for _, file := range job.PartitionInfo.GetPartitionFiles(i) {
-				reader := ctr.GetReader(file, inputMetadata, job.Filters)
+				var reader connector.IndexReader
+				reader, err = ctr.GetReader(file, inputMetadata, job.Filters)
 				if err != nil {
 					break
 				}
 				for err == nil {
-					dataRG, err := reader(dataCols)
+					var dataRG *row.RowsGroup
+					dataRG, err = reader(dataCols)
 					if err == io.EOF {
 						err = nil
 						break

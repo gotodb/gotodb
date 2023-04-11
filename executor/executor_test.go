@@ -56,7 +56,7 @@ func (e *Executor) setupReaders() {
 }
 
 func TestSelect(t *testing.T) {
-	sql := "/*+partition_number=1*/select * from http.toutiao.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue?recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }'"
+	sql := "/*+partition_number=1*/select * from http.toutiao.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue\", \"uri\": \"recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }'"
 	executor(t, sql)
 }
 

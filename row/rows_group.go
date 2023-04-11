@@ -7,7 +7,6 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 )
 
-// RowsGroup to store rows
 type RowsGroup struct {
 	Metadata   *metadata.Metadata
 	RowsNumber int
