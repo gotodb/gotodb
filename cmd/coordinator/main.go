@@ -68,7 +68,8 @@ func (n WorkerNodes) HasExecutor() bool {
 }
 
 func Query(w http.ResponseWriter, req *http.Request) {
-	sqlStr := "/*+partition_number=4*/select * from http.toutiao.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue?recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }'"
+	sqlStr := "select * from test.test.csv"
+	//sqlStr := "/*+partition_number=4*/select * from http.toutiao.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue?recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }'"
 
 	var query struct {
 		SQL string `json:"sql"`
@@ -87,7 +88,7 @@ func Query(w http.ResponseWriter, req *http.Request) {
 	p.AddErrorListener(errListener)
 	tree := p.SingleStatement()
 	if errListener.HasError() {
-		panic(errListener)
+		fmt.Fprintf(w, "%v", errListener)
 		return
 	}
 
@@ -96,27 +97,27 @@ func Query(w http.ResponseWriter, req *http.Request) {
 
 	//SetMetaData
 	if err := logicalTree.SetMetadata(); err != nil {
-		panic(err)
+		fmt.Fprintf(w, "%v", err)
 		return
 	}
 
 	if err := optimizer.DeleteRenameNode(logicalTree); err != nil {
-		panic(err)
+		fmt.Fprintf(w, "%v", err)
 		return
 	}
 
 	if err := optimizer.FilterColumns(logicalTree, []string{}); err != nil {
-		panic(err)
+		fmt.Fprintf(w, "%v", err)
 		return
 	}
 
 	if err := optimizer.PredicatePushDown(logicalTree, []*operator.BooleanExpressionNode{}); err != nil {
-		panic(err)
+		fmt.Fprintf(w, "%v", err)
 		return
 	}
 
 	if err := optimizer.ExtractAggFunc(logicalTree); err != nil {
-		panic(err)
+		fmt.Fprintf(w, "%v", err)
 		return
 	}
 
@@ -126,7 +127,7 @@ func Query(w http.ResponseWriter, req *http.Request) {
 	}
 	stageJobs, err := stage.CreateJob(logicalTree, workerNode, partitionNumber)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(w, "%v", err)
 		return
 	}
 	var (
@@ -245,8 +246,9 @@ func main() {
 	}
 	fmt.Println("start gotodb coordinator")
 	workerDiscovery()
+
 	http.HandleFunc("/query", Query)
-	if err := http.ListenAndServe(strconv.Itoa(config.Conf.Coordinator.HttpPort), nil); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", config.Conf.Coordinator.HttpPort), nil); err != nil {
 		log.Fatal(err)
 	}
 }

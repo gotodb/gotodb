@@ -14,9 +14,9 @@ file-connector:
     paths: [ ../db/file/info/student/ ]
 
 http-connector:
-  http.toutiao.*:
+  http.etcd.*:
     catalog: http
-    schema: toutiao
+    schema: etcd
     table: "*"
     data-path:
     column-names: [ key, value, _http, _ ]

@@ -70,7 +70,9 @@ func (e *Executor) AddLogInfo(info interface{}, level pb.LogLevel) {
 
 func (e *Executor) Clear() {
 	for _, writer := range e.Writers {
-		_ = writer.(io.WriteCloser).Close()
+		if w, ok := writer.(io.WriteCloser); ok {
+			_ = w.Close()
+		}
 	}
 	e.IsStatusChanged = true
 	if e.Status != pb.TaskStatus_ERROR {

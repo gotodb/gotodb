@@ -107,7 +107,16 @@ data:
         column-names: [id,name,age]
         column-types: [INT64,STRING,INT32]
         paths: [./db/file/info/student/]
-
+    
+    http-connector:
+      http.etcd.*:
+        catalog: http
+        schema: etcd
+        table: "*"
+        data-path:
+        column-names: [ key, value, _http, _ ]
+        column-types: [ STRING, STRING, STRING, STRING ]
+    
     etcd:
       endpoint: [${ETCD_ENDPOINT}]
       dial-timeout: 5
@@ -205,15 +214,38 @@ spec:
           emptyDir: {}
 
 ---
-apiVersion: batch/v1
-kind: Job
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: gotodb
+  name: coordinator-client
+spec:
+  type: LoadBalancer
+  ports:
+    - name: coordinator-client
+      port: 8001
+      protocol: TCP
+      targetPort: 8001
+  selector:
+    app: coordinator
+
+---
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   namespace: gotodb
   name: coordinator
   labels:
     app: coordinator
 spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: coordinator
   template:
+    metadata:
+      labels:
+        app: coordinator
     spec:
       initContainers:
         - name: init-etcd
@@ -224,10 +256,8 @@ spec:
           env:
             - name: ETCD_ENDPOINT
               value: "http://etcd:2379"
-            - name: WORKER_TCP_PORT
-              value: "50051"
-            - name: WORKER_RPC_PORT
-              value: "50052"
+            - name: CO_HTTP_PORT
+              value: "8001"
           volumeMounts:
             - name: config
               mountPath: /processed
@@ -236,13 +266,15 @@ spec:
       containers:
         - name: coordinator
           image: zhenorzz/gotodb:latest
+          ports:
+            - containerPort: 8001
+              name: co-http
           volumeMounts:
             - mountPath: /tmp
               name: tmp
             - mountPath: /opt/gotodb/config.yaml
               name: config
               subPath: config.yaml
-      restartPolicy: Never
       volumes:
         - name: tmp
           hostPath:
