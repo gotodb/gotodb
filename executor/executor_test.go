@@ -167,7 +167,7 @@ func executor(t *testing.T, sqlStr string) {
 		}
 		exec := New(loc.Name)
 
-		if _, err := exec.SendInstruction(context.Background(), &instruction); err != nil {
+		if err := exec.SendInstruction(&instruction); err != nil {
 			t.Errorf("exec.SendInstruction: %v", err)
 			return
 		}

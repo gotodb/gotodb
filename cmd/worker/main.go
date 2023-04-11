@@ -27,10 +27,10 @@ type worker struct {
 	pb.UnimplementedWorkerServer
 }
 
-func (s *worker) SendInstruction(ctx context.Context, instruction *pb.Instruction) (*pb.Empty, error) {
+func (s *worker) SendInstruction(_ context.Context, instruction *pb.Instruction) (*pb.Empty, error) {
 	empty := new(pb.Empty)
 	exec := executor.New(instruction.Location.Name)
-	err := exec.SendInstruction(ctx, instruction)
+	err := exec.SendInstruction(instruction)
 	if err != nil {
 		executor.Delete(instruction.Location.Name)
 		return empty, err

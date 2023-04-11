@@ -156,7 +156,7 @@ func (c *Test) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, _
 	}, nil
 }
 
-func (c *Test) ShowTables(_, _ string, _, _ *string) func() (*row.Row, error) {
+func (c *Test) ShowTables(_, _ string, _, _ *string) RowReader {
 	var err error
 	tables := []string{"csv", "parquet", "orc"}
 	var rs []*row.Row
@@ -178,7 +178,7 @@ func (c *Test) ShowTables(_, _ string, _, _ *string) func() (*row.Row, error) {
 	}
 }
 
-func (c *Test) ShowSchemas(_ string, _, _ *string) func() (*row.Row, error) {
+func (c *Test) ShowSchemas(_ string, _, _ *string) RowReader {
 	var err error
 
 	r := row.NewRow()
@@ -196,7 +196,7 @@ func (c *Test) ShowSchemas(_ string, _, _ *string) func() (*row.Row, error) {
 	}
 }
 
-func (c *Test) ShowColumns(_, _, _ string) func() (*row.Row, error) {
+func (c *Test) ShowColumns(_, _, _ string) RowReader {
 	var err error
 	var rs []*row.Row
 	r := row.NewRow()
@@ -232,7 +232,7 @@ func (c *Test) ShowColumns(_, _, _ string) func() (*row.Row, error) {
 	}
 }
 
-func (c *Test) ShowPartitions(_, _, _ string) func() (*row.Row, error) {
+func (c *Test) ShowPartitions(_, _, _ string) RowReader {
 	var err error
 
 	return func() (*row.Row, error) {

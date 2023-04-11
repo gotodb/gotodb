@@ -114,7 +114,10 @@ data:
       dial-keepalive-timeout: 5
       username:
       password:
-
+    
+    coordinator:
+      http-port: ${CO_HTTP_PORT}
+    
     worker:
       ip: ${HOSTNAME}${SERVICE_NAME}
       tcp-port: ${WORKER_TCP_PORT}

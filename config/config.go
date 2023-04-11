@@ -14,6 +14,7 @@ type Config struct {
 	FileConnectors FileConnectors `yaml:"file-connector"`
 	HttpConnectors HttpConnectors `yaml:"http-connector"`
 	Worker         Worker         `yaml:"worker"`
+	Coordinator    Coordinator    `yaml:"coordinator"`
 }
 
 type Runtime struct {
@@ -35,6 +36,10 @@ type Worker struct {
 	IP      string `yaml:"ip"`
 	TCPPort int    `yaml:"tcp-port"`
 	RPCPort int    `yaml:"rpc-port"`
+}
+
+type Coordinator struct {
+	HttpPort int `yaml:"http-port"`
 }
 
 var Conf Config

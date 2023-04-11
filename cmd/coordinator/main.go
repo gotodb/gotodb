@@ -26,6 +26,7 @@ import (
 	"log"
 	"math/rand"
 	"net"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -66,14 +67,17 @@ func (n WorkerNodes) HasExecutor() bool {
 	}
 }
 
-func main() {
-	flag.Parse()
-	if err := config.Load(*configFile); err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("start gotodb coordinator")
-	workerDiscovery()
+func Query(w http.ResponseWriter, req *http.Request) {
 	sqlStr := "/*+partition_number=4*/select * from http.toutiao.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue?recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }'"
+
+	var query struct {
+		SQL string `json:"sql"`
+	}
+	err := json.NewDecoder(req.Body).Decode(&query)
+	if err == nil && query.SQL != "" {
+		sqlStr = query.SQL
+	}
+
 	//sqlStr := "show COLUMNS from test.test.csv"
 	hint := optimizer.ParseHint(sqlStr)
 	inputStream := antlr.NewInputStream(sqlStr)
@@ -198,13 +202,15 @@ func main() {
 		logger.Errorf("read md err: %v", err)
 		return
 	}
+
 	if msg, err = json.MarshalIndent(md, "", "    "); err != nil {
 		logger.Errorf("json marshal: %v", err)
 		return
 	}
+
 	msg = append(msg, []byte("\n")...)
 
-	fmt.Println(string(msg))
+	w.Write(msg)
 
 	rbReader := row.NewRowsBuffer(md, conn, nil)
 
@@ -227,9 +233,22 @@ func main() {
 		msg = []byte(strings.Join(res, ","))
 		msg = append(msg, []byte("\n")...)
 
-		fmt.Println(string(msg))
+		w.Write(msg)
 	}
 	wg.Wait()
+}
+
+func main() {
+	flag.Parse()
+	if err := config.Load(*configFile); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("start gotodb coordinator")
+	workerDiscovery()
+	http.HandleFunc("/query", Query)
+	if err := http.ListenAndServe(strconv.Itoa(config.Conf.Coordinator.HttpPort), nil); err != nil {
+		log.Fatal(err)
+	}
 }
 
 var serviceLocker = sync.Mutex{}

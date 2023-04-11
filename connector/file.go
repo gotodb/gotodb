@@ -90,7 +90,7 @@ func (c *File) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, _
 	}, err
 }
 
-func (c *File) ShowSchemas(catalog string, _, _ *string) func() (*row.Row, error) {
+func (c *File) ShowSchemas(catalog string, _, _ *string) RowReader {
 	var err error
 	var rs []*row.Row
 	for key := range config.Conf.FileConnectors {
@@ -116,7 +116,7 @@ func (c *File) ShowSchemas(catalog string, _, _ *string) func() (*row.Row, error
 	}
 }
 
-func (c *File) ShowTables(catalog, schema string, _, _ *string) func() (*row.Row, error) {
+func (c *File) ShowTables(catalog, schema string, _, _ *string) RowReader {
 	var err error
 	var rs []*row.Row
 	for key := range config.Conf.FileConnectors {
@@ -142,7 +142,7 @@ func (c *File) ShowTables(catalog, schema string, _, _ *string) func() (*row.Row
 	}
 }
 
-func (c *File) ShowColumns(catalog, schema, table string) func() (*row.Row, error) {
+func (c *File) ShowColumns(catalog, schema, table string) RowReader {
 	var err error
 	var rs []*row.Row
 	for key, conf := range config.Conf.FileConnectors {
@@ -172,7 +172,7 @@ func (c *File) ShowColumns(catalog, schema, table string) func() (*row.Row, erro
 	}
 }
 
-func (c *File) ShowPartitions(_, _, _ string) func() (*row.Row, error) {
+func (c *File) ShowPartitions(_, _, _ string) RowReader {
 	return func() (*row.Row, error) {
 		return nil, io.EOF
 	}

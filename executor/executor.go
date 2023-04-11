@@ -78,7 +78,7 @@ func (e *Executor) Clear() {
 	}
 }
 
-func (e *Executor) SendInstruction(ctx context.Context, instruction *pb.Instruction) error {
+func (e *Executor) SendInstruction(instruction *pb.Instruction) error {
 	var runtime config.Runtime
 	if err := msgpack.Unmarshal(instruction.RuntimeBytes, &runtime); err != nil {
 		return err

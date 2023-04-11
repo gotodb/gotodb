@@ -29,6 +29,9 @@ etcd:
   username:
   password:
 
+coordinator:
+  http-port: 8001
+
 worker:
   ip: 127.0.0.1
   tcp-port: 50051

@@ -15,13 +15,14 @@ type Connector interface {
 	GetPartitionInfo(parallelNumber int) (*partition.Info, error)
 	GetReader(file *filesystem.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) (IndexReader, error)
 
-	ShowTables(catalog, schema string, like, escape *string) func() (*row.Row, error)
-	ShowSchemas(catalog string, like, escape *string) func() (*row.Row, error)
-	ShowColumns(catalog, schema, table string) func() (*row.Row, error)
-	ShowPartitions(catalog, schema, table string) func() (*row.Row, error)
+	ShowTables(catalog, schema string, like, escape *string) RowReader
+	ShowSchemas(catalog string, like, escape *string) RowReader
+	ShowColumns(catalog, schema, table string) RowReader
+	ShowPartitions(catalog, schema, table string) RowReader
 }
 
 type IndexReader func(indexes []int) (*row.RowsGroup, error)
+type RowReader func() (*row.Row, error)
 
 func NewConnector(catalog string, schema string, table string) (Connector, error) {
 	if len(catalog) >= 4 {

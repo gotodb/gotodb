@@ -280,7 +280,7 @@ func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, f
 	}, nil
 }
 
-func (c *Http) ShowSchemas(catalog string, _, _ *string) func() (*row.Row, error) {
+func (c *Http) ShowSchemas(catalog string, _, _ *string) RowReader {
 	var err error
 	var rs []*row.Row
 	for key := range config.Conf.HttpConnectors {
@@ -306,7 +306,7 @@ func (c *Http) ShowSchemas(catalog string, _, _ *string) func() (*row.Row, error
 	}
 }
 
-func (c *Http) ShowTables(catalog, schema string, _, _ *string) func() (*row.Row, error) {
+func (c *Http) ShowTables(catalog, schema string, _, _ *string) RowReader {
 	var err error
 	var rs []*row.Row
 	for key := range config.Conf.HttpConnectors {
@@ -332,7 +332,7 @@ func (c *Http) ShowTables(catalog, schema string, _, _ *string) func() (*row.Row
 	}
 }
 
-func (c *Http) ShowColumns(catalog, schema, table string) func() (*row.Row, error) {
+func (c *Http) ShowColumns(catalog, schema, table string) RowReader {
 	var err error
 	var rs []*row.Row
 	for key, conf := range config.Conf.HttpConnectors {
@@ -362,7 +362,7 @@ func (c *Http) ShowColumns(catalog, schema, table string) func() (*row.Row, erro
 	}
 }
 
-func (c *Http) ShowPartitions(_, _, _ string) func() (*row.Row, error) {
+func (c *Http) ShowPartitions(_, _, _ string) RowReader {
 	return func() (*row.Row, error) {
 		return nil, io.EOF
 	}
