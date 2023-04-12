@@ -2,7 +2,6 @@ package executor
 
 import (
 	"github.com/gotodb/gotodb/gtype"
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -81,7 +80,6 @@ func (e *Executor) RunOrderBy() (err error) {
 		}
 	}
 
-	logger.Infof("RunOrderBy finished")
 	return nil
 }
 

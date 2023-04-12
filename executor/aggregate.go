@@ -4,7 +4,6 @@ import (
 	"github.com/gotodb/gotodb/stage"
 	"io"
 
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -58,6 +57,5 @@ func (e *Executor) RunAggregate() (err error) {
 		}
 	}
 	rbWriter.Flush()
-	logger.Infof("RunAggregate finished")
 	return nil
 }

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/sirupsen/logrus"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"gopkg.in/yaml.v3"
 	"log"
@@ -67,6 +68,8 @@ func Load(fileName string) error {
 		return err
 	}
 
+	initLogger()
+
 	return nil
 }
 
@@ -113,4 +116,8 @@ func WildcardMatch(s, p string) bool {
 		}
 	}
 	return dp[ls][lp]
+}
+
+func initLogger() {
+	logrus.SetOutput(os.Stdout)
 }

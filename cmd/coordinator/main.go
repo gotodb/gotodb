@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/optimizer"
 	"github.com/gotodb/gotodb/parser"
@@ -18,6 +17,7 @@ import (
 	"github.com/gotodb/gotodb/stage"
 	"github.com/gotodb/gotodb/util"
 	uuid "github.com/satori/go.uuid"
+	"github.com/sirupsen/logrus"
 	"github.com/vmihailenco/msgpack"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
@@ -179,7 +179,7 @@ func Query(w http.ResponseWriter, req *http.Request) {
 		go func(instruction *pb.Instruction) {
 			defer wg.Done()
 			if _, err = client.Run(context.Background(), instruction.GetLocation()); err != nil {
-				logger.Errorf("failed to Run: %v", err)
+				logrus.Errorf("failed to Run: %v", err)
 			}
 		}(instruction)
 	}
@@ -225,7 +225,7 @@ func Query(w http.ResponseWriter, req *http.Request) {
 			break
 		}
 		if err != nil {
-			logger.Errorf("read line: %v", err)
+			_, _ = fmt.Fprintf(w, "read line: err: %v", err)
 			return
 		}
 
@@ -264,7 +264,7 @@ func workerDiscovery() {
 	// 获取当前所有服务入口
 	getRes, err := cli.Get(ctx, "worker", clientv3.WithPrefix())
 	if err != nil {
-		logger.Errorf("read line: %v", err)
+		logrus.Errorf("etcd get key: %v", err)
 		return
 	}
 	serviceLocker.Lock()

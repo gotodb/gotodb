@@ -1,7 +1,6 @@
 package executor
 
 import (
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -90,7 +89,6 @@ func (e *Executor) RunAggregateFuncGlobal() (err error) {
 		rbWriter.WriteRow(r)
 	}
 
-	logger.Infof("RunAggregateFuncGlobal finished")
 	return err
 }
 

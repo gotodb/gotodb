@@ -72,7 +72,7 @@ func dispatch(conn net.Conn) {
 		_ = conn.Close()
 		return
 	}
-	fmt.Printf("接收到长度:%d, 内容:%v", n, loc)
+	fmt.Printf("接收到长度:%d, 内容:%v\n", n, loc)
 
 	exec, err := executor.Get(loc.Name)
 	if err != nil {

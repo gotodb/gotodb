@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -110,6 +109,5 @@ func (e *Executor) RunFilter() (err error) {
 		return err
 	}
 
-	logger.Infof("RunFilter finished")
 	return err
 }

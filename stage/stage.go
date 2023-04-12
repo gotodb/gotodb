@@ -5,7 +5,6 @@ import (
 	"github.com/gotodb/gotodb/filesystem"
 	"github.com/gotodb/gotodb/filesystem/partition"
 	"github.com/gotodb/gotodb/gtype"
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/plan"
 	"github.com/gotodb/gotodb/plan/operator"
@@ -592,8 +591,6 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		return res, nil
 
 	default:
-		logger.Errorf("create job: unknown type")
 		return nil, fmt.Errorf("create job: unknown type")
-
 	}
 }

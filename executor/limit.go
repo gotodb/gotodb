@@ -4,7 +4,6 @@ import (
 	"github.com/gotodb/gotodb/stage"
 	"io"
 
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -82,6 +81,5 @@ func (e *Executor) RunLimit() (err error) {
 		}
 	}
 
-	logger.Infof("RunLimit finished")
 	return nil
 }

@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"github.com/gotodb/gotodb/connector"
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/plan"
 	"github.com/gotodb/gotodb/row"
@@ -75,7 +74,6 @@ func (e *Executor) RunShow() (err error) {
 		return err
 	}
 
-	logger.Infof("RunShowTables finished")
 	return err
 
 }

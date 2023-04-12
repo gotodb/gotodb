@@ -2,7 +2,6 @@ package executor
 
 import (
 	"github.com/gotodb/gotodb/connector"
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
 	"github.com/gotodb/gotodb/stage"
@@ -203,6 +202,5 @@ func (e *Executor) RunScan() (err error) {
 	close(jobs)
 	wg.Wait()
 
-	logger.Infof("RunScan finished")
 	return err
 }

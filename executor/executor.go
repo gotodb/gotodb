@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/stage"
+	"github.com/sirupsen/logrus"
 	"github.com/vmihailenco/msgpack"
 	"io"
 	"net"
@@ -91,10 +91,10 @@ func (e *Executor) SendInstruction(instruction *pb.Instruction) error {
 	config.Conf.Runtime = &runtime
 
 	nodeType := stage.JobType(instruction.TaskType)
-	logger.Infof("Instruction: %s", nodeType)
 	e.Instruction = instruction
 	e.Status = pb.TaskStatus_RUNNING
 	e.IsStatusChanged = true
+	logrus.Infof("%s instruction: %s", e.Instruction.TaskID, nodeType)
 	var err error
 	switch nodeType {
 	case stage.JobTypeScan:
@@ -148,19 +148,18 @@ func (e *Executor) SetupPipe() error {
 	for _, location := range e.StageJob.GetInputs() {
 		conn, err := net.Dial("tcp", location.GetURL())
 		if err != nil {
-			logger.Errorf("failed to connect to input channel %v: %v", location, err)
+			logrus.Errorf("%s failed to connect to input channel %v: %v", e.Instruction.TaskID, location, err)
 			return err
 		}
-		logger.Infof("connect to %v", location)
+		logrus.Infof("connect to %v", location)
 		bytes, _ := msgpack.Marshal(location)
-
 		if _, err := conn.Write(bytes); err != nil {
-			logger.Errorf("failed to write to input channel %v: %v", location, err)
+			logrus.Errorf("%s failed to write to input channel %v: %v", e.Instruction.TaskID, location, err)
 			return err
 		}
 		e.Readers = append(e.Readers, conn)
 	}
-	logger.Infof("SetupReaders Input=%v", e.StageJob.GetInputs())
+	logrus.Infof("%s setup readers Input=%v", e.Instruction.TaskID, e.StageJob.GetInputs())
 	return nil
 }
 
@@ -224,5 +223,13 @@ func (e *Executor) Run(ctx context.Context) error {
 	default:
 		err = fmt.Errorf("unknown job type")
 	}
+
+	if err != nil {
+		logrus.Infof("%s run %s error: %v", e.Instruction.TaskID, nodeType, err)
+		return err
+	}
+
+	logrus.Infof("%s run %s finished", e.Instruction.TaskID, nodeType)
+
 	return nil
 }

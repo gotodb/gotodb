@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/optimizer"
 	"github.com/gotodb/gotodb/parser"
@@ -18,6 +17,7 @@ import (
 	"github.com/gotodb/gotodb/stage"
 	"github.com/gotodb/gotodb/util"
 	uuid "github.com/satori/go.uuid"
+	"github.com/sirupsen/logrus"
 	"github.com/vmihailenco/msgpack"
 	"io"
 	"os"
@@ -33,28 +33,28 @@ import (
 var tempDir = "."
 
 func (e *Executor) setupWriters() {
-	logger.Infof("SetupWriters start")
+	logrus.Infof("SetupWriters start")
 	e.Writers = []io.Writer{}
 	for _, location := range e.StageJob.GetOutputs() {
 		file, _ := os.Create(fmt.Sprintf("%s/%s.txt", tempDir, location.Name))
 		e.Writers = append(e.Writers, file)
 	}
 
-	logger.Infof("SetupWriters Output=%v", e.StageJob.GetOutputs())
+	logrus.Infof("SetupWriters Output=%v", e.StageJob.GetOutputs())
 }
 
 func (e *Executor) setupReaders() {
-	logger.Infof("SetupReaders start")
+	logrus.Infof("SetupReaders start")
 	e.Readers = []io.Reader{}
 	for _, location := range e.StageJob.GetInputs() {
 		file, err := os.Open(fmt.Sprintf("%s/%s.txt", tempDir, location.Name))
 		if err != nil {
-			logger.Errorf("failed to open file: %v", err)
+			logrus.Errorf("failed to open file: %v", err)
 		}
 		e.Readers = append(e.Readers, file)
 	}
 
-	logger.Infof("SetupReaders Input=%v", e.StageJob.GetInputs())
+	logrus.Infof("SetupReaders Input=%v", e.StageJob.GetInputs())
 }
 
 func TestSelect(t *testing.T) {

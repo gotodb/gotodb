@@ -2,7 +2,6 @@ package executor
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -67,6 +66,5 @@ func (e *Executor) RunUnion() (err error) {
 		}
 	}
 
-	logger.Infof("RunUnion finished")
 	return err
 }

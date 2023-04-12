@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/gotodb/gotodb/gtype"
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/plan"
@@ -196,6 +195,5 @@ func (e *Executor) RunHashJoin() (err error) {
 
 	}
 
-	logger.Infof("RunJoin finished")
 	return err
 }

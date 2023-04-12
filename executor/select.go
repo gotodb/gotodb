@@ -3,7 +3,6 @@ package executor
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/gtype"
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -81,13 +80,11 @@ func (e *Executor) RunSelect() (err error) {
 
 		} else {
 			if err = rbWriter.Write(res); err != nil {
-				logger.Errorf("failed to Write %v", err)
 				break
 			}
 		}
 	}
 
-	logger.Infof("RunSelect finished")
 	return err
 }
 
@@ -98,7 +95,7 @@ func (e *Executor) CalSelectItems(job *stage.SelectJob, rg *row.RowsGroup) (*row
 	ci := 0
 
 	if job.Having != nil {
-		rgtmp := row.NewRowsGroup(rg.Metadata)
+		rgTmp := row.NewRowsGroup(rg.Metadata)
 		flags, err := job.Having.Result(rg)
 		if err != nil {
 			return nil, err
@@ -106,11 +103,11 @@ func (e *Executor) CalSelectItems(job *stage.SelectJob, rg *row.RowsGroup) (*row
 
 		for i, flag := range flags.([]interface{}) {
 			if flag.(bool) {
-				rgtmp.AppendRowVals(rg.GetRowVals(i)...)
-				rgtmp.AppendRowKeys(rg.GetRowKeys(i)...)
+				rgTmp.AppendRowVals(rg.GetRowVals(i)...)
+				rgTmp.AppendRowKeys(rg.GetRowKeys(i)...)
 			}
 		}
-		rg = rgtmp
+		rg = rgTmp
 	}
 
 	for _, item := range job.SelectItems {

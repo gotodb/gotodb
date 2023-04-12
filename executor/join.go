@@ -2,7 +2,6 @@ package executor
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/logger"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/plan"
@@ -113,6 +112,5 @@ func (e *Executor) RunJoin() (err error) {
 	case plan.RightJoin:
 	}
 
-	logger.Infof("RunJoin finished")
 	return err
 }
