@@ -30,13 +30,18 @@ type worker struct {
 func (s *worker) SendInstruction(_ context.Context, instruction *pb.Instruction) (*pb.Empty, error) {
 	empty := new(pb.Empty)
 	exec := executor.New(instruction.Location.Name)
-	err := exec.SendInstruction(instruction)
-	if err != nil {
+
+	if err := exec.SendInstruction(instruction); err != nil {
 		executor.Delete(instruction.Location.Name)
 		return empty, err
 	}
 
-	return empty, err
+	if err := exec.SetupPipe(); err != nil {
+		executor.Delete(instruction.Location.Name)
+		return empty, err
+	}
+
+	return empty, nil
 }
 
 func (s *worker) Run(ctx context.Context, loc *pb.Location) (*pb.Empty, error) {
@@ -47,7 +52,7 @@ func (s *worker) Run(ctx context.Context, loc *pb.Location) (*pb.Empty, error) {
 	}
 	defer executor.Delete(loc.Name)
 
-	if _, err := exec.Run(ctx, empty); err != nil {
+	if err := exec.Run(ctx); err != nil {
 		return empty, err
 	}
 	return empty, err

@@ -34,6 +34,7 @@ var tempDir = "."
 
 func (e *Executor) setupWriters() {
 	logger.Infof("SetupWriters start")
+	e.Writers = []io.Writer{}
 	for _, location := range e.StageJob.GetOutputs() {
 		file, _ := os.Create(fmt.Sprintf("%s/%s.txt", tempDir, location.Name))
 		e.Writers = append(e.Writers, file)
@@ -44,6 +45,7 @@ func (e *Executor) setupWriters() {
 
 func (e *Executor) setupReaders() {
 	logger.Infof("SetupReaders start")
+	e.Readers = []io.Reader{}
 	for _, location := range e.StageJob.GetInputs() {
 		file, err := os.Open(fmt.Sprintf("%s/%s.txt", tempDir, location.Name))
 		if err != nil {
@@ -56,7 +58,7 @@ func (e *Executor) setupReaders() {
 }
 
 func TestSelect(t *testing.T) {
-	sql := "/*+partition_number=1*/select * from http.toutiao.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue\", \"uri\": \"recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }'"
+	sql := "/*+partition_number=1*/select * from http.etcd.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue\", \"uri\": \"recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }'"
 	executor(t, sql)
 }
 
@@ -175,7 +177,7 @@ func executor(t *testing.T, sqlStr string) {
 		exec.setupWriters()
 		exec.setupReaders()
 
-		if _, err := exec.Run(context.Background(), new(pb.Empty)); err != nil {
+		if err := exec.Run(context.Background()); err != nil {
 			t.Errorf("exec.Run: %v", err)
 			return
 		}

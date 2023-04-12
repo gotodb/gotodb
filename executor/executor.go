@@ -139,9 +139,11 @@ func (e *Executor) SendInstruction(instruction *pb.Instruction) error {
 		e.Status = pb.TaskStatus_TODO
 		err = fmt.Errorf("unknown node type")
 	}
-	if err != nil {
-		return err
-	}
+
+	return err
+}
+
+func (e *Executor) SetupPipe() error {
 	e.Writers = make([]io.Writer, len(e.StageJob.GetOutputs()))
 	for _, location := range e.StageJob.GetInputs() {
 		conn, err := net.Dial("tcp", location.GetURL())
@@ -162,8 +164,7 @@ func (e *Executor) SendInstruction(instruction *pb.Instruction) error {
 	return nil
 }
 
-func (e *Executor) Run(ctx context.Context, empty *pb.Empty) (*pb.Empty, error) {
-	res := &pb.Empty{}
+func (e *Executor) Run(ctx context.Context) error {
 	nodeType := stage.JobType(e.Instruction.TaskType)
 	var err error
 	defer func() {
@@ -223,5 +224,5 @@ func (e *Executor) Run(ctx context.Context, empty *pb.Empty) (*pb.Empty, error) 
 	default:
 		err = fmt.Errorf("unknown job type")
 	}
-	return res, nil
+	return nil
 }
