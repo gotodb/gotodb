@@ -84,7 +84,7 @@ func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, f
 		}
 	}
 	var part, partitionNumber int
-	_, _ = fmt.Sscanf(file.Location, "%d/%d", part, partitionNumber)
+	_, _ = fmt.Sscanf(file.Location, "%d/%d", &part, &partitionNumber)
 
 	type Options struct {
 		URL         string        `json:"url"`
