@@ -64,17 +64,13 @@ func (c *Mysql) GetPartitionInfo(partitionNumber int) (*partition.Info, error) {
 	if c.PartitionInfo == nil {
 		c.PartitionInfo = partition.New(metadata.NewMetadata())
 		for i := 0; i < partitionNumber; i++ {
-			c.PartitionInfo.FileList = append(c.PartitionInfo.FileList, &filesystem.FileLocation{Location: fmt.Sprintf("%d/%d", i, partitionNumber), FileType: filesystem.HTTP})
+			c.PartitionInfo.FileList = append(c.PartitionInfo.FileList, &filesystem.FileLocation{Location: fmt.Sprintf("%d/%d", i, partitionNumber)})
 		}
 	}
 	return c.PartitionInfo, nil
 }
 
 func (c *Mysql) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) (IndexReader, error) {
-
-	var part, partitionNumber int
-	_, _ = fmt.Sscanf(file.Location, "%d/%d", part, partitionNumber)
-
 	alias := ""
 	if c.Config.Table != md.Columns[0].Table {
 		alias = md.Columns[0].Table + "."
@@ -93,8 +89,10 @@ func (c *Mysql) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, 
 	clause := strings.Join(clauses, " AND ")
 
 	var stop error
+	var part, partitionNumber int
+	_, _ = fmt.Sscanf(file.Location, "%d/%d", &part, &partitionNumber)
 	return func(indexes []int) (*row.RowsGroup, error) {
-		if part > 1 {
+		if part > 0 {
 			return nil, io.EOF
 		}
 

@@ -18,7 +18,7 @@ func BinaryReadINT8(r io.Reader, nums []interface{}) error {
 	}
 
 	for i := 0; i < len(nums); i++ {
-		nums[i] = int8(buf[i*4+0])
+		nums[i] = int8(buf[i])
 	}
 	return nil
 }
@@ -34,8 +34,8 @@ func BinaryReadINT16(r io.Reader, nums []interface{}) error {
 	}
 
 	for i := 0; i < len(nums); i++ {
-		nums[i] = int16(uint16(buf[i*4+0]) |
-			uint16(buf[i*4+1])<<8)
+		nums[i] = int16(uint16(buf[i*2+0]) |
+			uint16(buf[i*2+1])<<8)
 	}
 	return nil
 }
@@ -93,7 +93,7 @@ func BinaryReadUINT8(r io.Reader, nums []interface{}) error {
 	}
 
 	for i := 0; i < len(nums); i++ {
-		nums[i] = buf[i*4+0]
+		nums[i] = buf[i]
 	}
 	return nil
 }
@@ -109,8 +109,8 @@ func BinaryReadUINT16(r io.Reader, nums []interface{}) error {
 	}
 
 	for i := 0; i < len(nums); i++ {
-		nums[i] = uint16(buf[i*4+0]) |
-			uint16(buf[i*4+1])<<8
+		nums[i] = uint16(buf[i*2+0]) |
+			uint16(buf[i*2+1])<<8
 	}
 	return nil
 }
