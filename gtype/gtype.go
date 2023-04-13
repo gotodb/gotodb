@@ -3,6 +3,7 @@ package gtype
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 type OrderType int32
@@ -53,4 +54,20 @@ func CheckType(ta, tb Type, op Operator) (Type, error) {
 		return UNKNOWNTYPE, fmt.Errorf("type not match")
 	}
 	return ta, nil
+}
+
+type Date struct {
+	Sec int64
+}
+
+func (d Date) String() string {
+	return time.Unix(d.Sec, 0).Format("2006-01-02")
+}
+
+type Timestamp struct {
+	Sec int64
+}
+
+func (ts Timestamp) String() string {
+	return time.Unix(ts.Sec, 0).Format("2006-01-02 15:04:05")
 }

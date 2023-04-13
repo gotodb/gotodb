@@ -22,6 +22,19 @@ http-connector:
     column-names: [ key, value, _http, _ ]
     column-types: [ STRING, STRING, STRING, STRING ]
 
+
+mysql-connector:
+  mysql.goploy.*:
+    catalog: localhost
+    schema: goploy
+    table: user
+    host: 127.0.0.1
+    port: 3306
+    user: root
+    password:
+    column-names: []
+    column-types: []
+
 etcd:
   endpoint: [ http://127.0.0.1:2379 ]
   dial-timeout: 5

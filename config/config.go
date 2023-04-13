@@ -10,12 +10,13 @@ import (
 )
 
 type Config struct {
-	Etcd           Etcd           `yaml:"etcd"`
-	Runtime        *Runtime       `yaml:"runtime"`
-	FileConnectors FileConnectors `yaml:"file-connector"`
-	HttpConnectors HttpConnectors `yaml:"http-connector"`
-	Worker         Worker         `yaml:"worker"`
-	Coordinator    Coordinator    `yaml:"coordinator"`
+	Etcd            Etcd            `yaml:"etcd"`
+	Runtime         *Runtime        `yaml:"runtime"`
+	FileConnectors  FileConnectors  `yaml:"file-connector"`
+	HttpConnectors  HttpConnectors  `yaml:"http-connector"`
+	MysqlConnectors MysqlConnectors `yaml:"mysql-connector"`
+	Worker          Worker          `yaml:"worker"`
+	Coordinator     Coordinator     `yaml:"coordinator"`
 }
 
 type Runtime struct {
@@ -64,6 +65,11 @@ func Load(fileName string) error {
 	}
 
 	if err = Conf.HttpConnectors.Check(); err != nil {
+		log.Fatalf("%v", err)
+		return err
+	}
+
+	if err = Conf.MysqlConnectors.Check(); err != nil {
 		log.Fatalf("%v", err)
 		return err
 	}

@@ -61,3 +61,13 @@ func (n *NumberNode) GetType(_ *metadata.Metadata) (gtype.Type, error) {
 	}
 	return gtype.UNKNOWNTYPE, fmt.Errorf("wrong NumberNode")
 }
+
+func (n *NumberNode) GetText() string {
+	if n.DoubleVal != nil {
+		return fmt.Sprintf("%f", *n.DoubleVal)
+	} else if n.IntVal != nil {
+		return fmt.Sprintf("%d", *n.IntVal)
+	} else {
+		return ""
+	}
+}

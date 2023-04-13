@@ -45,3 +45,7 @@ func (n *BooleanValueNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
 func (n *BooleanValueNode) IsAggregate() bool {
 	return false
 }
+
+func (n *BooleanValueNode) GetText() string {
+	return n.Name
+}

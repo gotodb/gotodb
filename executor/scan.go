@@ -47,16 +47,8 @@ func (e *Executor) RunScan() (err error) {
 		}
 	}
 
-	var colIndexes []int
-	inputMetadata := job.InputMetadata
-	for _, c := range job.Metadata.Columns {
-		cn := c.ColumnName
-		index, err := inputMetadata.GetIndexByName(cn)
-		if err != nil {
-			return err
-		}
-		colIndexes = append(colIndexes, index)
-	}
+	colIndexes := job.Metadata.GetColumnIndexes()
+	inputMetadata := job.Metadata
 
 	rbWriters := make([]*row.RowsBuffer, len(e.Writers))
 	for i, writer := range e.Writers {

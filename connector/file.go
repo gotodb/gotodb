@@ -49,7 +49,7 @@ func NewFileMetadata(conf *config.FileConnector) (*metadata.Metadata, error) {
 			Schema:     conf.Schema,
 			Table:      conf.Table,
 			ColumnName: conf.ColumnNames[i],
-			ColumnType: gtype.TypeNameToType(conf.ColumnTypes[i]),
+			ColumnType: gtype.NameToType(conf.ColumnTypes[i]),
 		}
 		res.AppendColumn(col)
 	}

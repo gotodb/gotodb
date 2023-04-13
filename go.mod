@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230321174746-8dcc6526cfb1
+	github.com/go-sql-driver/mysql v1.7.0
 	github.com/golang/snappy v0.0.4
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.9.0

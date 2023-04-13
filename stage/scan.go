@@ -14,7 +14,6 @@ type ScanJob struct {
 	Schema        string
 	Table         string
 	Metadata      *metadata.Metadata
-	InputMetadata *metadata.Metadata
 	PartitionInfo *partition.Info
 	Outputs       []*pb.Location
 	Filters       []*operator.BooleanExpressionNode
@@ -45,7 +44,6 @@ func NewScanJob(node *plan.ScanNode, parInfo *partition.Info, loc *pb.Location, 
 		Table:         node.Table,
 		Outputs:       outputs,
 		Metadata:      node.GetMetadata(),
-		InputMetadata: node.InputMetadata,
 		PartitionInfo: parInfo,
 		Filters:       node.Filters,
 	}

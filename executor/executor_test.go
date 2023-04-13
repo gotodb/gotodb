@@ -58,22 +58,24 @@ func (e *Executor) setupReaders() {
 }
 
 func TestSelect(t *testing.T) {
-	sql := "/*+partition_number=1*/select * from http.etcd.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue\", \"uri\": \"recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }'"
+	//sql := "/*+partition_number=1*/select * from http.etcd.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue\", \"uri\": \"recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }'"
+	//sql := "/*+partition_number=1*/select a.* from mysql.goploy.user as a join mysql.goploy.user as b on a.id = b.id where a.id = 1 and b.id = 2"
+	sql := "/*+partition_number=1*/select a.* from mysql.goploy.user as a where a.id = 1"
 	executor(t, sql)
 }
 
 func TestShowSchemas(t *testing.T) {
-	sql := "show Schemas from file"
+	sql := "show Schemas from mysql"
 	executor(t, sql)
 }
 
 func TestShowTables(t *testing.T) {
-	sql := "show tables from file.info"
+	sql := "show tables from mysql.goploy"
 	executor(t, sql)
 }
 
 func TestShowColumns(t *testing.T) {
-	sql := "show Columns from file.info.student"
+	sql := "show Columns from mysql.goploy.user"
 	executor(t, sql)
 }
 

@@ -61,10 +61,22 @@ func PLUSFunc(va interface{}, vb interface{}) interface{} {
 		switch t {
 		case BOOL:
 			return ToInt32(va) + ToInt32(vb)
+		case INT8:
+			return va.(int8) + vb.(int8)
+		case INT16:
+			return va.(int16) + vb.(int16)
 		case INT32:
 			return va.(int32) + vb.(int32)
 		case INT64:
 			return va.(int64) + vb.(int64)
+		case UINT8:
+			return va.(uint8) + vb.(uint8)
+		case UINT16:
+			return va.(uint16) + vb.(uint16)
+		case UINT32:
+			return va.(uint32) + vb.(uint32)
+		case UINT64:
+			return va.(uint64) + vb.(uint64)
 		case FLOAT32:
 			return va.(float32) + vb.(float32)
 		case FLOAT64:
@@ -87,10 +99,22 @@ func MINUSFunc(va interface{}, vb interface{}) interface{} {
 		switch t {
 		case BOOL:
 			return ToInt32(va) - ToInt32(vb)
+		case INT8:
+			return va.(int8) - vb.(int8)
+		case INT16:
+			return va.(int16) - vb.(int16)
 		case INT32:
 			return va.(int32) - vb.(int32)
 		case INT64:
 			return va.(int64) - vb.(int64)
+		case UINT8:
+			return va.(uint8) - vb.(uint8)
+		case UINT16:
+			return va.(uint16) - vb.(uint16)
+		case UINT32:
+			return va.(uint32) - vb.(uint32)
+		case UINT64:
+			return va.(uint64) - vb.(uint64)
 		case FLOAT32:
 			return va.(float32) - vb.(float32)
 		case FLOAT64:
@@ -115,10 +139,22 @@ func ASTERISKFunc(va interface{}, vb interface{}) interface{} {
 		switch t {
 		case BOOL:
 			return ToInt32(va) * ToInt32(vb)
+		case INT8:
+			return va.(int8) * vb.(int8)
+		case INT16:
+			return va.(int16) * vb.(int16)
 		case INT32:
 			return va.(int32) * vb.(int32)
 		case INT64:
 			return va.(int64) * vb.(int64)
+		case UINT8:
+			return va.(uint8) * vb.(uint8)
+		case UINT16:
+			return va.(uint16) * vb.(uint16)
+		case UINT32:
+			return va.(uint32) * vb.(uint32)
+		case UINT64:
+			return va.(uint64) * vb.(uint64)
 		case FLOAT32:
 			return va.(float32) * vb.(float32)
 		case FLOAT64:
@@ -143,6 +179,16 @@ func SLASHFunc(va interface{}, vb interface{}) interface{} {
 		switch t {
 		case BOOL:
 			return ToInt32(va) / ToInt32(vb)
+		case INT8:
+			if vb.(int8) == 0 {
+				return nil
+			}
+			return va.(int8) / vb.(int8)
+		case INT16:
+			if vb.(int16) == 0 {
+				return nil
+			}
+			return va.(int16) / vb.(int16)
 		case INT32:
 			if vb.(int32) == 0 {
 				return nil
@@ -153,6 +199,26 @@ func SLASHFunc(va interface{}, vb interface{}) interface{} {
 				return nil
 			}
 			return va.(int64) / vb.(int64)
+		case UINT8:
+			if vb.(uint8) == 0 {
+				return nil
+			}
+			return va.(uint8) / vb.(uint8)
+		case UINT16:
+			if vb.(uint16) == 0 {
+				return nil
+			}
+			return va.(uint16) / vb.(uint16)
+		case UINT32:
+			if vb.(uint32) == 0 {
+				return nil
+			}
+			return va.(uint32) / vb.(uint32)
+		case UINT64:
+			if vb.(uint64) == 0 {
+				return nil
+			}
+			return va.(uint64) / vb.(uint64)
 		case FLOAT32:
 			if vb.(float32) == 0 {
 				return nil
@@ -183,6 +249,16 @@ func PERCENTFunc(va interface{}, vb interface{}) interface{} {
 		switch t {
 		case BOOL:
 			return nil
+		case INT8:
+			if vb.(int8) == 0 {
+				return nil
+			}
+			return va.(int8) % vb.(int8)
+		case INT16:
+			if vb.(int16) == 0 {
+				return nil
+			}
+			return va.(int16) % vb.(int16)
 		case INT32:
 			if vb.(int32) == 0 {
 				return nil
@@ -193,6 +269,26 @@ func PERCENTFunc(va interface{}, vb interface{}) interface{} {
 				return nil
 			}
 			return va.(int64) % vb.(int64)
+		case UINT8:
+			if vb.(uint8) == 0 {
+				return nil
+			}
+			return va.(uint8) % vb.(uint8)
+		case UINT16:
+			if vb.(uint16) == 0 {
+				return nil
+			}
+			return va.(uint16) % vb.(uint16)
+		case UINT32:
+			if vb.(int32) == 0 {
+				return nil
+			}
+			return va.(uint32) % vb.(uint32)
+		case UINT64:
+			if vb.(uint64) == 0 {
+				return nil
+			}
+			return va.(uint64) % vb.(uint64)
 		case FLOAT32:
 			return nil
 		case FLOAT64:
@@ -225,6 +321,7 @@ func ORFunc(va interface{}, vb interface{}) interface{} {
 }
 
 func EQFunc(va interface{}, vb interface{}) interface{} {
+	va, vb = ToSameType(va, vb)
 	return va == vb
 }
 
@@ -251,10 +348,22 @@ func LTFunc(va interface{}, vb interface{}) interface{} {
 				return true
 			}
 			return false
+		case INT8:
+			return va.(int8) < vb.(int8)
+		case INT16:
+			return va.(int16) < vb.(int16)
 		case INT32:
 			return va.(int32) < vb.(int32)
 		case INT64:
 			return va.(int64) < vb.(int64)
+		case UINT8:
+			return va.(uint8) < vb.(uint8)
+		case UINT16:
+			return va.(uint16) < vb.(uint16)
+		case UINT32:
+			return va.(uint32) < vb.(uint32)
+		case UINT64:
+			return va.(uint64) < vb.(uint64)
 		case FLOAT32:
 			return va.(float32) < vb.(float32)
 		case FLOAT64:
@@ -291,10 +400,22 @@ func LTEFunc(va interface{}, vb interface{}) interface{} {
 				return true
 			}
 			return false
+		case INT8:
+			return va.(int8) <= vb.(int8)
+		case INT16:
+			return va.(int16) <= vb.(int16)
 		case INT32:
 			return va.(int32) <= vb.(int32)
 		case INT64:
 			return va.(int64) <= vb.(int64)
+		case UINT8:
+			return va.(uint8) <= vb.(uint8)
+		case UINT16:
+			return va.(uint16) <= vb.(uint16)
+		case UINT32:
+			return va.(uint32) <= vb.(uint32)
+		case UINT64:
+			return va.(uint64) <= vb.(uint64)
 		case FLOAT32:
 			return va.(float32) <= vb.(float32)
 		case FLOAT64:
@@ -331,10 +452,22 @@ func GTFunc(va interface{}, vb interface{}) interface{} {
 				return true
 			}
 			return false
+		case INT8:
+			return va.(int8) > vb.(int8)
+		case INT16:
+			return va.(int16) > vb.(int16)
 		case INT32:
 			return va.(int32) > vb.(int32)
 		case INT64:
 			return va.(int64) > vb.(int64)
+		case UINT8:
+			return va.(uint8) > vb.(uint8)
+		case UINT16:
+			return va.(uint16) > vb.(uint16)
+		case UINT32:
+			return va.(uint32) > vb.(uint32)
+		case UINT64:
+			return va.(uint64) > vb.(uint64)
 		case FLOAT32:
 			return va.(float32) > vb.(float32)
 		case FLOAT64:
@@ -371,10 +504,22 @@ func GTEFunc(va interface{}, vb interface{}) interface{} {
 				return true
 			}
 			return false
+		case INT8:
+			return va.(int8) >= vb.(int8)
+		case INT16:
+			return va.(int16) >= vb.(int16)
 		case INT32:
 			return va.(int32) >= vb.(int32)
 		case INT64:
 			return va.(int64) >= vb.(int64)
+		case UINT8:
+			return va.(uint8) >= vb.(uint8)
+		case UINT16:
+			return va.(uint16) >= vb.(uint16)
+		case UINT32:
+			return va.(uint32) >= vb.(uint32)
+		case UINT64:
+			return va.(uint64) >= vb.(uint64)
 		case FLOAT32:
 			return va.(float32) >= vb.(float32)
 		case FLOAT64:

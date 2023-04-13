@@ -11,6 +11,7 @@ import (
 
 type BooleanExpressionNode struct {
 	Name                    string
+	Clause                  string
 	Predicated              *PredicatedNode
 	NotBooleanExpression    *NotBooleanExpressionNode
 	BinaryBooleanExpression *BinaryBooleanExpressionNode
@@ -18,6 +19,7 @@ type BooleanExpressionNode struct {
 
 func NewBooleanExpressionNode(runtime *config.Runtime, t parser.IBooleanExpressionContext) *BooleanExpressionNode {
 	tt := t.(*parser.BooleanExpressionContext)
+
 	res := &BooleanExpressionNode{}
 	children := tt.GetChildren()
 	switch len(children) {
@@ -40,6 +42,11 @@ func NewBooleanExpressionNode(runtime *config.Runtime, t parser.IBooleanExpressi
 		res.Name = res.BinaryBooleanExpression.Name
 
 	}
+
+	start := tt.GetStart().GetStart()
+	stop := tt.GetStop().GetStop()
+	res.Clause = tt.GetStart().GetTokenSource().GetInputStream().GetText(start, stop)
+
 	return res
 }
 

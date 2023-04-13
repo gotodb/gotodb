@@ -9,15 +9,14 @@ import (
 )
 
 type ScanNode struct {
-	Catalog       string
-	Schema        string
-	Table         string
-	Name          string
-	Metadata      *metadata.Metadata
-	InputMetadata *metadata.Metadata
-	Connector     connector.Connector
-	Output        Node
-	Filters       []*operator.BooleanExpressionNode
+	Catalog   string
+	Schema    string
+	Table     string
+	Name      string
+	Metadata  *metadata.Metadata
+	Connector connector.Connector
+	Output    Node
+	Filters   []*operator.BooleanExpressionNode
 }
 
 func NewScanNode(runtime *config.Runtime, name string) *ScanNode {
@@ -79,8 +78,6 @@ func (n *ScanNode) SetMetadata() error {
 	n.Connector = ctr
 	n.Metadata = md.Copy()
 	n.Metadata.Reset()
-	n.InputMetadata = md.Copy()
-	n.InputMetadata.Reset()
 
 	return err
 }

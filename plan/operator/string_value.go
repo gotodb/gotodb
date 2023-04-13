@@ -42,3 +42,7 @@ func (n *StringValueNode) GetType(_ *metadata.Metadata) (gtype.Type, error) {
 func (n *StringValueNode) IsAggregate() bool {
 	return false
 }
+
+func (n *StringValueNode) GetText() string {
+	return n.Str
+}

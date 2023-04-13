@@ -25,15 +25,15 @@ type IndexReader func(indexes []int) (*row.RowsGroup, error)
 type RowReader func() (*row.Row, error)
 
 func NewConnector(catalog string, schema string, table string) (Connector, error) {
-	if len(catalog) >= 4 {
-		switch catalog[:4] {
-		case "test":
-			return NewTestConnector(catalog, schema, table)
-		case "file":
-			return NewFileConnector(catalog, schema, table)
-		case "http":
-			return NewHttpConnector(catalog, schema, table)
-		}
+	switch catalog {
+	case "test":
+		return NewTestConnector(catalog, schema, table)
+	case "file":
+		return NewFileConnector(catalog, schema, table)
+	case "http":
+		return NewHttpConnector(catalog, schema, table)
+	case "mysql":
+		return NewMysqlConnector(catalog, schema, table)
 	}
 	return nil, fmt.Errorf("newConnector failed: table %s.%s.%s not found", catalog, schema, table)
 }
@@ -46,6 +46,8 @@ func NewEmptyConnector(catalog string) Connector {
 		return NewFileConnectorEmpty()
 	case "http":
 		return NewHttpConnectorEmpty()
+	case "mysql":
+		return NewMysqlConnectorEmpty()
 	default:
 		return NewTestConnectorEmpty()
 	}
