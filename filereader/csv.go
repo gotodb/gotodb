@@ -113,14 +113,13 @@ func (csv *CSV) Read(indexes []int) (*row.RowsGroup, error) {
 		}
 		rg.RowsNumber++
 	}
+	if err == io.EOF && rg.RowsNumber > 0 {
+		err = nil
+	}
 
 	if err != nil {
 		csv.Closer.Close()
-		if err == io.EOF && rg.RowsNumber > 0 {
-			err = nil
-		} else {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	return csv.TypeConvert(rg)

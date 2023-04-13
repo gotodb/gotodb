@@ -73,7 +73,7 @@ func (m *Metadata) GetColumnNumber() int {
 
 func (m *Metadata) GetColumnIndexes() []int {
 	var indexes []int
-	for _, i := range m.ColumnMap {
+	for i := range m.Columns {
 		indexes = append(indexes, i)
 	}
 	return indexes

@@ -10,7 +10,7 @@ file-connector:
     table: student
     file-type: csv
     column-names: [ id,name,age ]
-    column-types: [ INT64,STRING,INT32 ]
+    column-types: [ UINT64,STRING,INT32 ]
     paths: [ ../db/file/info/student/ ]
 
 http-connector:
