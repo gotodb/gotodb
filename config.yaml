@@ -10,7 +10,7 @@ file-connector:
     table: student
     file-type: csv
     column-names: [ id,name,age ]
-    column-types: [ UINT64,STRING,INT32 ]
+    column-types: [ INT64,STRING,INT32 ]
     paths: [ ../db/file/info/student/ ]
 
 http-connector:
@@ -31,7 +31,7 @@ mysql-connector:
     host: 127.0.0.1
     port: 3306
     user: root
-    password:
+    password: zhangzhen
     column-names: []
     column-types: []
 

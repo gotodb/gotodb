@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gotodb/gotodb/filereader"
+	"github.com/gotodb/gotodb/connector/filereader"
 	"github.com/gotodb/gotodb/filesystem"
 	"github.com/gotodb/gotodb/filesystem/partition"
 	"github.com/gotodb/gotodb/gtype"

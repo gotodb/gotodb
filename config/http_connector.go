@@ -28,7 +28,7 @@ func (c HttpConnectors) Check() error {
 	for pattern, conf := range c {
 		ns := strings.Split(pattern, ".")
 		if len(ns) < 3 {
-			return fmt.Errorf("file config name error: %s", pattern)
+			return fmt.Errorf("http config name error: %s", pattern)
 		}
 		if len(conf.ColumnNames) != len(conf.ColumnTypes) {
 			return fmt.Errorf("column names (%d) doesn't match column types (%d)", len(conf.ColumnNames), len(conf.ColumnTypes))

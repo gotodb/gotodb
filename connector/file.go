@@ -2,16 +2,16 @@ package connector
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/plan/operator"
 	"io"
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/filereader"
+	"github.com/gotodb/gotodb/connector/filereader"
 	"github.com/gotodb/gotodb/filesystem"
 	"github.com/gotodb/gotodb/filesystem/partition"
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/metadata"
+	"github.com/gotodb/gotodb/plan/operator"
 	"github.com/gotodb/gotodb/row"
 )
 
@@ -84,10 +84,9 @@ func (c *File) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, _
 	if err != nil {
 		return nil, err
 	}
-
 	return func(indexes []int) (*row.RowsGroup, error) {
 		return reader.Read(indexes)
-	}, err
+	}, nil
 }
 
 func (c *File) ShowSchemas(catalog string, _, _ *string) RowReader {

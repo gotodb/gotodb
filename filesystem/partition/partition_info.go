@@ -71,7 +71,7 @@ func (p *Info) GetPartitionFiles(i int) []*filesystem.FileLocation {
 func (p *Info) GetNoPartitionFiles() []*filesystem.FileLocation {
 	var f []*filesystem.FileLocation
 	for i, location := range p.Locations {
-		f = append(f, &filesystem.FileLocation{Location: location, FileType: p.GetFileType(i)})
+		f = append(f, filesystem.NewFileLocation(location, p.GetFileType(i)))
 	}
 	return f
 }

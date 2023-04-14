@@ -80,7 +80,7 @@ func (csv *CSV) Read(indexes []int) (*row.RowsGroup, error) {
 	}
 
 	if err != nil {
-		csv.Closer.Close()
+		_ = csv.Closer.Close()
 		return nil, err
 	}
 

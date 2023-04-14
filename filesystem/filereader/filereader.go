@@ -21,5 +21,5 @@ func NewReader(file *filesystem.FileLocation, md *metadata.Metadata) (FileReader
 		}
 		return New(vf, md), nil
 	}
-	return nil, fmt.Errorf("file type %d is not defined", file.FileType)
+	return nil, fmt.Errorf("filereader type %d is not defined", file.FileType)
 }
