@@ -114,31 +114,29 @@ func (c *Test) GetPartitionInfo(_ int) (*partition.Info, error) {
 	if c.PartitionInfo == nil {
 		c.PartitionInfo = partition.New(metadata.NewMetadata())
 		if c.Table == "csv" {
-			c.PartitionInfo.FileList = []*filesystem.FileLocation{
-				{
-					Location: tempDir + "/test01.csv",
-					FileType: filesystem.CSV,
-				},
-				{
-					Location: tempDir + "/test02.csv",
-					FileType: filesystem.CSV,
-				},
+			c.PartitionInfo.Locations = []string{
+				tempDir + "/test01.csv",
+				tempDir + "/test02.csv",
+			}
+			c.PartitionInfo.FileTypes = []filesystem.FileType{
+				filesystem.CSV,
+				filesystem.CSV,
 			}
 			GenerateTestRows(columns)
 
 		} else if c.Table == "parquet" {
-			c.PartitionInfo.FileList = []*filesystem.FileLocation{
-				{
-					Location: tempDir + "/test.parquet",
-					FileType: filesystem.PARQUET,
-				},
+			c.PartitionInfo.Locations = []string{
+				tempDir + "/test.parquet",
+			}
+			c.PartitionInfo.FileTypes = []filesystem.FileType{
+				filesystem.PARQUET,
 			}
 		} else if c.Table == "orc" {
-			c.PartitionInfo.FileList = []*filesystem.FileLocation{
-				{
-					Location: tempDir + "/test.orc",
-					FileType: filesystem.ORC,
-				},
+			c.PartitionInfo.Locations = []string{
+				tempDir + "/test.orc",
+			}
+			c.PartitionInfo.FileTypes = []filesystem.FileType{
+				filesystem.ORC,
 			}
 		}
 

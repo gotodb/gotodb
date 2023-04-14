@@ -64,7 +64,7 @@ func (c *Mysql) GetPartitionInfo(partitionNumber int) (*partition.Info, error) {
 	if c.PartitionInfo == nil {
 		c.PartitionInfo = partition.New(metadata.NewMetadata())
 		for i := 0; i < partitionNumber; i++ {
-			c.PartitionInfo.FileList = append(c.PartitionInfo.FileList, &filesystem.FileLocation{Location: fmt.Sprintf("%d/%d", i, partitionNumber)})
+			c.PartitionInfo.Locations = append(c.PartitionInfo.Locations, fmt.Sprintf("%d/%d", i, partitionNumber))
 		}
 	}
 	return c.PartitionInfo, nil

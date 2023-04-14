@@ -197,7 +197,8 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 			}
 		} else {
 			for i, file := range scanNodePar.GetNoPartitionFiles() {
-				parInfos[i%pn].FileList = append(parInfos[i%pn].FileList, file)
+				parInfos[i%pn].Locations = append(parInfos[i%pn].Locations, file.Location)
+				parInfos[i%pn].FileTypes = append(parInfos[i%pn].FileTypes, file.FileType)
 			}
 		}
 

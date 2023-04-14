@@ -71,9 +71,9 @@ func (c *File) GetPartitionInfo(_ int) (*partition.Info, error) {
 				return nil, err
 			}
 			for _, f := range fs {
-				f.FileType = c.FileType
+				c.PartitionInfo.Locations = append(c.PartitionInfo.Locations, f.Location)
+				c.PartitionInfo.FileTypes = append(c.PartitionInfo.FileTypes, c.FileType)
 			}
-			c.PartitionInfo.FileList = append(c.PartitionInfo.FileList, fs...)
 		}
 	}
 	return c.PartitionInfo, nil

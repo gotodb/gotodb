@@ -12,8 +12,6 @@ type Info struct {
 	Locations  []string
 	FileTypes  []filesystem.FileType
 	FileLists  [][]*filesystem.FileLocation
-	//for no partition
-	FileList []*filesystem.FileLocation
 }
 
 func New(md *metadata.Metadata) *Info {
@@ -22,7 +20,6 @@ func New(md *metadata.Metadata) *Info {
 		Locations: []string{},
 		FileTypes: []filesystem.FileType{},
 		FileLists: [][]*filesystem.FileLocation{},
-		FileList:  []*filesystem.FileLocation{},
 	}
 	for i := 0; i < md.GetColumnNumber(); i++ {
 		t, _ := md.GetTypeByIndex(i)
@@ -72,7 +69,11 @@ func (p *Info) GetPartitionFiles(i int) []*filesystem.FileLocation {
 }
 
 func (p *Info) GetNoPartitionFiles() []*filesystem.FileLocation {
-	return p.FileList
+	var f []*filesystem.FileLocation
+	for i, location := range p.Locations {
+		f = append(f, &filesystem.FileLocation{Location: location, FileType: p.GetFileType(i)})
+	}
+	return f
 }
 
 func (p *Info) GetLocation(i int) string {
