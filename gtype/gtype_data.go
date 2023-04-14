@@ -738,7 +738,7 @@ func ToType(v interface{}, t Type) interface{} {
 	case INT32:
 		res = ToInt32(v)
 	case INT64:
-		res = ToUint64(v)
+		res = ToInt64(v)
 	case UINT8:
 		res = ToUint8(v)
 	case UINT16:

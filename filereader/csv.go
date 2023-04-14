@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/filesystem"
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/metadata"
@@ -31,43 +30,6 @@ func New(reader io.Reader, md *metadata.Metadata) *CSV {
 		Reader:   csv.NewReader(reader),
 		Closer:   io.Closer(reader.(filesystem.VirtualFile)),
 	}
-}
-
-func (csv *CSV) TypeConvert(rg *row.RowsGroup) (*row.RowsGroup, error) {
-	jobs := make(chan int)
-	done := make(chan bool)
-	cn := len(csv.Indexes)
-	colTypes := make([]gtype.Type, cn)
-	for i := 0; i < cn; i++ {
-		colTypes[i], _ = csv.Metadata.GetTypeByIndex(csv.Indexes[i])
-	}
-
-	for i := 0; i < config.Conf.Runtime.ParallelNumber; i++ {
-		go func() {
-			for {
-				j, ok := <-jobs
-				if ok {
-					for k := 0; k < cn; k++ {
-						v := rg.Vals[k][j]
-						cv := gtype.ToType(v, colTypes[k])
-						rg.Vals[k][j] = cv
-					}
-				} else {
-					done <- true
-					break
-				}
-			}
-		}()
-	}
-
-	for i := 0; i < rg.RowsNumber; i++ {
-		jobs <- i
-	}
-	close(jobs)
-	for i := 0; i < config.Conf.Runtime.ParallelNumber; i++ {
-		<-done
-	}
-	return rg, nil
 }
 
 func (csv *CSV) SetReadColumns(indexes []int) error {
@@ -109,7 +71,7 @@ func (csv *CSV) Read(indexes []int) (*row.RowsGroup, error) {
 			break
 		}
 		for i, index := range csv.Indexes {
-			rg.Vals[i] = append(rg.Vals[i], record[index])
+			rg.Vals[i] = append(rg.Vals[i], gtype.ToType(record[index], csv.Metadata.Columns[index].ColumnType))
 		}
 		rg.RowsNumber++
 	}
@@ -122,5 +84,5 @@ func (csv *CSV) Read(indexes []int) (*row.RowsGroup, error) {
 		return nil, err
 	}
 
-	return csv.TypeConvert(rg)
+	return rg, nil
 }
