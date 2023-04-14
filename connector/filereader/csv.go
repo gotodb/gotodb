@@ -24,7 +24,7 @@ type CSV struct {
 	OutMetadata *metadata.Metadata
 }
 
-func New(reader io.Reader, md *metadata.Metadata) *CSV {
+func NewCSV(reader io.Reader, md *metadata.Metadata) *CSV {
 	return &CSV{
 		Metadata: md,
 		Reader:   csv.NewReader(reader),
