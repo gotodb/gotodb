@@ -20,7 +20,7 @@ import (
 type Http struct {
 	Config        *config.HttpConnector
 	Metadata      *metadata.Metadata
-	PartitionInfo *partition.Info
+	PartitionInfo *partition.Partition
 }
 
 func NewHttpConnectorEmpty() *Http {
@@ -62,7 +62,7 @@ func (c *Http) GetMetadata() (*metadata.Metadata, error) {
 	return c.Metadata, nil
 }
 
-func (c *Http) GetPartitionInfo(partitionNumber int) (*partition.Info, error) {
+func (c *Http) GetPartitionInfo(partitionNumber int) (*partition.Partition, error) {
 	if c.PartitionInfo == nil {
 		c.PartitionInfo = partition.New(metadata.NewMetadata())
 		for i := 0; i < partitionNumber; i++ {

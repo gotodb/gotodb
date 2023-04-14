@@ -139,7 +139,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 			return res, err
 		}
 
-		parInfos := make([]*partition.Info, pn)
+		parInfos := make([]*partition.Partition, pn)
 		recMap := make([]map[int]int, pn)
 		for i := 0; i < pn; i++ {
 			parInfos[i] = partition.New(scanNodePar.Metadata)

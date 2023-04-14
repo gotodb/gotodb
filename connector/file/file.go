@@ -18,7 +18,7 @@ type File struct {
 	Config        *config.FileConnector
 	Metadata      *metadata.Metadata
 	FileType      partition.FileType
-	PartitionInfo *partition.Info
+	PartitionInfo *partition.Partition
 }
 
 func NewFileConnectorEmpty() *File {
@@ -61,7 +61,7 @@ func (c *File) GetMetadata() (*metadata.Metadata, error) {
 	return c.Metadata, nil
 }
 
-func (c *File) GetPartitionInfo(_ int) (*partition.Info, error) {
+func (c *File) GetPartitionInfo(_ int) (*partition.Partition, error) {
 	if c.PartitionInfo == nil {
 		c.PartitionInfo = partition.New(metadata.NewMetadata())
 		for _, loc := range c.Config.Paths {

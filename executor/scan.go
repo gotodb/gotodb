@@ -17,9 +17,10 @@ func (e *Executor) SetInstructionScan(instruction *pb.Instruction) error {
 		return err
 	}
 
-	if err := job.PartitionInfo.Decode(); err != nil {
+	//partition info must decode firstly
+	if err := job.Partition.Decode(); err != nil {
 		return err
-	} //partition info must decode firstly
+	}
 
 	e.StageJob = &job
 	return nil
@@ -110,8 +111,8 @@ func (e *Executor) RunScan() (err error) {
 	}
 
 	// no partitions
-	if !job.PartitionInfo.IsPartition() {
-		for _, file := range job.PartitionInfo.GetNoPartitionFiles() {
+	if !job.Partition.IsPartition() {
+		for _, file := range job.Partition.GetNoPartitionFiles() {
 			var reader row.GroupReader
 			reader, err = ctr.GetReader(file, inputMetadata, job.Filters)
 			if err != nil {
@@ -133,7 +134,7 @@ func (e *Executor) RunScan() (err error) {
 			}
 		}
 	} else { // partitioned
-		parColNum := job.PartitionInfo.GetPartitionColumnNum()
+		parColNum := job.Partition.GetPartitionColumnNum()
 		totColNum := inputMetadata.GetColumnNumber()
 		dataColNum := totColNum - parColNum
 		var dataCols []int
@@ -152,14 +153,14 @@ func (e *Executor) RunScan() (err error) {
 			inputMetadata.DeleteColumnByIndex(i)
 		}
 
-		for i := 0; i < job.PartitionInfo.GetPartitionNum(); i++ {
-			parFullRow := job.PartitionInfo.GetPartitionRow(i)
+		for i := 0; i < job.Partition.GetPartitionNum(); i++ {
+			parFullRow := job.Partition.GetPartitionRow(i)
 			parRow := row.NewRow()
 			for _, index := range parCols {
 				parRow.AppendVals(parFullRow.Vals[index])
 			}
 
-			for _, file := range job.PartitionInfo.GetPartitionFiles(i) {
+			for _, file := range job.Partition.GetPartitionFiles(i) {
 				var reader row.GroupReader
 				reader, err = ctr.GetReader(file, inputMetadata, job.Filters)
 				if err != nil {

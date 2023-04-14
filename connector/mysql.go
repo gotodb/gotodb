@@ -17,7 +17,7 @@ import (
 type Mysql struct {
 	Config        *config.MysqlConnector
 	Metadata      *metadata.Metadata
-	PartitionInfo *partition.Info
+	PartitionInfo *partition.Partition
 }
 
 func NewMysqlConnectorEmpty() *Mysql {
@@ -59,7 +59,7 @@ func (c *Mysql) GetMetadata() (*metadata.Metadata, error) {
 	return c.Metadata, nil
 }
 
-func (c *Mysql) GetPartitionInfo(partitionNumber int) (*partition.Info, error) {
+func (c *Mysql) GetPartitionInfo(partitionNumber int) (*partition.Partition, error) {
 	if c.PartitionInfo == nil {
 		c.PartitionInfo = partition.New(metadata.NewMetadata())
 		for i := 0; i < partitionNumber; i++ {
