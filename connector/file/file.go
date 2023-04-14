@@ -1,14 +1,13 @@
-package connector
+package file
 
 import (
 	"fmt"
+	"github.com/gotodb/gotodb/partition"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/connector/filereader"
-	"github.com/gotodb/gotodb/filesystem"
-	"github.com/gotodb/gotodb/filesystem/partition"
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/plan/operator"
@@ -18,7 +17,7 @@ import (
 type File struct {
 	Config        *config.FileConnector
 	Metadata      *metadata.Metadata
-	FileType      filesystem.FileType
+	FileType      partition.FileType
 	PartitionInfo *partition.Info
 }
 
@@ -35,7 +34,7 @@ func NewFileConnector(catalog, schema, table string) (*File, error) {
 		return nil, fmt.Errorf("file connector: table not found")
 	}
 	res.Config = conf
-	res.FileType = filesystem.StringToFileType(conf.FileType)
+	res.FileType = partition.StringToFileType(conf.FileType)
 	res.Metadata, err = NewFileMetadata(conf)
 
 	return res, err
@@ -66,12 +65,12 @@ func (c *File) GetPartitionInfo(_ int) (*partition.Info, error) {
 	if c.PartitionInfo == nil {
 		c.PartitionInfo = partition.New(metadata.NewMetadata())
 		for _, loc := range c.Config.Paths {
-			fs, err := filesystem.List(loc)
+			files, err := os.ReadDir(loc)
 			if err != nil {
 				return nil, err
 			}
-			for _, f := range fs {
-				c.PartitionInfo.Locations = append(c.PartitionInfo.Locations, f.Location)
+			for _, file := range files {
+				c.PartitionInfo.Locations = append(c.PartitionInfo.Locations, loc+"/"+file.Name())
 				c.PartitionInfo.FileTypes = append(c.PartitionInfo.FileTypes, c.FileType)
 			}
 		}
@@ -79,8 +78,8 @@ func (c *File) GetPartitionInfo(_ int) (*partition.Info, error) {
 	return c.PartitionInfo, nil
 }
 
-func (c *File) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, _ []*operator.BooleanExpressionNode) (IndexReader, error) {
-	reader, err := filereader.NewReader(file, md)
+func (c *File) GetReader(file *partition.FileLocation, md *metadata.Metadata, _ []*operator.BooleanExpressionNode) (row.GroupReader, error) {
+	reader, err := NewReader(file, md)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +88,7 @@ func (c *File) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, _
 	}, nil
 }
 
-func (c *File) ShowSchemas(catalog string, _, _ *string) RowReader {
+func (c *File) ShowSchemas(catalog string, _, _ *string) row.Reader {
 	var err error
 	var rs []*row.Row
 	for key := range config.Conf.FileConnectors {
@@ -115,7 +114,7 @@ func (c *File) ShowSchemas(catalog string, _, _ *string) RowReader {
 	}
 }
 
-func (c *File) ShowTables(catalog, schema string, _, _ *string) RowReader {
+func (c *File) ShowTables(catalog, schema string, _, _ *string) row.Reader {
 	var err error
 	var rs []*row.Row
 	for key := range config.Conf.FileConnectors {
@@ -141,7 +140,7 @@ func (c *File) ShowTables(catalog, schema string, _, _ *string) RowReader {
 	}
 }
 
-func (c *File) ShowColumns(catalog, schema, table string) RowReader {
+func (c *File) ShowColumns(catalog, schema, table string) row.Reader {
 	var err error
 	var rs []*row.Row
 	for key, conf := range config.Conf.FileConnectors {
@@ -171,7 +170,7 @@ func (c *File) ShowColumns(catalog, schema, table string) RowReader {
 	}
 }
 
-func (c *File) ShowPartitions(_, _, _ string) RowReader {
+func (c *File) ShowPartitions(_, _, _ string) row.Reader {
 	return func() (*row.Row, error) {
 		return nil, io.EOF
 	}

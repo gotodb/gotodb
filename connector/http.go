@@ -3,6 +3,7 @@ package connector
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gotodb/gotodb/partition"
 	"github.com/gotodb/gotodb/plan/operator"
 	"io"
 	"net/http"
@@ -11,8 +12,6 @@ import (
 	"time"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/filesystem"
-	"github.com/gotodb/gotodb/filesystem/partition"
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
@@ -21,7 +20,6 @@ import (
 type Http struct {
 	Config        *config.HttpConnector
 	Metadata      *metadata.Metadata
-	FileType      filesystem.FileType
 	PartitionInfo *partition.Info
 }
 
@@ -38,7 +36,6 @@ func NewHttpConnector(catalog, schema, table string) (*Http, error) {
 		return nil, fmt.Errorf("http connector: table not found")
 	}
 	res.Config = conf
-	res.FileType = filesystem.HTTP
 	res.Metadata, err = NewHttpMetadata(conf)
 
 	return res, err
@@ -75,7 +72,7 @@ func (c *Http) GetPartitionInfo(partitionNumber int) (*partition.Info, error) {
 	return c.PartitionInfo, nil
 }
 
-func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) (IndexReader, error) {
+func (c *Http) GetReader(file *partition.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) (row.GroupReader, error) {
 	var _http string
 	for _, filter := range filters {
 		if filter.Name == "_http" {
@@ -280,7 +277,7 @@ func (c *Http) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, f
 	}, nil
 }
 
-func (c *Http) ShowSchemas(catalog string, _, _ *string) RowReader {
+func (c *Http) ShowSchemas(catalog string, _, _ *string) row.Reader {
 	var err error
 	var rs []*row.Row
 	for key := range config.Conf.HttpConnectors {
@@ -306,7 +303,7 @@ func (c *Http) ShowSchemas(catalog string, _, _ *string) RowReader {
 	}
 }
 
-func (c *Http) ShowTables(catalog, schema string, _, _ *string) RowReader {
+func (c *Http) ShowTables(catalog, schema string, _, _ *string) row.Reader {
 	var err error
 	var rs []*row.Row
 	for key := range config.Conf.HttpConnectors {
@@ -332,7 +329,7 @@ func (c *Http) ShowTables(catalog, schema string, _, _ *string) RowReader {
 	}
 }
 
-func (c *Http) ShowColumns(catalog, schema, table string) RowReader {
+func (c *Http) ShowColumns(catalog, schema, table string) row.Reader {
 	var err error
 	var rs []*row.Row
 	for key, conf := range config.Conf.HttpConnectors {
@@ -362,7 +359,7 @@ func (c *Http) ShowColumns(catalog, schema, table string) RowReader {
 	}
 }
 
-func (c *Http) ShowPartitions(_, _, _ string) RowReader {
+func (c *Http) ShowPartitions(_, _, _ string) row.Reader {
 	return func() (*row.Row, error) {
 		return nil, io.EOF
 	}

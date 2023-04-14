@@ -1,8 +1,8 @@
 package stage
 
 import (
-	"github.com/gotodb/gotodb/filesystem/partition"
 	"github.com/gotodb/gotodb/metadata"
+	"github.com/gotodb/gotodb/partition"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/plan"
 	"github.com/gotodb/gotodb/plan/operator"

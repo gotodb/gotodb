@@ -2,34 +2,30 @@ package connector
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/plan/operator"
-
-	"github.com/gotodb/gotodb/filesystem"
-	"github.com/gotodb/gotodb/filesystem/partition"
+	"github.com/gotodb/gotodb/connector/file"
 	"github.com/gotodb/gotodb/metadata"
+	"github.com/gotodb/gotodb/partition"
+	"github.com/gotodb/gotodb/plan/operator"
 	"github.com/gotodb/gotodb/row"
 )
 
 type Connector interface {
 	GetMetadata() (*metadata.Metadata, error)
 	GetPartitionInfo(parallelNumber int) (*partition.Info, error)
-	GetReader(file *filesystem.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) (IndexReader, error)
+	GetReader(file *partition.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) (row.GroupReader, error)
 
-	ShowTables(catalog, schema string, like, escape *string) RowReader
-	ShowSchemas(catalog string, like, escape *string) RowReader
-	ShowColumns(catalog, schema, table string) RowReader
-	ShowPartitions(catalog, schema, table string) RowReader
+	ShowTables(catalog, schema string, like, escape *string) row.Reader
+	ShowSchemas(catalog string, like, escape *string) row.Reader
+	ShowColumns(catalog, schema, table string) row.Reader
+	ShowPartitions(catalog, schema, table string) row.Reader
 }
-
-type IndexReader func(indexes []int) (*row.RowsGroup, error)
-type RowReader func() (*row.Row, error)
 
 func NewConnector(catalog string, schema string, table string) (Connector, error) {
 	switch catalog {
 	case "test":
 		return NewTestConnector(catalog, schema, table)
 	case "file":
-		return NewFileConnector(catalog, schema, table)
+		return file.NewFileConnector(catalog, schema, table)
 	case "http":
 		return NewHttpConnector(catalog, schema, table)
 	case "mysql":
@@ -43,7 +39,7 @@ func NewEmptyConnector(catalog string) Connector {
 	case "test":
 		return NewTestConnectorEmpty()
 	case "file":
-		return NewFileConnectorEmpty()
+		return file.NewFileConnectorEmpty()
 	case "http":
 		return NewHttpConnectorEmpty()
 	case "mysql":

@@ -3,13 +3,12 @@ package connector
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gotodb/gotodb/partition"
 	"github.com/gotodb/gotodb/plan/operator"
 	"io"
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/filesystem"
-	"github.com/gotodb/gotodb/filesystem/partition"
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
@@ -70,7 +69,7 @@ func (c *Mysql) GetPartitionInfo(partitionNumber int) (*partition.Info, error) {
 	return c.PartitionInfo, nil
 }
 
-func (c *Mysql) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) (IndexReader, error) {
+func (c *Mysql) GetReader(file *partition.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) (row.GroupReader, error) {
 	alias := ""
 	if c.Config.Table != md.Columns[0].Table {
 		alias = md.Columns[0].Table + "."
@@ -132,7 +131,7 @@ func (c *Mysql) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, 
 	}, nil
 }
 
-func (c *Mysql) ShowSchemas(catalog string, _, _ *string) RowReader {
+func (c *Mysql) ShowSchemas(catalog string, _, _ *string) row.Reader {
 	var err error
 	var rs []*row.Row
 	for key := range config.Conf.MysqlConnectors {
@@ -159,7 +158,7 @@ func (c *Mysql) ShowSchemas(catalog string, _, _ *string) RowReader {
 	}
 }
 
-func (c *Mysql) ShowTables(catalog, schema string, _, _ *string) RowReader {
+func (c *Mysql) ShowTables(catalog, schema string, _, _ *string) row.Reader {
 	var err error
 	var rs []*row.Row
 	for key := range config.Conf.MysqlConnectors {
@@ -185,7 +184,7 @@ func (c *Mysql) ShowTables(catalog, schema string, _, _ *string) RowReader {
 	}
 }
 
-func (c *Mysql) ShowColumns(catalog, schema, table string) RowReader {
+func (c *Mysql) ShowColumns(catalog, schema, table string) row.Reader {
 	var err error
 	var rs []*row.Row
 	for key, conf := range config.Conf.MysqlConnectors {
@@ -215,7 +214,7 @@ func (c *Mysql) ShowColumns(catalog, schema, table string) RowReader {
 	}
 }
 
-func (c *Mysql) ShowPartitions(_, _, _ string) RowReader {
+func (c *Mysql) ShowPartitions(_, _, _ string) row.Reader {
 	return func() (*row.Row, error) {
 		return nil, io.EOF
 	}

@@ -1,7 +1,6 @@
 package partition
 
 import (
-	"github.com/gotodb/gotodb/filesystem"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
 )
@@ -10,16 +9,16 @@ type Info struct {
 	Metadata   *metadata.Metadata
 	Partitions []*Partition
 	Locations  []string
-	FileTypes  []filesystem.FileType
-	FileLists  [][]*filesystem.FileLocation
+	FileTypes  []FileType
+	FileLists  [][]*FileLocation
 }
 
 func New(md *metadata.Metadata) *Info {
 	res := &Info{
 		Metadata:  md,
 		Locations: []string{},
-		FileTypes: []filesystem.FileType{},
-		FileLists: [][]*filesystem.FileLocation{},
+		FileTypes: []FileType{},
+		FileLists: [][]*FileLocation{},
 	}
 	for i := 0; i < md.GetColumnNumber(); i++ {
 		t, _ := md.GetTypeByIndex(i)
@@ -61,17 +60,17 @@ func (p *Info) GetPartitionRow(i int) *row.Row {
 	return r
 }
 
-func (p *Info) GetPartitionFiles(i int) []*filesystem.FileLocation {
+func (p *Info) GetPartitionFiles(i int) []*FileLocation {
 	if i >= len(p.FileLists) {
-		return []*filesystem.FileLocation{}
+		return []*FileLocation{}
 	}
 	return p.FileLists[i]
 }
 
-func (p *Info) GetNoPartitionFiles() []*filesystem.FileLocation {
-	var f []*filesystem.FileLocation
+func (p *Info) GetNoPartitionFiles() []*FileLocation {
+	var f []*FileLocation
 	for i, location := range p.Locations {
-		f = append(f, filesystem.NewFileLocation(location, p.GetFileType(i)))
+		f = append(f, NewFileLocation(location, p.GetFileType(i)))
 	}
 	return f
 }
@@ -83,9 +82,9 @@ func (p *Info) GetLocation(i int) string {
 	return p.Locations[i]
 }
 
-func (p *Info) GetFileType(i int) filesystem.FileType {
+func (p *Info) GetFileType(i int) FileType {
 	if i >= len(p.FileTypes) {
-		return filesystem.UNKNOWNFILETYPE
+		return FileTypeUnknown
 	}
 	return p.FileTypes[i]
 }

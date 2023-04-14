@@ -2,15 +2,14 @@ package connector
 
 import (
 	"fmt"
+	"github.com/gotodb/gotodb/connector/file"
+	"github.com/gotodb/gotodb/partition"
 	"github.com/gotodb/gotodb/plan/operator"
 	"io"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/gotodb/gotodb/connector/filereader"
-	"github.com/gotodb/gotodb/filesystem"
-	"github.com/gotodb/gotodb/filesystem/partition"
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
@@ -118,9 +117,9 @@ func (c *Test) GetPartitionInfo(_ int) (*partition.Info, error) {
 				tempDir + "/test01.csv",
 				tempDir + "/test02.csv",
 			}
-			c.PartitionInfo.FileTypes = []filesystem.FileType{
-				filesystem.CSV,
-				filesystem.CSV,
+			c.PartitionInfo.FileTypes = []partition.FileType{
+				partition.FileTypeCSV,
+				partition.FileTypeCSV,
 			}
 			GenerateTestRows(columns)
 
@@ -128,15 +127,15 @@ func (c *Test) GetPartitionInfo(_ int) (*partition.Info, error) {
 			c.PartitionInfo.Locations = []string{
 				tempDir + "/test.parquet",
 			}
-			c.PartitionInfo.FileTypes = []filesystem.FileType{
-				filesystem.PARQUET,
+			c.PartitionInfo.FileTypes = []partition.FileType{
+				partition.FileTypeParquet,
 			}
 		} else if c.Table == "orc" {
 			c.PartitionInfo.Locations = []string{
 				tempDir + "/test.orc",
 			}
-			c.PartitionInfo.FileTypes = []filesystem.FileType{
-				filesystem.ORC,
+			c.PartitionInfo.FileTypes = []partition.FileType{
+				partition.FileTypeORC,
 			}
 		}
 
@@ -144,8 +143,8 @@ func (c *Test) GetPartitionInfo(_ int) (*partition.Info, error) {
 	return c.PartitionInfo, nil
 }
 
-func (c *Test) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, _ []*operator.BooleanExpressionNode) (IndexReader, error) {
-	reader, err := filereader.NewReader(file, md)
+func (c *Test) GetReader(f *partition.FileLocation, md *metadata.Metadata, _ []*operator.BooleanExpressionNode) (row.GroupReader, error) {
+	reader, err := file.NewReader(f, md)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +153,7 @@ func (c *Test) GetReader(file *filesystem.FileLocation, md *metadata.Metadata, _
 	}, nil
 }
 
-func (c *Test) ShowTables(_, _ string, _, _ *string) RowReader {
+func (c *Test) ShowTables(_, _ string, _, _ *string) row.Reader {
 	var err error
 	tables := []string{"csv", "parquet", "orc"}
 	var rs []*row.Row
@@ -176,7 +175,7 @@ func (c *Test) ShowTables(_, _ string, _, _ *string) RowReader {
 	}
 }
 
-func (c *Test) ShowSchemas(_ string, _, _ *string) RowReader {
+func (c *Test) ShowSchemas(_ string, _, _ *string) row.Reader {
 	var err error
 
 	r := row.NewRow()
@@ -194,7 +193,7 @@ func (c *Test) ShowSchemas(_ string, _, _ *string) RowReader {
 	}
 }
 
-func (c *Test) ShowColumns(_, _, _ string) RowReader {
+func (c *Test) ShowColumns(_, _, _ string) row.Reader {
 	var err error
 	var rs []*row.Row
 	r := row.NewRow()
@@ -230,7 +229,7 @@ func (c *Test) ShowColumns(_, _, _ string) RowReader {
 	}
 }
 
-func (c *Test) ShowPartitions(_, _, _ string) RowReader {
+func (c *Test) ShowPartitions(_, _, _ string) row.Reader {
 	var err error
 
 	return func() (*row.Row, error) {

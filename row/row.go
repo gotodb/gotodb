@@ -9,6 +9,8 @@ type Row struct {
 	Vals []interface{}
 }
 
+type Reader func() (*Row, error)
+
 func NewRow(vals ...interface{}) *Row {
 	colNum := 0
 	if vals != nil {

@@ -1,11 +1,11 @@
-package filereader
+package file
 
 import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"os"
 
-	"github.com/gotodb/gotodb/filesystem"
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
@@ -24,11 +24,11 @@ type CSV struct {
 	OutMetadata *metadata.Metadata
 }
 
-func NewCSV(reader io.Reader, md *metadata.Metadata) *CSV {
+func NewCSV(osFile *os.File, md *metadata.Metadata) *CSV {
 	return &CSV{
 		Metadata: md,
-		Reader:   csv.NewReader(reader),
-		Closer:   io.Closer(reader.(filesystem.VirtualFile)),
+		Reader:   csv.NewReader(osFile),
+		Closer:   osFile,
 	}
 }
 

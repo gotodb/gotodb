@@ -2,9 +2,8 @@ package stage
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/filesystem"
-	"github.com/gotodb/gotodb/filesystem/partition"
 	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/partition"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/plan"
 	"github.com/gotodb/gotodb/plan/operator"
@@ -186,7 +185,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 						parInfos[k].Write(row)
 						parInfos[k].Locations = append(parInfos[k].Locations, location)
 						parInfos[k].FileTypes = append(parInfos[k].FileTypes, fileType)
-						parInfos[k].FileLists = append(parInfos[k].FileLists, []*filesystem.FileLocation{})
+						parInfos[k].FileLists = append(parInfos[k].FileLists, []*partition.FileLocation{})
 					}
 					j := recMap[k][i]
 					parInfos[k].FileLists[j] = append(parInfos[k].FileLists[j], file)

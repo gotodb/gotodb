@@ -15,6 +15,8 @@ type RowsGroup struct {
 	Index      int
 }
 
+type GroupReader func(indexes []int) (*RowsGroup, error)
+
 func NewRowsGroup(md *metadata.Metadata) *RowsGroup {
 	return &RowsGroup{
 		Metadata:   md,
