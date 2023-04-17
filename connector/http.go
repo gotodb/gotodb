@@ -43,6 +43,8 @@ func NewHttpConnector(catalog, schema, table string) (*Http, error) {
 
 func NewHttpMetadata(conf *config.HttpConnector) (*metadata.Metadata, error) {
 	res := metadata.NewMetadata()
+	conf.ColumnNames = append(conf.ColumnNames, conf.FilterColumn, conf.ResultColumn)
+	conf.ColumnTypes = append(conf.ColumnTypes, "STRING", "STRING")
 	for i := 0; i < len(conf.ColumnNames); i++ {
 		col := &metadata.ColumnMetadata{
 			Catalog:    conf.Catalog,
@@ -75,7 +77,7 @@ func (c *Http) GetPartition(partitionNumber int) (*partition.Partition, error) {
 func (c *Http) GetReader(file *partition.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) (row.GroupReader, error) {
 	var _http string
 	for _, filter := range filters {
-		if filter.Name == "_http" {
+		if filter.Name == c.Config.FilterColumn {
 			_http = filter.Predicated.Predicate.RightValueExpression.PrimaryExpression.StringValue.Str
 			break
 		}
@@ -258,9 +260,9 @@ func (c *Http) GetReader(file *partition.FileLocation, md *metadata.Metadata, fi
 				}
 				for _, index := range indexes {
 					col := rg.Metadata.Columns[index]
-					if col.ColumnName == "_http" {
+					if col.ColumnName == c.Config.FilterColumn {
 						rg.Vals[index] = append(rg.Vals[index], _http)
-					} else if col.ColumnName == "_" {
+					} else if col.ColumnName == c.Config.ResultColumn {
 						rg.Vals[index] = append(rg.Vals[index], string(respBody))
 					} else if value, ok := data[col.ColumnName]; ok {
 						rg.Vals[index] = append(rg.Vals[index], gtype.ToType(value, md.Columns[index].ColumnType))

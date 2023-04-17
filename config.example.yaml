@@ -19,6 +19,8 @@ http-connector:
     schema: etcd
     table: "*"
     data-path:
+    filter-column: _http
+    result-column: _
     column-names: [ key, value, _http, _ ]
     column-types: [ STRING, STRING, STRING, STRING ]
 

@@ -6,12 +6,14 @@ import (
 )
 
 type HttpConnector struct {
-	Catalog     string   `yaml:"catalog"`
-	Schema      string   `yaml:"schema"`
-	Table       string   `yaml:"table"`
-	DataPath    string   `yaml:"data-path"`
-	ColumnNames []string `yaml:"column-names"`
-	ColumnTypes []string `yaml:"column-types"`
+	Catalog      string   `yaml:"catalog"`
+	Schema       string   `yaml:"schema"`
+	Table        string   `yaml:"table"`
+	DataPath     string   `yaml:"data-path"`
+	FilterColumn string   `yaml:"filter-column"`
+	ResultColumn string   `yaml:"result-column"`
+	ColumnNames  []string `yaml:"column-names"`
+	ColumnTypes  []string `yaml:"column-types"`
 }
 type HttpConnectors map[string]*HttpConnector
 

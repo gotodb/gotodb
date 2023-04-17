@@ -114,8 +114,22 @@ data:
         schema: etcd
         table: "*"
         data-path:
-        column-names: [ key, value, _http, _ ]
-        column-types: [ STRING, STRING, STRING, STRING ]
+        filter-column: _http
+        result-column: _
+        column-names: [ key, value ]
+        column-types: [ STRING, STRING ]
+    
+    mysql-connector:
+      mysql.goploy.*:
+        catalog: localhost
+        schema: goploy
+        table: user
+        host: mysql
+        port: 3306
+        user: root
+        password:
+        column-names: []
+        column-types: []
     
     etcd:
       endpoint: [${ETCD_ENDPOINT}]
