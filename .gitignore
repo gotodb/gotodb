@@ -21,5 +21,6 @@
 # Go workspace file
 go.work
 
+config.yaml
 cmd/coordinator/coordinator
 cmd/worker/worker
