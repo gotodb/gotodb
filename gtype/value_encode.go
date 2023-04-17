@@ -71,7 +71,7 @@ func EncodeINT8(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	numBufWriter := new(bytes.Buffer)
 	n, _ := BinaryWriteINT8(numBufWriter, nums)
-	binary.Write(bufWriter, binary.LittleEndian, int8(n))
+	binary.Write(bufWriter, binary.LittleEndian, int32(n))
 	bufWriter.Write(numBufWriter.Bytes())
 	return bufWriter.Bytes()
 }
@@ -80,7 +80,7 @@ func EncodeINT16(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	numBufWriter := new(bytes.Buffer)
 	n, _ := BinaryWriteINT16(numBufWriter, nums)
-	binary.Write(bufWriter, binary.LittleEndian, int16(n))
+	binary.Write(bufWriter, binary.LittleEndian, int32(n))
 	bufWriter.Write(numBufWriter.Bytes())
 	return bufWriter.Bytes()
 }
@@ -98,7 +98,7 @@ func EncodeINT64(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	numBufWriter := new(bytes.Buffer)
 	n, _ := BinaryWriteINT64(numBufWriter, nums)
-	binary.Write(bufWriter, binary.LittleEndian, int64(n))
+	binary.Write(bufWriter, binary.LittleEndian, int32(n))
 	bufWriter.Write(numBufWriter.Bytes())
 	return bufWriter.Bytes()
 }
@@ -107,7 +107,7 @@ func EncodeUINT8(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	numBufWriter := new(bytes.Buffer)
 	n, _ := BinaryWriteUINT8(numBufWriter, nums)
-	binary.Write(bufWriter, binary.LittleEndian, uint8(n))
+	binary.Write(bufWriter, binary.LittleEndian, int32(n))
 	bufWriter.Write(numBufWriter.Bytes())
 	return bufWriter.Bytes()
 }
@@ -116,7 +116,7 @@ func EncodeUINT16(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	numBufWriter := new(bytes.Buffer)
 	n, _ := BinaryWriteUINT16(numBufWriter, nums)
-	binary.Write(bufWriter, binary.LittleEndian, uint16(n))
+	binary.Write(bufWriter, binary.LittleEndian, int32(n))
 	bufWriter.Write(numBufWriter.Bytes())
 	return bufWriter.Bytes()
 }
@@ -125,7 +125,7 @@ func EncodeUINT32(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	numBufWriter := new(bytes.Buffer)
 	n, _ := BinaryWriteUINT32(numBufWriter, nums)
-	binary.Write(bufWriter, binary.LittleEndian, uint32(n))
+	binary.Write(bufWriter, binary.LittleEndian, int32(n))
 	bufWriter.Write(numBufWriter.Bytes())
 	return bufWriter.Bytes()
 }
@@ -134,7 +134,7 @@ func EncodeUINT64(nums []interface{}) []byte {
 	bufWriter := new(bytes.Buffer)
 	numBufWriter := new(bytes.Buffer)
 	n, _ := BinaryWriteUINT64(numBufWriter, nums)
-	binary.Write(bufWriter, binary.LittleEndian, uint64(n))
+	binary.Write(bufWriter, binary.LittleEndian, int32(n))
 	bufWriter.Write(numBufWriter.Bytes())
 	return bufWriter.Bytes()
 }

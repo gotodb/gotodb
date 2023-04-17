@@ -3,16 +3,16 @@ package connector
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/connector/file"
-	"github.com/gotodb/gotodb/partition"
-	"github.com/gotodb/gotodb/plan/operator"
-	"io"
-	"os"
-	"strings"
-	"time"
-
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/metadata"
+	"github.com/gotodb/gotodb/partition"
+	"github.com/gotodb/gotodb/plan/operator"
 	"github.com/gotodb/gotodb/row"
+	"io"
+	"os"
+	"sort"
+	"strings"
+	"time"
 )
 
 type Test struct {
@@ -23,10 +23,18 @@ type Test struct {
 	Partition *partition.Partition
 }
 
-var columns = []string{"process_date", "var1", "var2", "var3", "data_source", "network_id", "event_date"}
-var tempDir = os.TempDir()
+var columns = map[string]gtype.Type{
+	"process_date": gtype.TIMESTAMP,
+	"var1":         gtype.INT64,
+	"var2":         gtype.FLOAT64,
+	"var3":         gtype.STRING,
+	"data_source":  gtype.STRING,
+	"network_id":   gtype.INT64,
+	"event_date":   gtype.DATE,
+}
+var tempDir = "./"
 
-func GenerateTestRows(columns []string) error {
+func GenerateTestRows(columns map[string]gtype.Type) error {
 	f1, err := os.Create(tempDir + "/test01.csv")
 	if err != nil {
 		return err
@@ -35,12 +43,14 @@ func GenerateTestRows(columns []string) error {
 	if err != nil {
 		return err
 	}
-	defer f1.Close()
-	defer f2.Close()
-
+	keys := make([]string, 0)
+	for k := range columns {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 	for i := int64(0); i < int64(100); i++ {
 		var res []string
-		for _, name := range columns {
+		for _, name := range keys {
 			switch name {
 			case "process_date":
 				res = append(res, fmt.Sprintf("%v", time.Now().Format("2006-01-02 15:04:05")))
@@ -59,43 +69,50 @@ func GenerateTestRows(columns []string) error {
 			}
 		}
 		s := strings.Join(res, ",") + "\n"
-		f1.Write([]byte(s))
-		f2.Write([]byte(s))
+
+		if _, err := f1.Write([]byte(s)); err != nil {
+			_ = f1.Close()
+			return err
+		}
+
+		if _, err := f2.Write([]byte(s)); err != nil {
+			_ = f2.Close()
+			return err
+		}
 	}
+
+	if err := f1.Close(); err != nil {
+		return err
+	}
+
+	if err := f2.Close(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func GenerateTestMetadata(columns []string, table string) *metadata.Metadata {
+func GenerateTestMetadata(columns map[string]gtype.Type, table string) *metadata.Metadata {
 	res := metadata.NewMetadata()
-	for _, name := range columns {
-		t := gtype.UNKNOWNTYPE
-		switch name {
-		case "process_date":
-			t = gtype.TIMESTAMP
-		case "var1":
-			t = gtype.INT64
-		case "var2":
-			t = gtype.FLOAT64
-		case "var3":
-			t = gtype.STRING
-		case "data_source":
-			t = gtype.STRING
-		case "network_id":
-			t = gtype.INT64
-		case "event_date":
-			t = gtype.DATE
-		}
-		col := metadata.NewColumnMetadata(t, "test", "test", table, name)
+	keys := make([]string, 0)
+	for k := range columns {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, name := range keys {
+		col := metadata.NewColumnMetadata(columns[name], "test", "test", table, name)
 		res.AppendColumn(col)
 	}
 	return res
 }
 
 func NewTestConnectorEmpty() *Test {
-	return &Test{}
+	return &Test{
+		Metadata: GenerateTestMetadata(columns, "csv"),
+	}
 }
 
-func NewTestConnector(catalog, schema, table string) (*Test, error) {
+func NewTestConnector(_, _, table string) (*Test, error) {
 	var res *Test
 	res = &Test{
 		Metadata: GenerateTestMetadata(columns, table),
@@ -121,7 +138,10 @@ func (c *Test) GetPartition(_ int) (*partition.Partition, error) {
 				partition.FileTypeCSV,
 				partition.FileTypeCSV,
 			}
-			GenerateTestRows(columns)
+
+			if err := GenerateTestRows(columns); err != nil {
+				return nil, err
+			}
 
 		} else if c.Table == "parquet" {
 			c.Partition.Locations = []string{
@@ -159,6 +179,24 @@ func (c *Test) GetReader(f *partition.FileLocation, selectedMD *metadata.Metadat
 	}, nil
 }
 
+func (c *Test) ShowSchemas(_ string, _, _ *string) row.Reader {
+	var err error
+
+	r := row.NewRow()
+	r.AppendVals("test")
+	i := 0
+	return func() (*row.Row, error) {
+		if err != nil {
+			return nil, err
+		}
+		if i > 0 {
+			return nil, io.EOF
+		}
+		i++
+		return r, nil
+	}
+}
+
 func (c *Test) ShowTables(_, _ string, _, _ *string) row.Reader {
 	var err error
 	tables := []string{"csv", "parquet", "orc"}
@@ -181,46 +219,14 @@ func (c *Test) ShowTables(_, _ string, _, _ *string) row.Reader {
 	}
 }
 
-func (c *Test) ShowSchemas(_ string, _, _ *string) row.Reader {
-	var err error
-
-	r := row.NewRow()
-	r.AppendVals("test")
-	i := 0
-	return func() (*row.Row, error) {
-		if err != nil {
-			return nil, err
-		}
-		if i > 0 {
-			return nil, io.EOF
-		}
-		i++
-		return r, nil
-	}
-}
-
 func (c *Test) ShowColumns(_, _, _ string) row.Reader {
 	var err error
 	var rs []*row.Row
-	r := row.NewRow()
-	r.AppendVals("ID", "INT64")
-	rs = append(rs, r)
-
-	r = row.NewRow()
-	r.AppendVals("INT64", "INT64")
-	rs = append(rs, r)
-
-	r = row.NewRow()
-	r.AppendVals("FLOAT64", "FLOAT64")
-	rs = append(rs, r)
-
-	r = row.NewRow()
-	r.AppendVals("STRING", "STRING")
-	rs = append(rs, r)
-
-	r = row.NewRow()
-	r.AppendVals("TIMESTAMP", "TIMESTAMP")
-	rs = append(rs, r)
+	for _, column := range c.Metadata.Columns {
+		r := row.NewRow()
+		r.AppendVals(column.ColumnName, column.ColumnType.String())
+		rs = append(rs, r)
+	}
 
 	i := 0
 	return func() (*row.Row, error) {

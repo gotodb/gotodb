@@ -71,7 +71,7 @@ func DecodeBOOL(bytesReader *bytes.Reader) ([]interface{}, error) {
 
 func DecodeINT8(bytesReader *bytes.Reader) ([]interface{}, error) {
 	var err error
-	var cnt int8
+	var cnt int32
 	if err := binary.Read(bytesReader, binary.LittleEndian, &cnt); err != nil {
 		return []interface{}{}, err
 	}
@@ -85,7 +85,7 @@ func DecodeINT8(bytesReader *bytes.Reader) ([]interface{}, error) {
 
 func DecodeINT16(bytesReader *bytes.Reader) ([]interface{}, error) {
 	var err error
-	var cnt int16
+	var cnt int32
 	if err := binary.Read(bytesReader, binary.LittleEndian, &cnt); err != nil {
 		return []interface{}{}, err
 	}
@@ -113,7 +113,7 @@ func DecodeINT32(bytesReader *bytes.Reader) ([]interface{}, error) {
 
 func DecodeINT64(bytesReader *bytes.Reader) ([]interface{}, error) {
 	var err error
-	var cnt int64
+	var cnt int32
 	if err := binary.Read(bytesReader, binary.LittleEndian, &cnt); err != nil {
 		return []interface{}{}, err
 	}
@@ -127,7 +127,7 @@ func DecodeINT64(bytesReader *bytes.Reader) ([]interface{}, error) {
 
 func DecodeUINT8(bytesReader *bytes.Reader) ([]interface{}, error) {
 	var err error
-	var cnt uint8
+	var cnt int32
 	if err := binary.Read(bytesReader, binary.LittleEndian, &cnt); err != nil {
 		return []interface{}{}, err
 	}
@@ -141,7 +141,7 @@ func DecodeUINT8(bytesReader *bytes.Reader) ([]interface{}, error) {
 
 func DecodeUINT16(bytesReader *bytes.Reader) ([]interface{}, error) {
 	var err error
-	var cnt uint16
+	var cnt int32
 	if err := binary.Read(bytesReader, binary.LittleEndian, &cnt); err != nil {
 		return []interface{}{}, err
 	}
@@ -169,7 +169,7 @@ func DecodeUINT32(bytesReader *bytes.Reader) ([]interface{}, error) {
 
 func DecodeUINT64(bytesReader *bytes.Reader) ([]interface{}, error) {
 	var err error
-	var cnt uint64
+	var cnt int32
 	if err := binary.Read(bytesReader, binary.LittleEndian, &cnt); err != nil {
 		return []interface{}{}, err
 	}
@@ -197,7 +197,7 @@ func DecodeFLOAT32(bytesReader *bytes.Reader) ([]interface{}, error) {
 
 func DecodeFLOAT64(bytesReader *bytes.Reader) ([]interface{}, error) {
 	var err error
-	var cnt int64
+	var cnt int32
 	if err := binary.Read(bytesReader, binary.LittleEndian, &cnt); err != nil {
 		return []interface{}{}, err
 	}
@@ -211,7 +211,7 @@ func DecodeFLOAT64(bytesReader *bytes.Reader) ([]interface{}, error) {
 
 func DecodeSTRING(bytesReader *bytes.Reader) ([]interface{}, error) {
 	var err error
-	var cnt uint32
+	var cnt int32
 	if err := binary.Read(bytesReader, binary.LittleEndian, &cnt); err != nil {
 		return []interface{}{}, err
 	}
