@@ -78,12 +78,18 @@ func (c *File) GetPartitionInfo(_ int) (*partition.Partition, error) {
 	return c.PartitionInfo, nil
 }
 
-func (c *File) GetReader(file *partition.FileLocation, md *metadata.Metadata, _ []*operator.BooleanExpressionNode) (row.GroupReader, error) {
-	reader, err := NewReader(file, md)
+func (c *File) GetReader(file *partition.FileLocation, selectedMD *metadata.Metadata, _ []*operator.BooleanExpressionNode) (row.GroupReader, error) {
+	reader, err := NewReader(file, c.Metadata)
 	if err != nil {
 		return nil, err
 	}
-	return func(indexes []int) (*row.RowsGroup, error) {
+
+	indexes := make([]int, len(selectedMD.Columns))
+	for i, column := range selectedMD.Columns {
+		indexes[i] = c.Metadata.ColumnMap[column.ColumnName]
+	}
+
+	return func(_ []int) (*row.RowsGroup, error) {
 		return reader.Read(indexes)
 	}, nil
 }

@@ -36,7 +36,7 @@ func (e *Executor) setupWriters() {
 	logrus.Infof("SetupWriters start")
 	e.Writers = []io.Writer{}
 	for _, location := range e.StageJob.GetOutputs() {
-		file, _ := os.Create(fmt.Sprintf("%s/%s.txt", tempDir, location.Name))
+		file, _ := os.Create(fmt.Sprintf("%s/%s-%d.txt", tempDir, location.Name, location.ChannelIndex))
 		e.Writers = append(e.Writers, file)
 	}
 
@@ -47,7 +47,7 @@ func (e *Executor) setupReaders() {
 	logrus.Infof("SetupReaders start")
 	e.Readers = []io.Reader{}
 	for _, location := range e.StageJob.GetInputs() {
-		file, err := os.Open(fmt.Sprintf("%s/%s.txt", tempDir, location.Name))
+		file, err := os.Open(fmt.Sprintf("%s/%s-%d.txt", tempDir, location.Name, location.ChannelIndex))
 		if err != nil {
 			logrus.Errorf("failed to open file: %v", err)
 		}
@@ -60,8 +60,10 @@ func (e *Executor) setupReaders() {
 func TestSelect(t *testing.T) {
 	//sql := "/*+partition_number=1*/select * from http.etcd.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue\", \"uri\": \"recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }'"
 	//sql := "/*+partition_number=1*/select a.* from mysql.goploy.user as a join mysql.goploy.user as b on a.id = b.id where a.id = 1 and b.id = 2"
-	sql := "select a.* from mysql.goploy.user as a join file.info.student as b on a.id = b.id  where a.id = 1"
-	//sql := "select * from file.info.student"
+	//sql := "select a.* from mysql.goploy.user as a join file.info.student as b on a.id = b.id  where a.id = 1"
+	sql := "select id from mysql.goploy.user union select id from file.info.student where id = 4"
+	//sql := "select name from file.info.student"
+	//sql := "select id from mysql.goploy.user"
 	executor(t, sql)
 }
 
@@ -206,7 +208,7 @@ func executor(t *testing.T, sqlStr string) {
 	)
 	md := &metadata.Metadata{}
 	aggLoc := aggJob.GetLocation()
-	file, err := os.Open(fmt.Sprintf("%s.txt", aggLoc.Name))
+	file, err := os.Open(fmt.Sprintf("%s/%s-%d.txt", tempDir, aggLoc.Name, aggLoc.ChannelIndex))
 	if err != nil {
 		t.Errorf("failed to open file: %v", err)
 		return

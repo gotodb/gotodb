@@ -12,7 +12,7 @@ type Part struct {
 	Buffer []byte
 }
 
-func NewPartition(t gtype.Type) *Part {
+func NewPart(t gtype.Type) *Part {
 	return &Part{
 		Type:   t,
 		Vals:   []interface{}{},

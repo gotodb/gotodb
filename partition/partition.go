@@ -22,7 +22,7 @@ func New(md *metadata.Metadata) *Partition {
 	}
 	for i := 0; i < md.GetColumnNumber(); i++ {
 		t, _ := md.GetTypeByIndex(i)
-		par := NewPartition(t)
+		par := NewPart(t)
 		res.Parts = append(res.Parts, par)
 	}
 	return res

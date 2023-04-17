@@ -16,10 +16,9 @@ const (
 )
 
 type CSV struct {
-	Closer   io.Closer
-	Metadata *metadata.Metadata
-	Reader   *csv.Reader
-
+	Closer      io.Closer
+	Metadata    *metadata.Metadata
+	Reader      *csv.Reader
 	Indexes     []int
 	OutMetadata *metadata.Metadata
 }

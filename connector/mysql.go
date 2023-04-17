@@ -62,9 +62,11 @@ func (c *Mysql) GetMetadata() (*metadata.Metadata, error) {
 func (c *Mysql) GetPartitionInfo(partitionNumber int) (*partition.Partition, error) {
 	if c.PartitionInfo == nil {
 		c.PartitionInfo = partition.New(metadata.NewMetadata())
-		for i := 0; i < partitionNumber; i++ {
-			c.PartitionInfo.Locations = append(c.PartitionInfo.Locations, fmt.Sprintf("%d/%d", i, partitionNumber))
-		}
+		//for i := 0; i < partitionNumber; i++ {
+		//	c.PartitionInfo.Locations = append(c.PartitionInfo.Locations, fmt.Sprintf("%d/%d", i, partitionNumber))
+		//}
+		c.PartitionInfo.Locations = append(c.PartitionInfo.Locations, fmt.Sprintf("%d/%d", 0, partitionNumber))
+
 	}
 	return c.PartitionInfo, nil
 }
@@ -87,6 +89,10 @@ func (c *Mysql) GetReader(file *partition.FileLocation, md *metadata.Metadata, f
 	}
 	clause := strings.Join(clauses, " AND ")
 
+	if clause != "" {
+		clause = " where " + clause
+	}
+
 	var stop error
 	var part, partitionNumber int
 	_, _ = fmt.Sscanf(file.Location, "%d/%d", &part, &partitionNumber)
@@ -105,7 +111,7 @@ func (c *Mysql) GetReader(file *partition.FileLocation, md *metadata.Metadata, f
 			return nil, err
 		}
 		defer db.Close()
-		rows, err := db.Query(fmt.Sprintf("select %s from %s.%s %s where %s", selectItems, c.Config.Schema, c.Config.Table, strings.TrimRight(alias, "."), clause))
+		rows, err := db.Query(fmt.Sprintf("select %s from %s.%s %s %s", selectItems, c.Config.Schema, c.Config.Table, strings.TrimRight(alias, "."), clause))
 		if err != nil {
 			return nil, err
 		}
