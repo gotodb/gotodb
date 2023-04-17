@@ -18,9 +18,9 @@ import (
 )
 
 type Http struct {
-	Config        *config.HttpConnector
-	Metadata      *metadata.Metadata
-	PartitionInfo *partition.Partition
+	Config    *config.HttpConnector
+	Metadata  *metadata.Metadata
+	Partition *partition.Partition
 }
 
 func NewHttpConnectorEmpty() *Http {
@@ -62,14 +62,14 @@ func (c *Http) GetMetadata() (*metadata.Metadata, error) {
 	return c.Metadata, nil
 }
 
-func (c *Http) GetPartitionInfo(partitionNumber int) (*partition.Partition, error) {
-	if c.PartitionInfo == nil {
-		c.PartitionInfo = partition.New(metadata.NewMetadata())
+func (c *Http) GetPartition(partitionNumber int) (*partition.Partition, error) {
+	if c.Partition == nil {
+		c.Partition = partition.New(metadata.NewMetadata())
 		for i := 0; i < partitionNumber; i++ {
-			c.PartitionInfo.Locations = append(c.PartitionInfo.Locations, fmt.Sprintf("%d/%d", i, partitionNumber))
+			c.Partition.Locations = append(c.Partition.Locations, fmt.Sprintf("%d/%d", i, partitionNumber))
 		}
 	}
-	return c.PartitionInfo, nil
+	return c.Partition, nil
 }
 
 func (c *Http) GetReader(file *partition.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) (row.GroupReader, error) {

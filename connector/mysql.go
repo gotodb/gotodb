@@ -15,9 +15,9 @@ import (
 )
 
 type Mysql struct {
-	Config        *config.MysqlConnector
-	Metadata      *metadata.Metadata
-	PartitionInfo *partition.Partition
+	Config    *config.MysqlConnector
+	Metadata  *metadata.Metadata
+	Partition *partition.Partition
 }
 
 func NewMysqlConnectorEmpty() *Mysql {
@@ -59,16 +59,16 @@ func (c *Mysql) GetMetadata() (*metadata.Metadata, error) {
 	return c.Metadata, nil
 }
 
-func (c *Mysql) GetPartitionInfo(partitionNumber int) (*partition.Partition, error) {
-	if c.PartitionInfo == nil {
-		c.PartitionInfo = partition.New(metadata.NewMetadata())
+func (c *Mysql) GetPartition(partitionNumber int) (*partition.Partition, error) {
+	if c.Partition == nil {
+		c.Partition = partition.New(metadata.NewMetadata())
 		//for i := 0; i < partitionNumber; i++ {
-		//	c.PartitionInfo.Locations = append(c.PartitionInfo.Locations, fmt.Sprintf("%d/%d", i, partitionNumber))
+		//	c.Partition.Locations = append(c.Partition.Locations, fmt.Sprintf("%d/%d", i, partitionNumber))
 		//}
-		c.PartitionInfo.Locations = append(c.PartitionInfo.Locations, fmt.Sprintf("%d/%d", 0, partitionNumber))
+		c.Partition.Locations = append(c.Partition.Locations, fmt.Sprintf("%d/%d", 0, partitionNumber))
 
 	}
-	return c.PartitionInfo, nil
+	return c.Partition, nil
 }
 
 func (c *Mysql) GetReader(file *partition.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) (row.GroupReader, error) {

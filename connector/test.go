@@ -16,11 +16,11 @@ import (
 )
 
 type Test struct {
-	Metadata      *metadata.Metadata
-	Rows          []row.Row
-	Index         int64
-	Table         string
-	PartitionInfo *partition.Partition
+	Metadata  *metadata.Metadata
+	Rows      []row.Row
+	Index     int64
+	Table     string
+	Partition *partition.Partition
 }
 
 var columns = []string{"process_date", "var1", "var2", "var3", "data_source", "network_id", "event_date"}
@@ -109,38 +109,38 @@ func (c *Test) GetMetadata() (*metadata.Metadata, error) {
 	return c.Metadata, nil
 }
 
-func (c *Test) GetPartitionInfo(_ int) (*partition.Partition, error) {
-	if c.PartitionInfo == nil {
-		c.PartitionInfo = partition.New(metadata.NewMetadata())
+func (c *Test) GetPartition(_ int) (*partition.Partition, error) {
+	if c.Partition == nil {
+		c.Partition = partition.New(metadata.NewMetadata())
 		if c.Table == "csv" {
-			c.PartitionInfo.Locations = []string{
+			c.Partition.Locations = []string{
 				tempDir + "/test01.csv",
 				tempDir + "/test02.csv",
 			}
-			c.PartitionInfo.FileTypes = []partition.FileType{
+			c.Partition.FileTypes = []partition.FileType{
 				partition.FileTypeCSV,
 				partition.FileTypeCSV,
 			}
 			GenerateTestRows(columns)
 
 		} else if c.Table == "parquet" {
-			c.PartitionInfo.Locations = []string{
+			c.Partition.Locations = []string{
 				tempDir + "/test.parquet",
 			}
-			c.PartitionInfo.FileTypes = []partition.FileType{
+			c.Partition.FileTypes = []partition.FileType{
 				partition.FileTypeParquet,
 			}
 		} else if c.Table == "orc" {
-			c.PartitionInfo.Locations = []string{
+			c.Partition.Locations = []string{
 				tempDir + "/test.orc",
 			}
-			c.PartitionInfo.FileTypes = []partition.FileType{
+			c.Partition.FileTypes = []partition.FileType{
 				partition.FileTypeORC,
 			}
 		}
 
 	}
-	return c.PartitionInfo, nil
+	return c.Partition, nil
 }
 
 func (c *Test) GetReader(f *partition.FileLocation, selectedMD *metadata.Metadata, _ []*operator.BooleanExpressionNode) (row.GroupReader, error) {

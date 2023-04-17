@@ -127,7 +127,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		return res, nil
 
 	case *plan.ScanNode:
-		scanNodePar, err := node.Connector.GetPartitionInfo(pn)
+		scanNodePar, err := node.Connector.GetPartition(pn)
 		if err != nil {
 			return res, err
 		}

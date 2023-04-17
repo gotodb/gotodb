@@ -15,10 +15,10 @@ import (
 )
 
 type File struct {
-	Config        *config.FileConnector
-	Metadata      *metadata.Metadata
-	FileType      partition.FileType
-	PartitionInfo *partition.Partition
+	Config    *config.FileConnector
+	Metadata  *metadata.Metadata
+	FileType  partition.FileType
+	Partition *partition.Partition
 }
 
 func NewFileConnectorEmpty() *File {
@@ -61,21 +61,21 @@ func (c *File) GetMetadata() (*metadata.Metadata, error) {
 	return c.Metadata, nil
 }
 
-func (c *File) GetPartitionInfo(_ int) (*partition.Partition, error) {
-	if c.PartitionInfo == nil {
-		c.PartitionInfo = partition.New(metadata.NewMetadata())
+func (c *File) GetPartition(_ int) (*partition.Partition, error) {
+	if c.Partition == nil {
+		c.Partition = partition.New(metadata.NewMetadata())
 		for _, loc := range c.Config.Paths {
 			files, err := os.ReadDir(loc)
 			if err != nil {
 				return nil, err
 			}
 			for _, file := range files {
-				c.PartitionInfo.Locations = append(c.PartitionInfo.Locations, loc+"/"+file.Name())
-				c.PartitionInfo.FileTypes = append(c.PartitionInfo.FileTypes, c.FileType)
+				c.Partition.Locations = append(c.Partition.Locations, loc+"/"+file.Name())
+				c.Partition.FileTypes = append(c.Partition.FileTypes, c.FileType)
 			}
 		}
 	}
-	return c.PartitionInfo, nil
+	return c.Partition, nil
 }
 
 func (c *File) GetReader(file *partition.FileLocation, selectedMD *metadata.Metadata, _ []*operator.BooleanExpressionNode) (row.GroupReader, error) {
