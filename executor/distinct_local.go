@@ -35,22 +35,13 @@ func (e *Executor) RunDistinctLocal() (err error) {
 	mdOutput := job.Metadata
 
 	//write md
-	for _, writer := range e.Writers {
+	rbWriters := make([]*row.RowsBuffer, len(e.Writers))
+	for i, writer := range e.Writers {
 		if err = util.WriteObject(writer, mdOutput); err != nil {
 			return err
 		}
-	}
-
-	rbWriters := make([]*row.RowsBuffer, len(e.Writers))
-	for i, writer := range e.Writers {
 		rbWriters[i] = row.NewRowsBuffer(mdOutput, nil, writer)
 	}
-
-	defer func() {
-		for _, rbWriter := range rbWriters {
-			rbWriter.Flush()
-		}
-	}()
 
 	//init
 	for _, e := range job.Expressions {
@@ -115,13 +106,19 @@ func (e *Executor) RunDistinctLocal() (err error) {
 						return
 					}
 
-					row.RowPool.Put(r)
+					row.Pool.Put(r)
 				}
 			}
 		}(i)
 	}
 
 	wg.Wait()
+
+	for _, rbWriter := range rbWriters {
+		if err := rbWriter.Flush(); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

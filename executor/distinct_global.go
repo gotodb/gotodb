@@ -12,44 +12,34 @@ import (
 	"sync"
 )
 
-func (e *Executor) SetInstructionDistinctGlobal(instruction *pb.Instruction) (err error) {
+func (e *Executor) SetInstructionDistinctGlobal(instruction *pb.Instruction) error {
 	var job stage.DistinctGlobalJob
-	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
+	if err := msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	e.StageJob = &job
 	return nil
 }
 
-func (e *Executor) RunDistinctGlobal() (err error) {
+func (e *Executor) RunDistinctGlobal() error {
 	job := e.StageJob.(*stage.DistinctGlobalJob)
 	//read md
 	md := &metadata.Metadata{}
 	for _, reader := range e.Readers {
-		if err = util.ReadObject(reader, md); err != nil {
+		if err := util.ReadObject(reader, md); err != nil {
 			return err
 		}
 	}
 
 	mdOutput := job.Metadata
 
-	//write md
-	for _, writer := range e.Writers {
-		if err = util.WriteObject(writer, mdOutput); err != nil {
-			return err
-		}
-	}
-
 	rbWriters := make([]*row.RowsBuffer, len(e.Writers))
 	for i, writer := range e.Writers {
+		if err := util.WriteObject(writer, mdOutput); err != nil {
+			return err
+		}
 		rbWriters[i] = row.NewRowsBuffer(mdOutput, nil, writer)
 	}
-
-	defer func() {
-		for _, rbWriter := range rbWriters {
-			rbWriter.Flush()
-		}
-	}()
 
 	//init
 	for _, e := range job.Expressions {
@@ -65,6 +55,7 @@ func (e *Executor) RunDistinctGlobal() (err error) {
 	}
 
 	indexes := make([]int, len(job.Expressions))
+	var err error
 	for i, e := range job.Expressions {
 		indexes[i], err = md.GetIndexByName(e.Name)
 		if err != nil {
@@ -109,7 +100,7 @@ func (e *Executor) RunDistinctGlobal() (err error) {
 						return
 					}
 
-					row.RowPool.Put(r)
+					row.Pool.Put(r)
 				}
 				mutex.Unlock()
 			}
@@ -117,6 +108,12 @@ func (e *Executor) RunDistinctGlobal() (err error) {
 	}
 
 	wg.Wait()
+
+	for _, rbWriter := range rbWriters {
+		if err := rbWriter.Flush(); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

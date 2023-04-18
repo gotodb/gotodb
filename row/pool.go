@@ -4,11 +4,10 @@ import (
 	"sync"
 )
 
-var RowPool *sync.Pool
-var RowsGroupPool *sync.Pool
+var Pool *sync.Pool
 
 func init() {
-	RowPool = &sync.Pool{
+	Pool = &sync.Pool{
 		New: func() interface{} {
 			return NewRow()
 		},

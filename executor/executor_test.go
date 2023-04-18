@@ -58,13 +58,13 @@ func (e *Executor) setupReaders() {
 }
 
 func TestSelect(t *testing.T) {
-	//sql := "/*+partition_number=1*/select * from http.etcd.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue\", \"uri\": \"recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }'"
+	sql := "/*+partition_number=1*/select * from http.etcd.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue\", \"uri\": \"recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }' group by value"
 	//sql := "/*+partition_number=1*/select a.* from mysql.goploy.user as a join mysql.goploy.user as b on a.id = b.id where a.id = 1 and b.id = 2"
 	//sql := "select a.id, b.id from mysql.goploy.user as a join file.info.student as b on a.id = b.id  where a.id = 1"
 	//sql := "select id from mysql.goploy.user union select id from file.info.student where id = 4"
 	//sql := "select name from file.info.student"
 	//sql := "select id from mysql.goploy.user"
-	sql := "select  * from test.test.csv as a limit 10"
+	//sql := "select  * from test.test.csv as a limit 10"
 	executor(t, sql)
 }
 

@@ -21,7 +21,7 @@ func (e *Executor) SetInstructionUnion(instruction *pb.Instruction) (err error) 
 	return nil
 }
 
-func (e *Executor) RunUnion() (err error) {
+func (e *Executor) RunUnion() error {
 	writer := e.Writers[0]
 	//read md
 	if len(e.Readers) != 2 {
@@ -30,7 +30,7 @@ func (e *Executor) RunUnion() (err error) {
 
 	readerMDs := make([]*metadata.Metadata, 2)
 	for i, reader := range e.Readers {
-		if err = util.ReadObject(reader, &readerMDs[i]); err != nil {
+		if err := util.ReadObject(reader, &readerMDs[i]); err != nil {
 			return err
 		}
 	}
@@ -49,17 +49,14 @@ func (e *Executor) RunUnion() (err error) {
 	}
 
 	//write md
-	if err = util.WriteObject(writer, md); err != nil {
+	if err := util.WriteObject(writer, md); err != nil {
 		return err
 	}
 
 	rbWriter := row.NewRowsBuffer(md, nil, writer)
-	defer func() {
-		rbWriter.Flush()
-	}()
-
 	//write rows
 	var rg *row.RowsGroup
+	var err error
 	for index, reader := range e.Readers {
 		rbReader := row.NewRowsBuffer(readerMDs[index], reader, nil)
 		for {
@@ -85,6 +82,8 @@ func (e *Executor) RunUnion() (err error) {
 			}
 		}
 	}
-
-	return err
+	if err := rbWriter.Flush(); err != nil {
+		return err
+	}
+	return nil
 }

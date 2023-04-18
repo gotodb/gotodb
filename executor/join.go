@@ -12,16 +12,16 @@ import (
 	"io"
 )
 
-func (e *Executor) SetInstructionJoin(instruction *pb.Instruction) (err error) {
+func (e *Executor) SetInstructionJoin(instruction *pb.Instruction) error {
 	var job stage.JoinJob
-	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
+	if err := msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	e.StageJob = &job
 	return nil
 }
 
-func (e *Executor) RunJoin() (err error) {
+func (e *Executor) RunJoin() error {
 	writer := e.Writers[0]
 	job := e.StageJob.(*stage.JoinJob)
 
@@ -33,7 +33,7 @@ func (e *Executor) RunJoin() (err error) {
 	mds := make([]*metadata.Metadata, 2)
 	for i, reader := range e.Readers {
 		mds[i] = &metadata.Metadata{}
-		if err = util.ReadObject(reader, mds[i]); err != nil {
+		if err := util.ReadObject(reader, mds[i]); err != nil {
 			return err
 		}
 	}
@@ -41,16 +41,12 @@ func (e *Executor) RunJoin() (err error) {
 	leftMd, rightMd := mds[0], mds[1]
 
 	//write md
-	if err = util.WriteObject(writer, job.Metadata); err != nil {
+	if err := util.WriteObject(writer, job.Metadata); err != nil {
 		return err
 	}
 
 	leftRbReader, rightRbReader := row.NewRowsBuffer(leftMd, leftReader, nil), row.NewRowsBuffer(rightMd, rightReader, nil)
 	rbWriter := row.NewRowsBuffer(job.Metadata, nil, writer)
-
-	defer func() {
-		rbWriter.Flush()
-	}()
 
 	//init
 	if err := job.JoinCriteria.Init(job.Metadata); err != nil {
@@ -58,14 +54,13 @@ func (e *Executor) RunJoin() (err error) {
 	}
 
 	//write rows
-	var r *row.Row
 	rs := make([]*row.Row, 0)
 	switch job.JoinType {
 	case plan.InnerJoin:
 		fallthrough
 	case plan.LeftJoin:
 		for {
-			r, err = rightRbReader.ReadRow()
+			r, err := rightRbReader.ReadRow()
 			if err == io.EOF {
 				err = nil
 				break
@@ -77,7 +72,7 @@ func (e *Executor) RunJoin() (err error) {
 		}
 
 		for {
-			r, err = leftRbReader.ReadRow()
+			r, err := leftRbReader.ReadRow()
 			if err == io.EOF {
 				err = nil
 				break
@@ -112,5 +107,9 @@ func (e *Executor) RunJoin() (err error) {
 	case plan.RightJoin:
 	}
 
-	return err
+	if err := rbWriter.Flush(); err != nil {
+		return err
+	}
+
+	return nil
 }

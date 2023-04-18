@@ -10,37 +10,33 @@ import (
 	"io"
 )
 
-func (e *Executor) SetInstructionAggregateFuncGlobal(instruction *pb.Instruction) (err error) {
+func (e *Executor) SetInstructionAggregateFuncGlobal(instruction *pb.Instruction) error {
 	var job stage.AggregateFuncGlobalJob
-	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
+	if err := msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	e.StageJob = &job
 	return nil
 }
 
-func (e *Executor) RunAggregateFuncGlobal() (err error) {
+func (e *Executor) RunAggregateFuncGlobal() error {
 	writer := e.Writers[0]
 	job := e.StageJob.(*stage.AggregateFuncGlobalJob)
 	md := &metadata.Metadata{}
 
 	//read md
 	for _, reader := range e.Readers {
-		if err = util.ReadObject(reader, md); err != nil {
+		if err := util.ReadObject(reader, md); err != nil {
 			return err
 		}
 	}
 
 	//write md
-	if err = util.WriteObject(writer, job.Metadata); err != nil {
+	if err := util.WriteObject(writer, job.Metadata); err != nil {
 		return err
 	}
 
 	rbWriter := row.NewRowsBuffer(job.Metadata, nil, writer)
-
-	defer func() {
-		rbWriter.Flush()
-	}()
 
 	//init
 	if err := job.Init(job.Metadata); err != nil {
@@ -48,7 +44,6 @@ func (e *Executor) RunAggregateFuncGlobal() (err error) {
 	}
 
 	//write rows
-	var rg *row.RowsGroup
 	res := make([]map[string]interface{}, len(job.FuncNodes))
 	for i := 0; i < len(res); i++ {
 		res[i] = make(map[string]interface{})
@@ -56,10 +51,10 @@ func (e *Executor) RunAggregateFuncGlobal() (err error) {
 
 	keys := map[string]*row.Row{}
 
-	for _, reader := range e.Readers { //TODO: concurrent?
+	for _, reader := range e.Readers {
 		rbReader := row.NewRowsBuffer(md, reader, nil)
 		for {
-			rg, err = rbReader.Read()
+			rg, err := rbReader.Read()
 
 			if err == io.EOF {
 				err = nil
@@ -86,10 +81,16 @@ func (e *Executor) RunAggregateFuncGlobal() (err error) {
 		for i := 0; i < len(res); i++ {
 			r.Vals[len(r.Vals)-i-1] = res[i][key]
 		}
-		rbWriter.WriteRow(r)
+
+		if err := rbWriter.WriteRow(r); err != nil {
+			return err
+		}
 	}
 
-	return err
+	if err := rbWriter.Flush(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (e *Executor) CalAggregateFuncGlobal(job *stage.AggregateFuncGlobalJob, rg *row.RowsGroup, res *[]map[string]interface{}) error {

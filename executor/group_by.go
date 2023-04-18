@@ -20,38 +20,31 @@ func (e *Executor) SetInstructionGroupBy(instruction *pb.Instruction) (err error
 	return nil
 }
 
-func (e *Executor) RunGroupBy() (err error) {
+func (e *Executor) RunGroupBy() error {
 	job := e.StageJob.(*stage.GroupByJob)
 
 	md := &metadata.Metadata{}
 	reader := e.Readers[0]
 	writer := e.Writers[0]
-	if err = util.ReadObject(reader, md); err != nil {
+	if err := util.ReadObject(reader, md); err != nil {
 		return err
 	}
 
 	//write metadata
 	job.Metadata.ClearKeys()
 	job.Metadata.AppendKeyByType(gtype.STRING)
-	if err = util.WriteObject(writer, job.Metadata); err != nil {
+	if err := util.WriteObject(writer, job.Metadata); err != nil {
 		return err
 	}
 
 	rbReader := row.NewRowsBuffer(md, reader, nil)
 	rbWriter := row.NewRowsBuffer(job.Metadata, nil, writer)
 
-	defer func() {
-		rbWriter.Flush()
-	}()
-
-	//group by
-
 	if err := job.GroupBy.Init(md); err != nil {
 		return err
 	}
-	var rg *row.RowsGroup
 	for {
-		rg, err = rbReader.Read()
+		rg, err := rbReader.Read()
 		if err != nil {
 			if err == io.EOF {
 				err = nil
@@ -70,5 +63,9 @@ func (e *Executor) RunGroupBy() (err error) {
 		}
 	}
 
-	return err
+	if err := rbWriter.Flush(); err != nil {
+		return err
+	}
+
+	return nil
 }

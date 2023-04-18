@@ -6,7 +6,7 @@ import (
 	"github.com/gotodb/gotodb/gtype"
 )
 
-//Rows for sort rows
+// Rows for sort rows
 type Rows struct {
 	Data  []*Row
 	Order []gtype.OrderType
@@ -41,7 +41,7 @@ func (r *Rows) Less(i, j int) bool {
 	rowi, rowj := r.Data[i], r.Data[j]
 	for k := 0; k < len(r.Order); k++ {
 		vi, vj := rowi.Keys[k], rowj.Keys[k]
-		if vi == vj {
+		if gtype.EQFunc(vi, vj).(bool) {
 			continue
 		}
 		res := gtype.LTFunc(vi, vj).(bool)

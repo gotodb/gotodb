@@ -21,12 +21,12 @@ func (e *Executor) SetInstructionDuplicate(instruction *pb.Instruction) (err err
 	return nil
 }
 
-func (e *Executor) RunDuplicate() (err error) {
+func (e *Executor) RunDuplicate() error {
 	job := e.StageJob.(*stage.DuplicateJob)
 	//read md
 	md := &metadata.Metadata{}
 	for _, reader := range e.Readers {
-		if err = util.ReadObject(reader, md); err != nil {
+		if err := util.ReadObject(reader, md); err != nil {
 			return err
 		}
 	}
@@ -38,36 +38,25 @@ func (e *Executor) RunDuplicate() (err error) {
 		mdOutput.ClearKeys()
 		mdOutput.AppendKeyByType(gtype.STRING)
 	}
-	for _, writer := range e.Writers {
-		if err = util.WriteObject(writer, mdOutput); err != nil {
-			return err
-		}
-	}
 
 	rbWriters := make([]*row.RowsBuffer, len(e.Writers))
 	for i, writer := range e.Writers {
+		if err := util.WriteObject(writer, mdOutput); err != nil {
+			return err
+		}
 		rbWriters[i] = row.NewRowsBuffer(mdOutput, nil, writer)
 	}
 
-	defer func() {
-		for _, rbWriter := range rbWriters {
-			rbWriter.Flush()
-		}
-	}()
-
-	//init
 	for _, k := range job.Keys {
 		if err := k.Init(md); err != nil {
 			return err
 		}
 	}
 
-	//write rows
-	var rg *row.RowsGroup
 	for _, reader := range e.Readers {
 		rbReader := row.NewRowsBuffer(md, reader, nil)
 		for {
-			rg, err = rbReader.Read()
+			rg, err := rbReader.Read()
 			if err == io.EOF {
 				break
 			}
@@ -80,6 +69,12 @@ func (e *Executor) RunDuplicate() (err error) {
 					return err
 				}
 			}
+		}
+	}
+
+	for _, rbWriter := range rbWriters {
+		if err := rbWriter.Flush(); err != nil {
+			return err
 		}
 	}
 

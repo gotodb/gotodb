@@ -26,13 +26,7 @@ func (e *Executor) SetInstructionScan(instruction *pb.Instruction) error {
 	return nil
 }
 
-func (e *Executor) RunScan() (err error) {
-
-	defer func() {
-		for i := 0; i < len(e.Writers); i++ {
-			util.WriteEOFMessage(e.Writers[i])
-		}
-	}()
+func (e *Executor) RunScan() error {
 
 	job := e.StageJob.(*stage.ScanJob)
 
@@ -56,13 +50,6 @@ func (e *Executor) RunScan() (err error) {
 		rbWriters[i] = row.NewRowsBuffer(job.Metadata, nil, writer)
 	}
 
-	defer func() {
-		for _, rbWriter := range rbWriters {
-			rbWriter.Flush()
-		}
-	}()
-
-	//init
 	for _, filter := range job.Filters {
 		if err := filter.Init(job.Metadata); err != nil {
 			return err
@@ -194,6 +181,13 @@ func (e *Executor) RunScan() (err error) {
 	}
 	close(jobs)
 	wg.Wait()
-
-	return err
+	if err != nil {
+		return err
+	}
+	for _, rbWriter := range rbWriters {
+		if err = rbWriter.Flush(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

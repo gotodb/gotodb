@@ -11,28 +11,28 @@ import (
 	"io"
 )
 
-func (e *Executor) SetInstructionOrderBy(instruction *pb.Instruction) (err error) {
+func (e *Executor) SetInstructionOrderBy(instruction *pb.Instruction) error {
 	var job stage.OrderByJob
-	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
+	if err := msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	e.StageJob = &job
 	return nil
 }
 
-func (e *Executor) RunOrderBy() (err error) {
+func (e *Executor) RunOrderBy() error {
 	job := e.StageJob.(*stage.OrderByJob)
 	md := &metadata.Metadata{}
 	//read md
 	for _, reader := range e.Readers {
-		if err = util.ReadObject(reader, md); err != nil {
+		if err := util.ReadObject(reader, md); err != nil {
 			return err
 		}
 	}
 
 	//write md
 	writer := e.Writers[0]
-	if err = util.WriteObject(writer, job.Metadata); err != nil {
+	if err := util.WriteObject(writer, job.Metadata); err != nil {
 		return err
 	}
 
@@ -42,12 +42,7 @@ func (e *Executor) RunOrderBy() (err error) {
 	}
 	rbWriter := row.NewRowsBuffer(job.Metadata, nil, writer)
 
-	defer func() {
-		rbWriter.Flush()
-	}()
-
 	//write rows
-	var r *row.Row
 	rs := row.NewRows(e.GetOrder(job))
 	rs.Data = make([]*row.Row, len(e.Readers))
 
@@ -55,7 +50,7 @@ func (e *Executor) RunOrderBy() (err error) {
 	for {
 		for i := 0; i < len(isEnd); i++ {
 			if !isEnd[i] && rs.Data[i] == nil {
-				r, err = rbReaders[i].ReadRow()
+				r, err := rbReaders[i].ReadRow()
 				if err == io.EOF {
 					err = nil
 					isEnd[i] = true
@@ -73,11 +68,15 @@ func (e *Executor) RunOrderBy() (err error) {
 
 		} else {
 			rs.Data[minIndex].ClearKeys()
-			if err = rbWriter.WriteRow(rs.Data[minIndex]); err != nil {
+			if err := rbWriter.WriteRow(rs.Data[minIndex]); err != nil {
 				return err
 			}
 			rs.Data[minIndex] = nil
 		}
+	}
+
+	if err := rbWriter.Flush(); err != nil {
+		return err
 	}
 
 	return nil

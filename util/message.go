@@ -3,6 +3,7 @@ package util
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/golang/snappy"
 	"io"
 	"math"
 
@@ -61,7 +62,7 @@ func ReadMessage(reader io.Reader) (res []byte, err error) {
 		return nil, err
 	}
 
-	buf, err := UncompressSnappy(res)
+	buf, err := snappy.Decode(nil, res)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +70,7 @@ func ReadMessage(reader io.Reader) (res []byte, err error) {
 }
 
 func WriteMessage(writer io.Writer, msg []byte) (err error) {
-	buf := CompressSnappy(msg)
+	buf := snappy.Encode(nil, msg)
 	if err = binary.Write(writer, binary.LittleEndian, int32(len(buf))); err != nil {
 		return err
 	}

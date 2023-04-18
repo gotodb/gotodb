@@ -15,9 +15,9 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
-func (e *Executor) SetInstructionHashJoin(instruction *pb.Instruction) (err error) {
+func (e *Executor) SetInstructionHashJoin(instruction *pb.Instruction) error {
 	var job stage.HashJoinJob
-	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
+	if err := msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	e.StageJob = &job
@@ -36,7 +36,7 @@ func CalHashKey(es []*operator.ExpressionNode, rg *row.RowsGroup) (string, error
 	return res, nil
 }
 
-func (e *Executor) RunHashJoin() (err error) {
+func (e *Executor) RunHashJoin() error {
 	writer := e.Writers[0]
 	job := e.StageJob.(*stage.HashJoinJob)
 
@@ -45,7 +45,7 @@ func (e *Executor) RunHashJoin() (err error) {
 
 	for i, reader := range e.Readers {
 		mds[i] = &metadata.Metadata{}
-		if err = util.ReadObject(reader, mds[i]); err != nil {
+		if err := util.ReadObject(reader, mds[i]); err != nil {
 			return err
 		}
 	}
@@ -54,15 +54,11 @@ func (e *Executor) RunHashJoin() (err error) {
 	leftMd, rightMd := mds[0], mds[leftNum]
 
 	//write md
-	if err = util.WriteObject(writer, job.Metadata); err != nil {
+	if err := util.WriteObject(writer, job.Metadata); err != nil {
 		return err
 	}
 
 	rbWriter := row.NewRowsBuffer(job.Metadata, nil, writer)
-
-	defer func() {
-		rbWriter.Flush()
-	}()
 
 	//init
 	if err := job.JoinCriteria.Init(job.Metadata); err != nil {
@@ -153,7 +149,7 @@ func (e *Executor) RunHashJoin() (err error) {
 						if _, ok := rowsMap[leftKey]; ok {
 							for _, i := range rowsMap[leftKey] {
 								rightRow := rightRg.GetRow(i)
-								joinRow := row.RowPool.Get().(*row.Row)
+								joinRow := row.Pool.Get().(*row.Row)
 								joinRow.Clear()
 								joinRow.AppendVals(r.Vals...)
 								joinRow.AppendVals(rightRow.Vals...)
@@ -169,8 +165,8 @@ func (e *Executor) RunHashJoin() (err error) {
 									e.AddLogInfo(err, pb.LogLevel_ERR)
 									return
 								}
-								row.RowPool.Put(rightRow)
-								row.RowPool.Put(joinRow)
+								row.Pool.Put(rightRow)
+								row.Pool.Put(joinRow)
 							}
 						}
 
@@ -183,7 +179,7 @@ func (e *Executor) RunHashJoin() (err error) {
 							}
 						}
 
-						row.RowPool.Put(r)
+						row.Pool.Put(r)
 					}
 				}
 			}(i)
@@ -195,5 +191,9 @@ func (e *Executor) RunHashJoin() (err error) {
 
 	}
 
-	return err
+	if err := rbWriter.Flush(); err != nil {
+		return err
+	}
+
+	return nil
 }

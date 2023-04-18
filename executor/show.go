@@ -14,27 +14,20 @@ import (
 
 func (e *Executor) SetInstructionShow(instruction *pb.Instruction) error {
 	var job stage.ShowJob
-	var err error
-	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
+	if err := msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	e.StageJob = &job
 	return nil
 }
 
-func (e *Executor) RunShow() (err error) {
-	defer func() {
-		for i := 0; i < len(e.Writers); i++ {
-			util.WriteEOFMessage(e.Writers[i])
-		}
-	}()
-
+func (e *Executor) RunShow() error {
 	job := e.StageJob.(*stage.ShowJob)
 
 	md := job.Metadata
 	writer := e.Writers[0]
 	//write metadata
-	if err = util.WriteObject(writer, md); err != nil {
+	if err := util.WriteObject(writer, md); err != nil {
 		return err
 	}
 
@@ -70,10 +63,10 @@ func (e *Executor) RunShow() (err error) {
 		}
 	}
 
-	if err = rbWriter.Flush(); err != nil {
+	if err := rbWriter.Flush(); err != nil {
 		return err
 	}
 
-	return err
+	return nil
 
 }

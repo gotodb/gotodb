@@ -20,13 +20,13 @@ func (e *Executor) SetInstructionOrderByLocal(instruction *pb.Instruction) (err 
 	return nil
 }
 
-func (e *Executor) RunOrderByLocal() (err error) {
+func (e *Executor) RunOrderByLocal() error {
 	reader, writer := e.Readers[0], e.Writers[0]
 	job := e.StageJob.(*stage.OrderByLocalJob)
 	md := &metadata.Metadata{}
 
 	//read md
-	if err = util.ReadObject(reader, md); err != nil {
+	if err := util.ReadObject(reader, md); err != nil {
 		return err
 	}
 
@@ -39,16 +39,12 @@ func (e *Executor) RunOrderByLocal() (err error) {
 		}
 		job.Metadata.AppendKeyByType(t)
 	}
-	if err = util.WriteObject(writer, job.Metadata); err != nil {
+	if err := util.WriteObject(writer, job.Metadata); err != nil {
 		return err
 	}
 
 	rbWriter := row.NewRowsBuffer(job.Metadata, nil, writer)
 	rbReader := row.NewRowsBuffer(md, reader, nil)
-
-	defer func() {
-		rbWriter.Flush()
-	}()
 
 	//init
 	for _, item := range job.SortItems {
@@ -57,12 +53,10 @@ func (e *Executor) RunOrderByLocal() (err error) {
 		}
 	}
 
-	//write rows
-	var r *row.Row
 	rs := row.NewRows(e.GetOrderLocal(job))
 
 	for {
-		r, err = rbReader.ReadRow()
+		r, err := rbReader.ReadRow()
 		if err == io.EOF {
 			err = nil
 			break
@@ -80,9 +74,13 @@ func (e *Executor) RunOrderByLocal() (err error) {
 	}
 	rs.Sort()
 	for _, r := range rs.Data {
-		if err = rbWriter.WriteRow(r); err != nil {
+		if err := rbWriter.WriteRow(r); err != nil {
 			return err
 		}
+	}
+
+	if err := rbWriter.Flush(); err != nil {
+		return err
 	}
 
 	return nil
@@ -107,7 +105,12 @@ func (e *Executor) CalSortKey(job *stage.OrderByLocalJob, rg *row.RowsGroup) ([]
 		if err != nil {
 			return res, err
 		}
-		res = append(res, key)
+		switch key := key.(type) {
+		case []interface{}:
+			res = append(res, key...)
+		default:
+			res = append(res, key)
+		}
 	}
 
 	return res, err

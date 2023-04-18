@@ -21,24 +21,19 @@ func (e *Executor) SetInstructionSelect(instruction *pb.Instruction) (err error)
 	return nil
 }
 
-func (e *Executor) RunSelect() (err error) {
+func (e *Executor) RunSelect() error {
 	job := e.StageJob.(*stage.SelectJob)
 	md := &metadata.Metadata{}
 	reader := e.Readers[0]
 	writer := e.Writers[0]
-	if err = util.ReadObject(reader, md); err != nil {
+	if err := util.ReadObject(reader, md); err != nil {
 		return err
 	}
 
 	//write metadata
-	if err = util.WriteObject(writer, job.Metadata); err != nil {
+	if err := util.WriteObject(writer, job.Metadata); err != nil {
 		return err
 	}
-
-	rbReader, rbWriter := row.NewRowsBuffer(md, reader, nil), row.NewRowsBuffer(job.Metadata, nil, writer)
-	defer func() {
-		rbWriter.Flush()
-	}()
 
 	//init
 	for _, item := range job.SelectItems {
@@ -48,10 +43,11 @@ func (e *Executor) RunSelect() (err error) {
 	}
 	distinctMap := make(map[string]bool)
 
+	rbReader, rbWriter := row.NewRowsBuffer(md, reader, nil), row.NewRowsBuffer(job.Metadata, nil, writer)
 	//write rows
-	var rg, res *row.RowsGroup
+	var res *row.RowsGroup
 	for {
-		rg, err = rbReader.Read()
+		rg, err := rbReader.Read()
 		if err == io.EOF {
 			err = nil
 			break
@@ -84,8 +80,11 @@ func (e *Executor) RunSelect() (err error) {
 			}
 		}
 	}
+	if err := rbWriter.Flush(); err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }
 
 func (e *Executor) CalSelectItems(job *stage.SelectJob, rg *row.RowsGroup) (*row.RowsGroup, error) {

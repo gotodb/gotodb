@@ -12,9 +12,9 @@ import (
 	"sync"
 )
 
-func (e *Executor) SetInstructionShuffle(instruction *pb.Instruction) (err error) {
+func (e *Executor) SetInstructionShuffle(instruction *pb.Instruction) error {
 	var job stage.ShuffleJob
-	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
+	if err := msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	e.StageJob = &job
@@ -29,12 +29,12 @@ func ShuffleHash(s string) int {
 	return res
 }
 
-func (e *Executor) RunShuffle() (err error) {
+func (e *Executor) RunShuffle() error {
 	job := e.StageJob.(*stage.ShuffleJob)
 	//read md
 	md := &metadata.Metadata{}
 	for _, reader := range e.Readers {
-		if err = util.ReadObject(reader, md); err != nil {
+		if err := util.ReadObject(reader, md); err != nil {
 			return err
 		}
 	}
@@ -47,7 +47,7 @@ func (e *Executor) RunShuffle() (err error) {
 		mdOutput.AppendKeyByType(gtype.STRING)
 	}
 	for _, writer := range e.Writers {
-		if err = util.WriteObject(writer, mdOutput); err != nil {
+		if err := util.WriteObject(writer, mdOutput); err != nil {
 			return err
 		}
 	}
@@ -56,12 +56,6 @@ func (e *Executor) RunShuffle() (err error) {
 	for i, writer := range e.Writers {
 		rbWriters[i] = row.NewRowsBuffer(mdOutput, nil, writer)
 	}
-
-	defer func() {
-		for _, rbWriter := range rbWriters {
-			rbWriter.Flush()
-		}
-	}()
 
 	//init
 	for _, k := range job.Keys {
@@ -72,7 +66,7 @@ func (e *Executor) RunShuffle() (err error) {
 
 	//write rows
 	var wg sync.WaitGroup
-	for i := range e.Readers {
+	for index := range e.Readers {
 		wg.Add(1)
 		go func(index int) {
 			defer func() {
@@ -90,9 +84,9 @@ func (e *Executor) RunShuffle() (err error) {
 					return
 				}
 
-				for i := 0; i < rg0.GetRowsNumber(); i++ {
-					r := rg0.GetRow(i)
-					index := 0
+				for rowNumber := 0; rowNumber < rg0.GetRowsNumber(); rowNumber++ {
+					r := rg0.GetRow(rowNumber)
+					i := 0
 					if job.Keys != nil && len(job.Keys) > 0 {
 						rg := row.NewRowsGroup(mdOutput)
 						rg.Write(r)
@@ -102,22 +96,26 @@ func (e *Executor) RunShuffle() (err error) {
 							return
 						}
 						r.AppendKeys(key)
-						index = ShuffleHash(key) % len(rbWriters)
-
+						i = ShuffleHash(key) % len(rbWriters)
 					}
 
-					if err = rbWriters[index].WriteRow(r); err != nil {
+					if err = rbWriters[i].WriteRow(r); err != nil {
 						e.AddLogInfo(err, pb.LogLevel_ERR)
 						return
 					}
 
-					row.RowPool.Put(r)
+					row.Pool.Put(r)
 				}
 			}
-		}(i)
+		}(index)
 	}
 
 	wg.Wait()
 
+	for _, rbWriter := range rbWriters {
+		if err := rbWriter.Flush(); err != nil {
+			return err
+		}
+	}
 	return nil
 }

@@ -201,7 +201,12 @@ func ToInt8(iv interface{}) int8 {
 	case float64:
 		res = int8(v)
 	case string:
-		fmt.Sscanf(v, "%d", &res)
+		tmp, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			res = 0
+		} else {
+			res = int8(tmp)
+		}
 	case Timestamp:
 		res = int8(v.Sec)
 	case Date:
@@ -238,7 +243,12 @@ func ToInt16(iv interface{}) int16 {
 	case float64:
 		res = int16(v)
 	case string:
-		fmt.Sscanf(v, "%d", &res)
+		tmp, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			res = 0
+		} else {
+			res = int16(tmp)
+		}
 	case Timestamp:
 		res = int16(v.Sec)
 	case Date:
@@ -275,7 +285,12 @@ func ToInt32(iv interface{}) int32 {
 	case float64:
 		res = int32(v)
 	case string:
-		fmt.Sscanf(v, "%d", &res)
+		tmp, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			res = 0
+		} else {
+			res = int32(tmp)
+		}
 	case Timestamp:
 		res = int32(v.Sec)
 	case Date:
@@ -312,7 +327,12 @@ func ToInt64(iv interface{}) int64 {
 	case float64:
 		res = int64(v)
 	case string:
-		fmt.Sscanf(v, "%d", &res)
+		tmp, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			res = 0
+		} else {
+			res = tmp
+		}
 	case time.Time:
 		res = v.Unix()
 	case Date:
@@ -349,7 +369,12 @@ func ToUint8(iv interface{}) uint8 {
 	case float64:
 		res = uint8(v)
 	case string:
-		fmt.Sscanf(v, "%d", &res)
+		tmp, err := strconv.ParseUint(v, 10, 64)
+		if err != nil {
+			res = 0
+		} else {
+			res = uint8(tmp)
+		}
 	case Timestamp:
 		res = uint8(v.Sec)
 	case Date:
@@ -386,7 +411,12 @@ func ToUint16(iv interface{}) uint16 {
 	case float64:
 		res = uint16(v)
 	case string:
-		fmt.Sscanf(v, "%d", &res)
+		tmp, err := strconv.ParseUint(v, 10, 64)
+		if err != nil {
+			res = 0
+		} else {
+			res = uint16(tmp)
+		}
 	case Timestamp:
 		res = uint16(v.Sec)
 	case Date:
@@ -423,7 +453,12 @@ func ToUint32(iv interface{}) uint32 {
 	case float64:
 		res = uint32(v)
 	case string:
-		fmt.Sscanf(v, "%d", &res)
+		tmp, err := strconv.ParseUint(v, 10, 64)
+		if err != nil {
+			res = 0
+		} else {
+			res = uint32(tmp)
+		}
 	case Timestamp:
 		res = uint32(v.Sec)
 	case Date:
@@ -460,7 +495,12 @@ func ToUint64(iv interface{}) uint64 {
 	case float64:
 		res = uint64(v)
 	case string:
-		fmt.Sscanf(v, "%d", &res)
+		tmp, err := strconv.ParseUint(v, 10, 64)
+		if err != nil {
+			res = 0
+		} else {
+			res = tmp
+		}
 	case time.Time:
 		res = uint64(v.Unix())
 	case Date:
@@ -497,7 +537,12 @@ func ToFloat32(iv interface{}) float32 {
 	case float64:
 		res = float32(v)
 	case string:
-		fmt.Sscanf(v, "%f", &res)
+		tmp, err := strconv.ParseFloat(v, 32)
+		if err != nil {
+			res = 0
+		} else {
+			res = float32(tmp)
+		}
 	case time.Time:
 		res = float32(v.Unix())
 	case Date:
@@ -534,7 +579,12 @@ func ToFloat64(iv interface{}) float64 {
 	case float64:
 		res = v
 	case string:
-		fmt.Sscanf(v, "%f", &res)
+		tmp, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			res = 0
+		} else {
+			res = tmp
+		}
 	case time.Time:
 		res = float64(v.Unix())
 	case Date:

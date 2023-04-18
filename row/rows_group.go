@@ -104,7 +104,7 @@ func (rg *RowsGroup) GetRow(ri int) *Row {
 		return nil
 	}
 
-	res := RowPool.Get().(*Row)
+	res := Pool.Get().(*Row)
 	res.Clear()
 
 	for i := 0; i < len(rg.Vals); i++ {

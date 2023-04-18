@@ -10,7 +10,7 @@ import (
 	"github.com/gotodb/gotodb/util"
 )
 
-const ROWS_BUFFER_SIZE = 10000
+const RowsBufferSize = 10000
 
 type RowsBuffer struct {
 	sync.Mutex
@@ -32,7 +32,7 @@ type RowsBuffer struct {
 func NewRowsBuffer(md *metadata.Metadata, reader io.Reader, writer io.Writer) *RowsBuffer {
 	res := &RowsBuffer{
 		MD:         md,
-		BufferSize: ROWS_BUFFER_SIZE,
+		BufferSize: RowsBufferSize,
 		Reader:     reader,
 		Writer:     writer,
 	}
@@ -257,7 +257,7 @@ func (rb *RowsBuffer) ReadRow() (*Row, error) {
 		}
 	}
 
-	row := RowPool.Get().(*Row)
+	row := Pool.Get().(*Row)
 	row.Clear()
 	row.Vals = make([]interface{}, len(rb.ValueBuffers))
 	for i, col := range rb.ValueBuffers {

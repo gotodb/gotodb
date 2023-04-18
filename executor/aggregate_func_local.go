@@ -10,9 +10,9 @@ import (
 	"io"
 )
 
-func (e *Executor) SetInstructionAggregateFuncLocal(instruction *pb.Instruction) (err error) {
+func (e *Executor) SetInstructionAggregateFuncLocal(instruction *pb.Instruction) error {
 	var job stage.AggregateFuncLocalJob
-	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
+	if err := msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	e.StageJob = &job
@@ -20,26 +20,22 @@ func (e *Executor) SetInstructionAggregateFuncLocal(instruction *pb.Instruction)
 	return nil
 }
 
-func (e *Executor) RunAggregateFuncLocal() (err error) {
+func (e *Executor) RunAggregateFuncLocal() error {
 	reader, writer := e.Readers[0], e.Writers[0]
 	job := e.StageJob.(*stage.AggregateFuncLocalJob)
 	md := &metadata.Metadata{}
 
 	//read md
-	if err = util.ReadObject(reader, md); err != nil {
+	if err := util.ReadObject(reader, md); err != nil {
 		return err
 	}
 
 	//write md
-	if err = util.WriteObject(writer, job.Metadata); err != nil {
+	if err := util.WriteObject(writer, job.Metadata); err != nil {
 		return err
 	}
 
 	rbReader, rbWriter := row.NewRowsBuffer(md, reader, nil), row.NewRowsBuffer(job.Metadata, nil, writer)
-
-	defer func() {
-		rbWriter.Flush()
-	}()
 
 	//init
 	if err := job.Init(job.Metadata); err != nil {
@@ -47,7 +43,6 @@ func (e *Executor) RunAggregateFuncLocal() (err error) {
 	}
 
 	//write rows
-	var rg *row.RowsGroup
 	res := make([]map[string]interface{}, len(job.FuncNodes))
 	for i := 0; i < len(job.FuncNodes); i++ {
 		res[i] = map[string]interface{}{}
@@ -55,7 +50,7 @@ func (e *Executor) RunAggregateFuncLocal() (err error) {
 
 	keys := map[string]*row.Row{}
 	for {
-		rg, err = rbReader.Read()
+		rg, err := rbReader.Read()
 
 		if err == io.EOF {
 			err = nil
@@ -64,7 +59,10 @@ func (e *Executor) RunAggregateFuncLocal() (err error) {
 				for i := 0; i < len(res); i++ {
 					r.AppendVals(res[i][key])
 				}
-				rbWriter.WriteRow(r)
+
+				if err := rbWriter.WriteRow(r); err != nil {
+					return err
+				}
 			}
 
 			break
@@ -85,7 +83,11 @@ func (e *Executor) RunAggregateFuncLocal() (err error) {
 		}
 	}
 
-	return err
+	if err := rbWriter.Flush(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (e *Executor) CalAggregateFuncLocal(job *stage.AggregateFuncLocalJob, rg *row.RowsGroup, res *[]map[string]interface{}) error {

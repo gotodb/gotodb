@@ -9,7 +9,7 @@ import (
 type OrderType int32
 
 const (
-	UNKNOWNORDERTYPE OrderType = iota
+	UnknownOrderType OrderType = iota
 	ASC
 	DESC
 	FIRST
@@ -19,7 +19,7 @@ const (
 type FuncType int32
 
 const (
-	UNKNOWNFUNCTYPE FuncType = iota
+	UnknownFuncType FuncType = iota
 	AGGREGATE
 	NORMAL
 )
@@ -27,7 +27,7 @@ const (
 type QuantifierType int32
 
 const (
-	UNKNOWNQUANTIFIERTYPE QuantifierType = iota
+	UnknownQuantifierType QuantifierType = iota
 	ALL
 	DISTINCT
 	SOME
@@ -45,7 +45,7 @@ func StrToQuantifierType(s string) QuantifierType {
 	case "ANY":
 		return ANY
 	default:
-		return UNKNOWNQUANTIFIERTYPE
+		return UnknownQuantifierType
 	}
 }
 

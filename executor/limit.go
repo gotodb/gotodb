@@ -11,47 +11,38 @@ import (
 	"github.com/vmihailenco/msgpack"
 )
 
-func (e *Executor) SetInstructionLimit(instruction *pb.Instruction) (err error) {
+func (e *Executor) SetInstructionLimit(instruction *pb.Instruction) error {
 	var job stage.LimitJob
-	if err = msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
+	if err := msgpack.Unmarshal(instruction.EncodedStageJobBytes, &job); err != nil {
 		return err
 	}
 	e.StageJob = &job
 	return nil
 }
 
-func (e *Executor) RunLimit() (err error) {
+func (e *Executor) RunLimit() error {
 	job := e.StageJob.(*stage.LimitJob)
 	writer := e.Writers[0]
 	md := &metadata.Metadata{}
 	//read md
-	for _, reader := range e.Readers {
-		if err = util.ReadObject(reader, md); err != nil {
+	rbReaders := make([]*row.RowsBuffer, len(e.Readers))
+	for i, reader := range e.Readers {
+		if err := util.ReadObject(reader, md); err != nil {
 			return err
 		}
+		rbReaders[i] = row.NewRowsBuffer(md, reader, nil)
 	}
 
 	//write md
-	if err = util.WriteObject(writer, md); err != nil {
+	if err := util.WriteObject(writer, md); err != nil {
 		return err
 	}
 
-	rbReaders := make([]*row.RowsBuffer, len(e.Readers))
-	for i, reader := range e.Readers {
-		rbReaders[i] = row.NewRowsBuffer(md, reader, nil)
-	}
 	rbWriter := row.NewRowsBuffer(md, nil, writer)
-
-	defer func() {
-		rbWriter.Flush()
-	}()
-
-	//write rows
-	var rg *row.RowsGroup
 	readRowCnt := int64(0)
 	for _, rbReader := range rbReaders {
 		for readRowCnt < *(job.LimitNumber) {
-			rg, err = rbReader.Read()
+			rg, err := rbReader.Read()
 			if err == io.EOF || readRowCnt >= *(job.LimitNumber) {
 				err = nil
 				break
@@ -79,6 +70,10 @@ func (e *Executor) RunLimit() (err error) {
 				}
 			}
 		}
+	}
+
+	if err := rbWriter.Flush(); err != nil {
+		return err
 	}
 
 	return nil

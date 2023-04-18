@@ -32,7 +32,7 @@ var columns = map[string]gtype.Type{
 	"network_id":   gtype.INT64,
 	"event_date":   gtype.DATE,
 }
-var tempDir = "./"
+var tempDir = os.TempDir()
 
 func GenerateTestRows(columns map[string]gtype.Type) error {
 	f1, err := os.Create(tempDir + "/test01.csv")
@@ -48,7 +48,7 @@ func GenerateTestRows(columns map[string]gtype.Type) error {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	for i := int64(0); i < int64(100); i++ {
+	for i := int64(0); i < 100; i++ {
 		var res []string
 		for _, name := range keys {
 			switch name {

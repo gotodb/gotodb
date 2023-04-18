@@ -33,14 +33,15 @@ func (n *CaseNode) ExtractAggFunc(res *[]*FuncCallNode) {
 }
 
 func (n *CaseNode) GetColumns() ([]string, error) {
-	res, resmp := []string{}, map[string]int{}
+	var res []string
+	resMap := map[string]int{}
 	for _, w := range n.Whens {
 		cs, err := w.GetColumns()
 		if err != nil {
 			return res, err
 		}
 		for _, c := range cs {
-			resmp[c] = 1
+			resMap[c] = 1
 		}
 	}
 	cs, err := n.Else.GetColumns()
@@ -48,9 +49,9 @@ func (n *CaseNode) GetColumns() ([]string, error) {
 		return res, err
 	}
 	for _, c := range cs {
-		resmp[c] = 1
+		resMap[c] = 1
 	}
-	for c := range resmp {
+	for c := range resMap {
 		res = append(res, c)
 	}
 	return res, nil
