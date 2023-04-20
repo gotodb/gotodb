@@ -93,6 +93,22 @@ func NewNodeFromStatement(runtime *config.Runtime, t parser.IStatementContext) N
 	}
 
 	//show schemas
+	if tt.SHOW() != nil && tt.CATALOGS() != nil {
+		var like, escape string
+
+		if tt.LIKE() != nil {
+			stringValue := operator.NewStringValueNode(runtime, tt.GetPattern())
+			like = stringValue.Str
+		}
+
+		if tt.ESCAPE() != nil {
+			stringValue := operator.NewStringValueNode(runtime, tt.GetEscape())
+			escape = stringValue.Str
+		}
+
+		return NewShowNodeCatalogs(runtime, &like, &escape)
+	}
+
 	if tt.SHOW() != nil && tt.SCHEMAS() != nil {
 		catalog := runtime.Catalog
 		if id := tt.Identifier(0); id != nil {

@@ -67,6 +67,14 @@ func NewShowNodeTables(_ *config.Runtime, catalog, schema string, like, escape *
 	}
 }
 
+func NewShowNodeCatalogs(_ *config.Runtime, like, escape *string) *ShowNode {
+	return &ShowNode{
+		ShowType:    ShowCatalogs,
+		LikePattern: like,
+		Escape:      escape,
+	}
+}
+
 func NewShowNodeSchemas(_ *config.Runtime, catalog string, like, escape *string) *ShowNode {
 	return &ShowNode{
 		ShowType:    ShowSchemas,
@@ -102,6 +110,8 @@ func (n *ShowNode) SetMetadata() error {
 	res := metadata.NewMetadata()
 	switch n.ShowType {
 	case ShowCatalogs:
+		col := metadata.NewColumnMetadata(gtype.STRING, "*", "*", "*", "catalog")
+		res.AppendColumn(col)
 	case ShowTables:
 		col := metadata.NewColumnMetadata(gtype.STRING, n.Catalog, n.Schema, "*", "table")
 		res.AppendColumn(col)

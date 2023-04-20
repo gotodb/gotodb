@@ -38,6 +38,7 @@ func (e *Executor) RunShow() error {
 	//writer rows
 	switch job.ShowType {
 	case plan.ShowCatalogs:
+		showReader = connector.ShowCatalogs(job.LikePattern, job.Escape)
 	case plan.ShowSchemas:
 		showReader = ctr.ShowSchemas(job.Catalog, job.LikePattern, job.Escape)
 	case plan.ShowTables:

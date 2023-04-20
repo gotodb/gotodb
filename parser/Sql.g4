@@ -16,6 +16,7 @@ statement
     : query
     | USE schema=identifier							
     | USE catalog=identifier '.' schema=identifier
+    | INSERT INTO qualifiedName columnAliases? query
     | SHOW TABLES ((FROM | IN) qualifiedName)?
         (LIKE pattern=stringValue (ESCAPE escape=stringValue)?)?
     | SHOW SCHEMAS ((FROM | IN) identifier)?
@@ -125,6 +126,10 @@ sampleType
 
 sampledRelation
     : relationPrimary (AS? identifier)?
+    ;
+
+columnAliases
+    : '(' identifier (',' identifier)* ')'
     ;
 
 relationPrimary
