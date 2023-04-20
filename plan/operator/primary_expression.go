@@ -2,13 +2,13 @@ package operator
 
 import (
 	"fmt"
+	"github.com/gotodb/gotodb/pkg/parser"
 	"math/rand"
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/metadata"
-	"github.com/gotodb/gotodb/parser"
 	"github.com/gotodb/gotodb/row"
 )
 

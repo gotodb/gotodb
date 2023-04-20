@@ -2,13 +2,13 @@ package plan
 
 import (
 	"fmt"
+	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/plan/operator"
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/metadata"
-	"github.com/gotodb/gotodb/parser"
 )
 
 type SelectNode struct {

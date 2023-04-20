@@ -103,9 +103,9 @@ func Compile(pattern string, escape string) (*LikeMatcher, error) {
 	maxSize := 0
 	unbounded := false
 	for _, expression := range parsed {
-		if expression == "%" {
+		if isZeroOrMore(expression) {
 			unbounded = true
-		} else if strings.Contains(expression, "_") {
+		} else if isAny(expression) {
 			length := len(expression)
 			minSize += length
 			maxSize += length * 4 // at most 4 bytes for a single UTF-8 codepoint

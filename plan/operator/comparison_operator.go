@@ -3,7 +3,7 @@ package operator
 import (
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/gtype"
-	"github.com/gotodb/gotodb/parser"
+	"github.com/gotodb/gotodb/pkg/parser"
 )
 
 func NewComparisonOperator(runtime *config.Runtime, t parser.IComparisonOperatorContext) *gtype.Operator {

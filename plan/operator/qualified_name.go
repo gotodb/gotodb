@@ -1,11 +1,11 @@
 package operator
 
 import (
+	"github.com/gotodb/gotodb/pkg/parser"
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
-	"github.com/gotodb/gotodb/parser"
 )
 
 type QualifiedNameNode struct {
