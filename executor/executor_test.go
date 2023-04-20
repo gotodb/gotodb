@@ -69,7 +69,7 @@ func TestSelect(t *testing.T) {
 }
 
 func TestShowCatalogs(t *testing.T) {
-	sql := "show catalogs"
+	sql := "show catalogs like '%l%'"
 	executor(t, sql)
 }
 
