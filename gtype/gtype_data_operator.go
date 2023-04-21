@@ -389,7 +389,7 @@ func LTEFunc(va interface{}, vb interface{}) interface{} {
 	} else if va == nil && vb == nil {
 		return false
 	} else if va == vb {
-		return false
+		return true
 	} else {
 		va, vb = ToSameType(va, vb)
 		t := TypeOf(va)
@@ -493,7 +493,7 @@ func GTEFunc(va interface{}, vb interface{}) interface{} {
 	} else if va == nil && vb == nil {
 		return false
 	} else if va == vb {
-		return false
+		return true
 	} else {
 		va, vb = ToSameType(va, vb)
 		t := TypeOf(va)
