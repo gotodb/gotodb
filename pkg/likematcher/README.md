@@ -65,4 +65,4 @@ Contributions are welcomed and greatly appreciated.
 
 ## License
 
-[GPLv3](LICENSE) © zhenorzz
+Parser is under the GPLv3 license. See the LICENSE file for details.
