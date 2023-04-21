@@ -31,6 +31,6 @@ func TestShowTables(t *testing.T) {
 	if errListener.HasError() {
 		t.Error(errListener)
 	} else {
-		t.Logf("%+v", &tree)
+		t.Logf("%+v", tree)
 	}
 }
