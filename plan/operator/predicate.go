@@ -21,19 +21,31 @@ type PredicateNode struct {
 func NewPredicateNode(runtime *config.Runtime, t parser.IPredicateContext) *PredicateNode {
 	tt := t.(*parser.PredicateContext)
 	res := &PredicateNode{}
-	if iopc, ve := tt.ComparisonOperator(), tt.GetRight(); iopc != nil && ve != nil {
-		res.ComparisonOperator = NewComparisonOperator(runtime, iopc)
+	if tt.NOT() != nil {
+		res.IsNot = true
+	}
+	if ve := tt.GetRight(); ve != nil {
 		res.RightValueExpression = NewValueExpressionNode(runtime, ve)
-	} else if tt.BETWEEN() != nil {
-		if tt.NOT() != nil {
-			res.IsNot = true
+		// comparisonOperator right=valueExpression
+		if iopc := tt.ComparisonOperator(); iopc != nil {
+			res.ComparisonOperator = NewComparisonOperator(runtime, iopc)
+		} else {
+			// IS NOT? DISTINCT FROM right=valueExpression
+			if res.IsNot {
+				op := gtype.EQ
+				res.ComparisonOperator = &op
+			} else {
+				op := gtype.NEQ
+				res.ComparisonOperator = &op
+			}
 		}
+
+	} else if tt.BETWEEN() != nil {
+		// NOT? BETWEEN lower=valueExpression AND upper=valueExpression
 		res.LowerValueExpression = NewValueExpressionNode(runtime, tt.GetLower())
 		res.UpperValueExpression = NewValueExpressionNode(runtime, tt.GetUpper())
 	} else if tt.IN() != nil {
-		if tt.NOT() != nil {
-			res.IsNot = true
-		}
+		// NOT? IN '(' expression (',' expression)* ')'
 		for _, exp := range tt.AllExpression() {
 			res.BooleanExpressionNodes = append(res.BooleanExpressionNodes, NewBooleanExpressionNode(runtime, exp.BooleanExpression()))
 		}
@@ -105,7 +117,7 @@ func (n *PredicateNode) Init(md *metadata.Metadata) error {
 }
 
 func (n *PredicateNode) Result(valsi interface{}, input *row.RowsGroup) (interface{}, error) {
-	if n.ComparisonOperator != nil && n.RightValueExpression != nil {
+	if n.RightValueExpression != nil {
 		resi, err := n.RightValueExpression.Result(input)
 		if err != nil {
 			return nil, err
@@ -164,6 +176,15 @@ func (n *PredicateNode) Result(valsi interface{}, input *row.RowsGroup) (interfa
 
 		return res, nil
 	} else {
-		return false, fmt.Errorf("wrong PredicateNode")
+		vals := valsi.([]interface{})
+		res := make([]interface{}, len(vals))
+		for i := 0; i < len(res); i++ {
+			if n.IsNot {
+				res[i] = vals[i] != nil
+			} else {
+				res[i] = vals[i] == nil
+			}
+		}
+		return res, nil
 	}
 }
