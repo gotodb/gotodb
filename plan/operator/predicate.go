@@ -10,11 +10,12 @@ import (
 )
 
 type PredicateNode struct {
-	ComparisonOperator   *gtype.Operator
-	IsNot                bool
-	RightValueExpression *ValueExpressionNode
-	LowerValueExpression *ValueExpressionNode
-	UpperValueExpression *ValueExpressionNode
+	ComparisonOperator     *gtype.Operator
+	IsNot                  bool
+	RightValueExpression   *ValueExpressionNode
+	LowerValueExpression   *ValueExpressionNode
+	UpperValueExpression   *ValueExpressionNode
+	BooleanExpressionNodes []*BooleanExpressionNode
 }
 
 func NewPredicateNode(runtime *config.Runtime, t parser.IPredicateContext) *PredicateNode {
@@ -29,6 +30,13 @@ func NewPredicateNode(runtime *config.Runtime, t parser.IPredicateContext) *Pred
 		}
 		res.LowerValueExpression = NewValueExpressionNode(runtime, tt.GetLower())
 		res.UpperValueExpression = NewValueExpressionNode(runtime, tt.GetUpper())
+	} else if tt.IN() != nil {
+		if tt.NOT() != nil {
+			res.IsNot = true
+		}
+		for _, exp := range tt.AllExpression() {
+			res.BooleanExpressionNodes = append(res.BooleanExpressionNodes, NewBooleanExpressionNode(runtime, exp.BooleanExpression()))
+		}
 	}
 	return res
 }
@@ -43,6 +51,10 @@ func (n *PredicateNode) ExtractAggFunc(res *[]*FuncCallNode) {
 	} else if n.LowerValueExpression != nil || n.UpperValueExpression != nil {
 		n.LowerValueExpression.ExtractAggFunc(res)
 		n.UpperValueExpression.ExtractAggFunc(res)
+	} else if n.BooleanExpressionNodes != nil {
+		for _, booleanExpressionNode := range n.BooleanExpressionNodes {
+			booleanExpressionNode.ExtractAggFunc(res)
+		}
 	}
 }
 
@@ -60,6 +72,16 @@ func (n *PredicateNode) GetColumns() ([]string, error) {
 		}
 
 		return append(l, u...), nil
+	} else if n.BooleanExpressionNodes != nil {
+		var s []string
+		for _, booleanExpressionNode := range n.BooleanExpressionNodes {
+			c, err := booleanExpressionNode.GetColumns()
+			if err != nil {
+				return nil, err
+			}
+			s = append(s, c...)
+		}
+		return s, nil
 	} else {
 		return []string{}, fmt.Errorf("predicate get columns error")
 	}
@@ -109,12 +131,37 @@ func (n *PredicateNode) Result(valsi interface{}, input *row.RowsGroup) (interfa
 		res := make([]interface{}, len(vals))
 
 		for i := 0; i < len(res); i++ {
+			res[i] = gtype.OperatorFunc(vals[i], lower[i], gtype.GTE).(bool) && gtype.OperatorFunc(vals[i], upper[i], gtype.LTE).(bool)
 			if n.IsNot {
-				res[i] = gtype.OperatorFunc(vals[i], lower[i], gtype.LT).(bool) || gtype.OperatorFunc(vals[i], upper[i], gtype.GT).(bool)
-			} else {
-				res[i] = gtype.OperatorFunc(vals[i], lower[i], gtype.GTE).(bool) && gtype.OperatorFunc(vals[i], upper[i], gtype.LTE).(bool)
+				res[i] = !res[i].(bool)
 			}
 		}
+		return res, nil
+	} else if n.BooleanExpressionNodes != nil {
+		vals := valsi.([]interface{})
+		res := make([]interface{}, len(vals))
+		inItems := make([]interface{}, len(n.BooleanExpressionNodes))
+		for i, booleanExpressionNode := range n.BooleanExpressionNodes {
+			inItem, err := booleanExpressionNode.Result(input)
+			if err != nil {
+				return nil, err
+			}
+			inItems[i] = inItem
+		}
+
+		for i := 0; i < len(res); i++ {
+			for _, item := range inItems {
+				res[i] = gtype.EQFunc(vals[i], item.([]interface{})[i])
+				if res[i].(bool) {
+					break
+				}
+			}
+
+			if n.IsNot {
+				res[i] = !res[i].(bool)
+			}
+		}
+
 		return res, nil
 	} else {
 		return false, fmt.Errorf("wrong PredicateNode")
