@@ -78,7 +78,7 @@ func (c *Http) GetReader(file *partition.FileLocation, md *metadata.Metadata, fi
 	var _http string
 	for _, filter := range filters {
 		if filter.Name == c.Config.FilterColumn {
-			_http = filter.Predicated.Predicate.RightValueExpression.PrimaryExpression.StringValue.Str
+			_http = filter.Predicated.Predicate.FirstValueExpression.PrimaryExpression.StringValue.Str
 			break
 		}
 	}

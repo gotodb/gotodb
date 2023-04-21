@@ -62,7 +62,7 @@ func TestSelect(t *testing.T) {
 	//sql := "/*+partition_number=1*/select a.* from mysql.goploy.user as a join mysql.goploy.user as b on a.id = b.id where a.id = 1 and b.id = 2"
 	//sql := "select a.id, b.id from mysql.goploy.user as a join file.info.student as b on a.id = b.id  where a.id = 1"
 	//sql := "select id from mysql.goploy.user union select id from file.info.student where id = 4"
-	sql := "select id from file.info.student where id not between 1 and 2"
+	sql := "select id from file.info.student where id like '1'"
 	//sql := "select id from mysql.goploy.user"
 	//sql := "select  * from test.test.csv as a limit 10"
 	executor(t, sql)

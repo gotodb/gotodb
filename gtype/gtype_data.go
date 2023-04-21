@@ -2,6 +2,7 @@ package gtype
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 )
@@ -772,6 +773,108 @@ func ToBool(iv interface{}) bool {
 		res = true
 	case Date:
 		res = true
+	}
+	return res
+}
+
+func ToBytes(iv interface{}) []byte {
+	var res []byte
+	switch v := iv.(type) {
+	case bool:
+		res = make([]byte, 1)
+		if v {
+			res[0] = byte(1)
+		} else {
+			res[0] = byte(0)
+		}
+	case int8:
+		res = make([]byte, 1)
+		res[0] = byte(v)
+	case int16:
+		res = make([]byte, 2)
+		res[0] = byte(v)
+		res[1] = byte(v >> 8)
+	case int32:
+		res = make([]byte, 4)
+		res[0] = byte(v)
+		res[1] = byte(v >> 8)
+		res[2] = byte(v >> 16)
+		res[3] = byte(v >> 24)
+	case int64:
+		res = make([]byte, 8)
+		res[0] = byte(v)
+		res[1] = byte(v >> 8)
+		res[2] = byte(v >> 16)
+		res[3] = byte(v >> 24)
+		res[4] = byte(v >> 32)
+		res[5] = byte(v >> 40)
+		res[6] = byte(v >> 48)
+		res[7] = byte(v >> 56)
+	case uint8:
+		res = make([]byte, 1)
+		res[0] = v
+	case uint16:
+		res = make([]byte, 2)
+		res[0] = byte(v)
+		res[1] = byte(v >> 8)
+	case uint32:
+		res = make([]byte, 4)
+		res[0] = byte(v)
+		res[1] = byte(v >> 8)
+		res[2] = byte(v >> 16)
+		res[3] = byte(v >> 24)
+	case uint64:
+		res = make([]byte, 8)
+		res[0] = byte(v)
+		res[1] = byte(v >> 8)
+		res[2] = byte(v >> 16)
+		res[3] = byte(v >> 24)
+		res[4] = byte(v >> 32)
+		res[5] = byte(v >> 40)
+		res[6] = byte(v >> 48)
+		res[7] = byte(v >> 56)
+	case float32:
+		n := math.Float32bits(v)
+		res = make([]byte, 4)
+		res[0] = byte(n)
+		res[1] = byte(n >> 8)
+		res[2] = byte(n >> 16)
+		res[3] = byte(n >> 24)
+	case float64:
+		n := math.Float64bits(v)
+		res = make([]byte, 4)
+		res[0] = byte(n)
+		res[1] = byte(n >> 8)
+		res[2] = byte(n >> 16)
+		res[3] = byte(n >> 24)
+		res[4] = byte(n >> 32)
+		res[5] = byte(n >> 40)
+		res[6] = byte(n >> 48)
+		res[7] = byte(n >> 56)
+	case string:
+		res = []byte(v)
+	case time.Time:
+		sec := v.Unix()
+		res = make([]byte, 8)
+		res[0] = byte(sec)
+		res[1] = byte(sec >> 8)
+		res[2] = byte(sec >> 16)
+		res[3] = byte(sec >> 24)
+		res[4] = byte(sec >> 32)
+		res[5] = byte(sec >> 40)
+		res[6] = byte(sec >> 48)
+		res[7] = byte(sec >> 56)
+	case Date:
+		sec := v.Sec
+		res = make([]byte, 8)
+		res[0] = byte(sec)
+		res[1] = byte(sec >> 8)
+		res[2] = byte(sec >> 16)
+		res[3] = byte(sec >> 24)
+		res[4] = byte(sec >> 32)
+		res[5] = byte(sec >> 40)
+		res[6] = byte(sec >> 48)
+		res[7] = byte(sec >> 56)
 	}
 	return res
 }
