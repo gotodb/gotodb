@@ -58,7 +58,8 @@ func (e *Executor) setupReaders() {
 }
 
 func TestInsert(t *testing.T) {
-	sql := "insert into file.info.student select * from file.info.student where id like '1'"
+	sql := "insert into mysql.goploy.user (account, password, name, contact, state, super_manager) select account, password, name, contact, state, super_manager from mysql.goploy.user"
+	//sql := "insert into file.info.student select * from file.info.student where id like '1'"
 	executor(t, sql)
 }
 

@@ -96,7 +96,7 @@ func (c *File) GetReader(file *partition.FileLocation, selectedMD *metadata.Meta
 	}, nil
 }
 
-func (c *File) Insert(rb *row.RowsBuffer, Columns []string) (affectedRows int64, err error) {
+func (c *File) Insert(rb *row.RowsBuffer, columns []string) (affectedRows int64, err error) {
 
 	part, err := c.GetPartition(0)
 	if err != nil {
@@ -111,9 +111,9 @@ func (c *File) Insert(rb *row.RowsBuffer, Columns []string) (affectedRows int64,
 	}
 
 	var indexes []int
-	if len(Columns) > 0 {
-		indexes = make([]int, len(Columns))
-		for i, column := range Columns {
+	if columns != nil && len(columns) > 0 {
+		indexes = make([]int, len(columns))
+		for i, column := range columns {
 			indexes[i] = c.Metadata.ColumnMap[column]
 		}
 	}

@@ -62,9 +62,6 @@ func (c *Mysql) GetMetadata() (*metadata.Metadata, error) {
 func (c *Mysql) GetPartition(partitionNumber int) (*partition.Partition, error) {
 	if c.Partition == nil {
 		c.Partition = partition.New(metadata.NewMetadata())
-		//for i := 0; i < partitionNumber; i++ {
-		//	c.Partition.Locations = append(c.Partition.Locations, fmt.Sprintf("%d/%d", i, partitionNumber))
-		//}
 		c.Partition.Locations = append(c.Partition.Locations, fmt.Sprintf("%d/%d", 0, partitionNumber))
 
 	}
@@ -137,16 +134,66 @@ func (c *Mysql) GetReader(file *partition.FileLocation, md *metadata.Metadata, f
 	}, nil
 }
 
-func (c *Mysql) Insert(rb *row.RowsBuffer, Columns []string) (affectedRows int64, err error) {
+func (c *Mysql) Insert(rb *row.RowsBuffer, columns []string) (affectedRows int64, err error) {
+	if columns == nil || len(columns) == 0 {
+		columns = make([]string, c.Metadata.GetColumnNumber())
+		for i, column := range c.Metadata.Columns {
+			columns[i] = column.ColumnName
+		}
+	}
+
+	indexes := make([]int, len(columns))
+	sqlCache := "INSERT INTO " + c.Config.Schema + "." + c.Config.Table + "( "
+	for i, column := range columns {
+		indexes[i], err = c.Metadata.GetIndexByName(column)
+		if err != nil {
+			return
+		}
+		sqlCache += "`" + column + "`,"
+	}
+
+	sqlCache = strings.TrimSuffix(sqlCache, ",") + ") VALUES "
+	placeholder := strings.TrimSuffix(strings.Repeat("?,", len(columns)), ",")
+	dsn := c.getDSN()
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return
+	}
+	defer db.Close()
+	var rg *row.RowsGroup
 	for {
-		rg, err := rb.Read()
+		rg, err = rb.Read()
 		if err != nil {
 			if err == io.EOF {
 				err = nil
 			}
 			break
 		}
-		affectedRows += int64(rg.RowsNumber)
+		var vals []interface{}
+		sqlStr := sqlCache
+		for r := 0; r < rg.RowsNumber; r++ {
+			for columnNum, index := range indexes {
+				vals = append(vals, gtype.ToType(rg.Vals[columnNum][r], c.Metadata.Columns[index].ColumnType))
+			}
+
+			sqlStr += "(" + placeholder + "),"
+		}
+		sqlStr = strings.TrimSuffix(sqlStr, ",")
+		stmt, err := db.Prepare(sqlStr)
+		if err != nil {
+			return 0, err
+		}
+
+		result, err := stmt.Exec(vals...)
+		if err != nil {
+			return 0, err
+		}
+		insertedRows, err := result.RowsAffected()
+		if err != nil {
+			return affectedRows, err
+		}
+
+		affectedRows += insertedRows
 	}
 
 	return
