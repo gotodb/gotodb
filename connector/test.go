@@ -9,6 +9,7 @@ import (
 	"github.com/gotodb/gotodb/plan/operator"
 	"github.com/gotodb/gotodb/row"
 	"io"
+	"math/rand"
 	"os"
 	"sort"
 	"strings"
@@ -164,7 +165,7 @@ func (c *Test) GetPartition(_ int) (*partition.Partition, error) {
 }
 
 func (c *Test) GetReader(f *partition.FileLocation, selectedMD *metadata.Metadata, _ []*operator.BooleanExpressionNode) (row.GroupReader, error) {
-	reader, err := file.NewHandler(f, c.Metadata)
+	reader, err := file.NewHandler(f, c.Metadata, true)
 	if err != nil {
 		return nil, err
 	}
@@ -180,18 +181,26 @@ func (c *Test) GetReader(f *partition.FileLocation, selectedMD *metadata.Metadat
 }
 
 func (c *Test) Insert(rb *row.RowsBuffer, Columns []string) (affectedRows int64, err error) {
-	for {
-		rg, err := rb.Read()
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-			}
-			break
-		}
-		affectedRows += int64(rg.RowsNumber)
+	part, err := c.GetPartition(0)
+	if err != nil {
+		return
+	}
+	rand.Seed(time.Now().Unix())
+	n := rand.Intn(len(c.Partition.Locations))
+	writer, err := file.NewHandler(part.GetNoPartitionFiles()[n], c.Metadata, false)
+	if err != nil {
+		return
 	}
 
-	return
+	var indexes []int
+	if len(Columns) > 0 {
+		indexes = make([]int, len(Columns))
+		for i, column := range Columns {
+			indexes[i] = c.Metadata.ColumnMap[column]
+		}
+	}
+
+	return writer.Write(rb, indexes)
 }
 
 func (c *Test) ShowSchemas(_ string, _, _ *string) row.Reader {

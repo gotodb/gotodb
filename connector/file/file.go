@@ -81,7 +81,7 @@ func (c *File) GetPartition(_ int) (*partition.Partition, error) {
 }
 
 func (c *File) GetReader(file *partition.FileLocation, selectedMD *metadata.Metadata, _ []*operator.BooleanExpressionNode) (row.GroupReader, error) {
-	reader, err := NewHandler(file, c.Metadata)
+	reader, err := NewHandler(file, c.Metadata, true)
 	if err != nil {
 		return nil, err
 	}
@@ -98,13 +98,14 @@ func (c *File) GetReader(file *partition.FileLocation, selectedMD *metadata.Meta
 
 func (c *File) Insert(rb *row.RowsBuffer, Columns []string) (affectedRows int64, err error) {
 
-	rand.Seed(time.Now().Unix())
-	n := rand.Intn(len(c.Config.Paths))
 	part, err := c.GetPartition(0)
 	if err != nil {
 		return
 	}
-	writer, err := NewHandler(part.GetNoPartitionFiles()[n], c.Metadata)
+
+	rand.Seed(time.Now().Unix())
+	n := rand.Intn(len(c.Partition.Locations))
+	writer, err := NewHandler(part.GetNoPartitionFiles()[n], c.Metadata, false)
 	if err != nil {
 		return
 	}

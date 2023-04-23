@@ -13,10 +13,16 @@ type Handler interface {
 	Write(rb *row.RowsBuffer, indexes []int) (affectedRows int64, err error)
 }
 
-func NewHandler(file *partition.FileLocation, md *metadata.Metadata) (Handler, error) {
+func NewHandler(file *partition.FileLocation, md *metadata.Metadata, readonly bool) (Handler, error) {
 	switch file.FileType {
 	case partition.FileTypeCSV:
-		osFile, err := os.OpenFile(file.Location, os.O_RDWR|os.O_APPEND, 644)
+		var osFile *os.File
+		var err error
+		if readonly {
+			osFile, err = os.Open(file.Location)
+		} else {
+			osFile, err = os.OpenFile(file.Location, os.O_RDWR|os.O_APPEND, 644)
+		}
 		if err != nil {
 			return nil, err
 		}
