@@ -34,12 +34,15 @@ const (
 	JobTypeDistinctLocal
 	JobTypeDistinctGlobal
 	JobTypeShow
+	JobTypeInsert
 )
 
 func (s JobType) String() string {
 	switch s {
 	case JobTypeScan:
 		return "SCAN"
+	case JobTypeInsert:
+		return "INSERT"
 	case JobTypeSelect:
 		return "SELECT"
 	case JobTypeGroupBy:
@@ -251,6 +254,20 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		}
 		return res, nil
 
+	case *plan.InsertNode:
+		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
+		if err != nil {
+			return res, err
+		}
+		for _, inputJob := range inputJobs {
+			for _, input := range inputJob.GetOutputs() {
+				output := executorHeap.GetExecutorLoc()
+				res = append(res, NewInsertJob(node, input, output))
+			}
+		}
+
+		*jobs = append(*jobs, res...)
+		return res, nil
 	case *plan.GroupByNode:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
 		if err != nil {
@@ -265,7 +282,6 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 
 		*jobs = append(*jobs, res...)
 		return res, nil
-
 	case *plan.JoinNode:
 		leftInputJobs, err1 := createJob(node.LeftInput, jobs, executorHeap, pn)
 		if err1 != nil {

@@ -16,7 +16,7 @@ type Connector interface {
 	GetMetadata() (*metadata.Metadata, error)
 	GetPartition(parallelNumber int) (*partition.Partition, error)
 	GetReader(file *partition.FileLocation, selectedMD *metadata.Metadata, filters []*operator.BooleanExpressionNode) (row.GroupReader, error)
-
+	Insert(rb *row.RowsBuffer, Columns []string) (affectedRows int64, err error)
 	ShowTables(catalog, schema string, like, escape *string) row.Reader
 	ShowSchemas(catalog string, like, escape *string) row.Reader
 	ShowColumns(catalog, schema, table string) row.Reader

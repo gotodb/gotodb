@@ -279,6 +279,21 @@ func (c *Http) GetReader(file *partition.FileLocation, md *metadata.Metadata, fi
 	}, nil
 }
 
+func (c *Http) Insert(rb *row.RowsBuffer, Columns []string) (affectedRows int64, err error) {
+	for {
+		rg, err := rb.Read()
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+			}
+			break
+		}
+		affectedRows += int64(rg.RowsNumber)
+	}
+
+	return
+}
+
 func (c *Http) ShowSchemas(catalog string, _, _ *string) row.Reader {
 	var err error
 	var rs []*row.Row

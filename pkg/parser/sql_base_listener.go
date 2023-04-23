@@ -153,6 +153,12 @@ func (s *BaseSqlListener) EnterSampledRelation(ctx *SampledRelationContext) {}
 // ExitSampledRelation is called when production sampledRelation is exited.
 func (s *BaseSqlListener) ExitSampledRelation(ctx *SampledRelationContext) {}
 
+// EnterColumnAliases is called when production columnAliases is entered.
+func (s *BaseSqlListener) EnterColumnAliases(ctx *ColumnAliasesContext) {}
+
+// ExitColumnAliases is called when production columnAliases is exited.
+func (s *BaseSqlListener) ExitColumnAliases(ctx *ColumnAliasesContext) {}
+
 // EnterRelationPrimary is called when production relationPrimary is entered.
 func (s *BaseSqlListener) EnterRelationPrimary(ctx *RelationPrimaryContext) {}
 

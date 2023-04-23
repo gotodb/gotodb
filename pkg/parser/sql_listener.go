@@ -74,6 +74,9 @@ type SqlListener interface {
 	// EnterSampledRelation is called when entering the sampledRelation production.
 	EnterSampledRelation(c *SampledRelationContext)
 
+	// EnterColumnAliases is called when entering the columnAliases production.
+	EnterColumnAliases(c *ColumnAliasesContext)
+
 	// EnterRelationPrimary is called when entering the relationPrimary production.
 	EnterRelationPrimary(c *RelationPrimaryContext)
 
@@ -205,6 +208,9 @@ type SqlListener interface {
 
 	// ExitSampledRelation is called when exiting the sampledRelation production.
 	ExitSampledRelation(c *SampledRelationContext)
+
+	// ExitColumnAliases is called when exiting the columnAliases production.
+	ExitColumnAliases(c *ColumnAliasesContext)
 
 	// ExitRelationPrimary is called when exiting the relationPrimary production.
 	ExitRelationPrimary(c *RelationPrimaryContext)

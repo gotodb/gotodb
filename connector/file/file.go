@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/gotodb/gotodb/partition"
 	"io"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/gtype"
@@ -79,19 +81,43 @@ func (c *File) GetPartition(_ int) (*partition.Partition, error) {
 }
 
 func (c *File) GetReader(file *partition.FileLocation, selectedMD *metadata.Metadata, _ []*operator.BooleanExpressionNode) (row.GroupReader, error) {
-	reader, err := NewReader(file, c.Metadata)
+	reader, err := NewHandler(file, c.Metadata)
 	if err != nil {
 		return nil, err
 	}
 
 	indexes := make([]int, len(selectedMD.Columns))
-	for i, column := range selectedMD.Columns {
-		indexes[i] = c.Metadata.ColumnMap[column.ColumnName]
+	for i, col := range selectedMD.Columns {
+		indexes[i] = c.Metadata.ColumnMap[col.ColumnName]
 	}
 
 	return func(_ []int) (*row.RowsGroup, error) {
 		return reader.Read(indexes)
 	}, nil
+}
+
+func (c *File) Insert(rb *row.RowsBuffer, Columns []string) (affectedRows int64, err error) {
+
+	rand.Seed(time.Now().Unix())
+	n := rand.Intn(len(c.Config.Paths))
+	part, err := c.GetPartition(0)
+	if err != nil {
+		return
+	}
+	writer, err := NewHandler(part.GetNoPartitionFiles()[n], c.Metadata)
+	if err != nil {
+		return
+	}
+
+	var indexes []int
+	if len(Columns) > 0 {
+		indexes = make([]int, len(Columns))
+		for i, column := range Columns {
+			indexes[i] = c.Metadata.ColumnMap[column]
+		}
+	}
+
+	return writer.Write(rb, indexes)
 }
 
 func (c *File) ShowSchemas(catalog string, _, _ *string) row.Reader {

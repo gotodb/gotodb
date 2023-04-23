@@ -57,6 +57,11 @@ func (e *Executor) setupReaders() {
 	logrus.Infof("SetupReaders Input=%v", e.StageJob.GetInputs())
 }
 
+func TestInsert(t *testing.T) {
+	sql := "insert into file.info.student select * from file.info.student where id like '1'"
+	executor(t, sql)
+}
+
 func TestSelect(t *testing.T) {
 	//sql := "/*+partition_number=1*/select sum(value) from http.etcd.info where _http = '{ \"url\": \"http://127.0.0.1:2379/v2/keys/queue\", \"uri\": \"recursive=true&sorted=true\", \"dataPath\": \"node.nodes\", \"timeout\": 2000 }' group by value"
 	//sql := "/*+partition_number=1*/select a.* from mysql.goploy.user as a join mysql.goploy.user as b on a.id = b.id where a.id = 1 and b.id = 2"

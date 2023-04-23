@@ -8,14 +8,15 @@ import (
 	"os"
 )
 
-type Reader interface {
+type Handler interface {
 	Read(indexes []int) (rg *row.RowsGroup, err error)
+	Write(rb *row.RowsBuffer, indexes []int) (affectedRows int64, err error)
 }
 
-func NewReader(file *partition.FileLocation, md *metadata.Metadata) (Reader, error) {
+func NewHandler(file *partition.FileLocation, md *metadata.Metadata) (Handler, error) {
 	switch file.FileType {
 	case partition.FileTypeCSV:
-		osFile, err := os.Open(file.Location)
+		osFile, err := os.OpenFile(file.Location, os.O_RDWR|os.O_APPEND, 644)
 		if err != nil {
 			return nil, err
 		}

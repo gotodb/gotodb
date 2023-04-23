@@ -164,7 +164,7 @@ func (c *Test) GetPartition(_ int) (*partition.Partition, error) {
 }
 
 func (c *Test) GetReader(f *partition.FileLocation, selectedMD *metadata.Metadata, _ []*operator.BooleanExpressionNode) (row.GroupReader, error) {
-	reader, err := file.NewReader(f, c.Metadata)
+	reader, err := file.NewHandler(f, c.Metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -177,6 +177,21 @@ func (c *Test) GetReader(f *partition.FileLocation, selectedMD *metadata.Metadat
 	return func(_ []int) (*row.RowsGroup, error) {
 		return reader.Read(indexes)
 	}, nil
+}
+
+func (c *Test) Insert(rb *row.RowsBuffer, Columns []string) (affectedRows int64, err error) {
+	for {
+		rg, err := rb.Read()
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+			}
+			break
+		}
+		affectedRows += int64(rg.RowsNumber)
+	}
+
+	return
 }
 
 func (c *Test) ShowSchemas(_ string, _, _ *string) row.Reader {

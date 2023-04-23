@@ -137,6 +137,21 @@ func (c *Mysql) GetReader(file *partition.FileLocation, md *metadata.Metadata, f
 	}, nil
 }
 
+func (c *Mysql) Insert(rb *row.RowsBuffer, Columns []string) (affectedRows int64, err error) {
+	for {
+		rg, err := rb.Read()
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+			}
+			break
+		}
+		affectedRows += int64(rg.RowsNumber)
+	}
+
+	return
+}
+
 func (c *Mysql) ShowSchemas(catalog string, _, _ *string) row.Reader {
 	var err error
 	var rs []*row.Row

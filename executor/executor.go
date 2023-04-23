@@ -101,6 +101,8 @@ func (e *Executor) SendInstruction(instruction *pb.Instruction) error {
 		err = e.SetInstructionScan(instruction)
 	case stage.JobTypeSelect:
 		err = e.SetInstructionSelect(instruction)
+	case stage.JobTypeInsert:
+		err = e.SetInstructionInsert(instruction)
 	case stage.JobTypeGroupBy:
 		err = e.SetInstructionGroupBy(instruction)
 	case stage.JobTypeJoin:
@@ -186,6 +188,8 @@ func (e *Executor) Run(ctx context.Context) error {
 		err = e.RunScan()
 	case stage.JobTypeSelect:
 		err = e.RunSelect()
+	case stage.JobTypeInsert:
+		err = e.RunInsert()
 	case stage.JobTypeGroupBy:
 		err = e.RunGroupBy()
 	case stage.JobTypeJoin:

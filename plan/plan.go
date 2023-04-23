@@ -54,6 +54,11 @@ func NewNodeFromSingleStatement(runtime *config.Runtime, t parser.ISingleStateme
 
 func NewNodeFromStatement(runtime *config.Runtime, t parser.IStatementContext) Node {
 	tt := t.(*parser.StatementContext)
+
+	if tt.INSERT() != nil {
+		return NewNodeFromInsert(runtime, tt)
+	}
+
 	if tt.Query() != nil {
 		return NewNodeFromQuery(runtime, tt.Query())
 	}
@@ -163,6 +168,19 @@ func NewNodeFromStatement(runtime *config.Runtime, t parser.IStatementContext) N
 	}
 
 	return nil
+}
+
+func NewNodeFromInsert(runtime *config.Runtime, t parser.IStatementContext) Node {
+	var res Node
+
+	queryNode := NewNodeFromQuery(runtime, t.Query())
+	res = queryNode
+
+	insertNode := NewInsertNode(runtime, res, t.QualifiedName(), t.ColumnAliases())
+	res.SetOutput(insertNode)
+	res = insertNode
+
+	return res
 }
 
 func NewNodeFromQuery(runtime *config.Runtime, t parser.IQueryContext) Node {
