@@ -280,18 +280,8 @@ func (c *Http) GetReader(file *partition.FileLocation, md *metadata.Metadata, fi
 }
 
 func (c *Http) Insert(rb *row.RowsBuffer, Columns []string) (affectedRows int64, err error) {
-	for {
-		rg, err := rb.Read()
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-			}
-			break
-		}
-		affectedRows += int64(rg.RowsNumber)
-	}
 
-	return
+	return 0, fmt.Errorf("can not insert into http conn")
 }
 
 func (c *Http) ShowSchemas(catalog string, _, _ *string) row.Reader {
