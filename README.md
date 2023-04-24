@@ -9,6 +9,11 @@ It means your can perform a sql like this.
  select id from mysql.db.table join file.csv.dir on mysql.id = csv.id
 `
 
+`
+insert into mysql.db.table select * from file.csv.dir
+`
+
+
 Like presto or trino written in go, enjoy it.
 
 ## Diagram
