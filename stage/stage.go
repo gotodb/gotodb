@@ -35,6 +35,7 @@ const (
 	JobTypeDistinctGlobal
 	JobTypeShow
 	JobTypeInsert
+	JobTypeInserted
 )
 
 func (s JobType) String() string {
@@ -43,6 +44,8 @@ func (s JobType) String() string {
 		return "SCAN"
 	case JobTypeInsert:
 		return "INSERT"
+	case JobTypeInserted:
+		return "INSERTED"
 	case JobTypeSelect:
 		return "SELECT"
 	case JobTypeGroupBy:
@@ -257,16 +260,30 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 	case *plan.InsertNode:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
 		if err != nil {
-			return res, err
-		}
-		for _, inputJob := range inputJobs {
-			for _, input := range inputJob.GetOutputs() {
-				output := executorHeap.GetExecutorLoc()
-				res = append(res, NewInsertJob(node, input, output))
-			}
+			return nil, err
 		}
 
-		*jobs = append(*jobs, res...)
+		var inputs []*pb.Location
+		for _, inputJob := range inputJobs {
+			inputs = append(inputs, inputJob.GetOutputs()...)
+		}
+
+		var localRes []Job
+		for _, input := range inputs {
+			output := executorHeap.GetExecutorLoc()
+			localRes = append(localRes, NewInsertJob(node, input, output))
+		}
+
+		inputs = []*pb.Location{}
+		for _, inputJob := range localRes {
+			inputs = append(inputs, inputJob.GetOutputs()...)
+		}
+		output := executorHeap.GetExecutorLoc()
+		newInsertedJob := NewInsertedJob(node, inputs, output)
+		res = append(res, newInsertedJob)
+
+		*jobs = append(*jobs, localRes...)
+		*jobs = append(*jobs, newInsertedJob)
 		return res, nil
 	case *plan.GroupByNode:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)

@@ -97,12 +97,14 @@ func (e *Executor) SendInstruction(instruction *pb.Instruction) error {
 	logrus.Infof("%s instruction: %s", e.Instruction.TaskID, nodeType)
 	var err error
 	switch nodeType {
+	case stage.JobTypeInsert:
+		err = e.SetInstructionInsert(instruction)
+	case stage.JobTypeInserted:
+		err = e.SetInstructionInserted(instruction)
 	case stage.JobTypeScan:
 		err = e.SetInstructionScan(instruction)
 	case stage.JobTypeSelect:
 		err = e.SetInstructionSelect(instruction)
-	case stage.JobTypeInsert:
-		err = e.SetInstructionInsert(instruction)
 	case stage.JobTypeGroupBy:
 		err = e.SetInstructionGroupBy(instruction)
 	case stage.JobTypeJoin:
@@ -184,12 +186,14 @@ func (e *Executor) Run(ctx context.Context) error {
 	//}
 
 	switch nodeType {
+	case stage.JobTypeInsert:
+		err = e.RunInsert()
+	case stage.JobTypeInserted:
+		err = e.RunInserted()
 	case stage.JobTypeScan:
 		err = e.RunScan()
 	case stage.JobTypeSelect:
 		err = e.RunSelect()
-	case stage.JobTypeInsert:
-		err = e.RunInsert()
 	case stage.JobTypeGroupBy:
 		err = e.RunGroupBy()
 	case stage.JobTypeJoin:
