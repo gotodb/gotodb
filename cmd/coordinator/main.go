@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 	"github.com/gotodb/gotodb/config"
+	"github.com/gotodb/gotodb/gtype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/optimizer"
 	"github.com/gotodb/gotodb/pb"
@@ -206,36 +207,88 @@ func Query(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if msg, err = json.MarshalIndent(md, "", "    "); err != nil {
-		_, _ = fmt.Fprintf(w, "json marshal: %v", err)
-		return
-	}
-
-	msg = append(msg, []byte("\n")...)
-
-	w.Write(msg)
-
 	rbReader := row.NewRowsBuffer(md, conn, nil)
+	accept := req.Header.Get("accept")
+	switch {
+	case strings.Contains(accept, "application/json"):
+		var res []map[string]interface{}
+		for {
+			r, err = rbReader.ReadRow()
 
-	for {
-		r, err = rbReader.ReadRow()
-
-		if err == io.EOF {
-			err = nil
-			break
+			if err == io.EOF {
+				err = nil
+				break
+			}
+			if err != nil {
+				_, _ = fmt.Fprintf(w, "read line err: %v", err)
+				return
+			}
+			line := make(map[string]interface{})
+			for i := 0; i < len(r.Vals); i++ {
+				col := md.Columns[i]
+				line[col.ColumnName] = gtype.ToType(r.Vals[i], col.ColumnType)
+			}
+			res = append(res, line)
 		}
-		if err != nil {
-			_, _ = fmt.Fprintf(w, "read line: err: %v", err)
+		w.Header().Set("Content-Type", "application/json")
+
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			_, _ = fmt.Fprintf(w, "json encode err: %v", err)
 			return
 		}
 
-		var res []string
-		for i := 0; i < len(r.Vals); i++ {
-			res = append(res, fmt.Sprintf("%v", r.Vals[i]))
+	case strings.Contains(accept, "application/octet-stream"):
+		rbWriter := row.NewRowsBuffer(md, nil, w)
+		for {
+			r, err = rbReader.ReadRow()
+
+			if err == io.EOF {
+				err = nil
+				break
+			}
+			if err != nil {
+				_, _ = fmt.Fprintf(w, "read line err: %v", err)
+				return
+			}
+
+			if err := rbWriter.WriteRow(r); err != nil {
+				_, _ = fmt.Fprintf(w, "write row err: %v", err)
+				return
+			}
+
+			if err := rbWriter.Flush(); err != nil {
+				_, _ = fmt.Fprintf(w, "flush err: %v", err)
+				return
+			}
 		}
-		msg = []byte(strings.Join(res, ",") + "\n")
+	default:
+		if msg, err = json.MarshalIndent(md, "", "    "); err != nil {
+			_, _ = fmt.Fprintf(w, "json marshal: %v", err)
+			return
+		}
+		msg = append(msg, []byte("\n")...)
 		w.Write(msg)
+		for {
+			r, err = rbReader.ReadRow()
+
+			if err == io.EOF {
+				err = nil
+				break
+			}
+			if err != nil {
+				_, _ = fmt.Fprintf(w, "read line: err: %v", err)
+				return
+			}
+
+			var res []string
+			for i := 0; i < len(r.Vals); i++ {
+				res = append(res, fmt.Sprintf("%v", r.Vals[i]))
+			}
+			msg = []byte(strings.Join(res, ",") + "\n")
+			w.Write(msg)
+		}
 	}
+
 	wg.Wait()
 }
 
