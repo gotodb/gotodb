@@ -238,6 +238,11 @@ func Query(w http.ResponseWriter, req *http.Request) {
 		}
 
 	case strings.Contains(accept, "application/octet-stream"):
+		if err := util.WriteObject(w, md); err != nil {
+			_, _ = fmt.Fprintf(w, "write object err: %v", err)
+			return
+		}
+
 		rbWriter := row.NewRowsBuffer(md, nil, w)
 		for {
 			r, err = rbReader.ReadRow()
