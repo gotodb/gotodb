@@ -93,6 +93,9 @@ func (m MysqlConnectors) Check() error {
 				}{}
 
 				temp := *c
+				temp.Catalog = ns[0]
+				temp.Schema = dbname
+				temp.Table = tableName
 				temp.ColumnNames = []string{}
 				temp.ColumnTypes = []string{}
 				for columns.Next() {

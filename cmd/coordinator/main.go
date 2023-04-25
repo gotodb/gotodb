@@ -10,7 +10,7 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/optimizer"
 	"github.com/gotodb/gotodb/pb"
-	parser2 "github.com/gotodb/gotodb/pkg/parser"
+	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/plan"
 	"github.com/gotodb/gotodb/plan/operator"
 	"github.com/gotodb/gotodb/row"
@@ -82,9 +82,9 @@ func Query(w http.ResponseWriter, req *http.Request) {
 	//sqlStr := "show COLUMNS from test.test.csv"
 	hint := optimizer.ParseHint(sqlStr)
 	inputStream := antlr.NewInputStream(sqlStr)
-	lexer := parser2.NewSqlLexer(parser2.NewCaseChangingStream(inputStream, true))
-	p := parser2.NewSqlParser(antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel))
-	errListener := parser2.NewErrorListener()
+	lexer := parser.NewSqlLexer(parser.NewCaseChangingStream(inputStream, true))
+	p := parser.NewSqlParser(antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel))
+	errListener := parser.NewErrorListener()
 	p.AddErrorListener(errListener)
 	tree := p.SingleStatement()
 	if errListener.HasError() {
