@@ -35,7 +35,7 @@ type Etcd struct {
 }
 
 type Worker struct {
-	IP      string `yaml:"ip"`
+	Host    string `yaml:"host"`
 	TCPPort int    `yaml:"tcp-port"`
 	RPCPort int    `yaml:"rpc-port"`
 }

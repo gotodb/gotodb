@@ -155,7 +155,7 @@ func workerRegistry() {
 	}
 
 	key := fmt.Sprintf("%s/%s-%d", "worker", hostname, os.Getpid())
-	endpoint := fmt.Sprintf("%s:%d:%d", config.Conf.Worker.IP, config.Conf.Worker.RPCPort, config.Conf.Worker.TCPPort)
+	endpoint := fmt.Sprintf("%s:%d:%d", config.Conf.Worker.Host, config.Conf.Worker.RPCPort, config.Conf.Worker.TCPPort)
 	_, err = cli.Put(ctx, key, endpoint, clientv3.WithLease(lease.ID))
 	if err != nil {
 		log.Fatalf("failed to regiseter worker: %v", err)

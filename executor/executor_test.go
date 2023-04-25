@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"bytes"
 	"container/heap"
 	"context"
 	"encoding/json"
@@ -10,7 +11,7 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/optimizer"
 	"github.com/gotodb/gotodb/pb"
-	parser2 "github.com/gotodb/gotodb/pkg/parser"
+	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/plan"
 	"github.com/gotodb/gotodb/plan/operator"
 	"github.com/gotodb/gotodb/row"
@@ -20,24 +21,20 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/vmihailenco/msgpack"
 	"io"
-	"os"
 	"strings"
 	"testing"
 	"time"
 )
 
-// to temp dir
-//var tempDir = os.TempDir()
-
-// to current dir
-var tempDir = "."
+var buffers = map[string]*bytes.Buffer{}
 
 func (e *Executor) setupWriters() {
 	logrus.Infof("SetupWriters start")
 	e.Writers = []io.Writer{}
 	for _, location := range e.StageJob.GetOutputs() {
-		file, _ := os.Create(fmt.Sprintf("%s/%s-%d.txt", tempDir, location.Name, location.ChannelIndex))
-		e.Writers = append(e.Writers, file)
+		var b bytes.Buffer
+		buffers[fmt.Sprintf("%s-%d.txt", location.Name, location.ChannelIndex)] = &b
+		e.Writers = append(e.Writers, &b)
 	}
 
 	logrus.Infof("SetupWriters Output=%v", e.StageJob.GetOutputs())
@@ -47,11 +44,7 @@ func (e *Executor) setupReaders() {
 	logrus.Infof("SetupReaders start")
 	e.Readers = []io.Reader{}
 	for _, location := range e.StageJob.GetInputs() {
-		file, err := os.Open(fmt.Sprintf("%s/%s-%d.txt", tempDir, location.Name, location.ChannelIndex))
-		if err != nil {
-			logrus.Errorf("failed to open file: %v", err)
-		}
-		e.Readers = append(e.Readers, file)
+		e.Readers = append(e.Readers, buffers[fmt.Sprintf("%s-%d.txt", location.Name, location.ChannelIndex)])
 	}
 
 	logrus.Infof("SetupReaders Input=%v", e.StageJob.GetInputs())
@@ -68,7 +61,7 @@ func TestSelect(t *testing.T) {
 	//sql := "/*+partition_number=1*/select a.* from mysql.goploy.user as a join mysql.goploy.user as b on a.id = b.id where a.id = 1 and b.id = 2"
 	//sql := "select a.id, b.id from mysql.goploy.user as a join file.info.student as b on a.id = b.id  where a.id = 1"
 	//sql := "select id from mysql.goploy.user union select id from file.info.student where id = 4"
-	sql := "select id from file.info.student where id like '1'"
+	sql := "select id from file.info.student where id in (select id from file.info.student)"
 	//sql := "select id from mysql.goploy.user"
 	//sql := "select  * from test.test.csv as a limit 10"
 	executor(t, sql)
@@ -105,9 +98,9 @@ func executor(t *testing.T, sqlStr string) {
 	//sqlStr := "select sum(a.var1), a.var2, a.data_source from test.test.csv as a limit 10"
 	hint := optimizer.ParseHint(sqlStr)
 	inputStream := antlr.NewInputStream(sqlStr)
-	lexer := parser2.NewSqlLexer(parser2.NewCaseChangingStream(inputStream, true))
-	p := parser2.NewSqlParser(antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel))
-	errListener := parser2.NewErrorListener()
+	lexer := parser.NewSqlLexer(parser.NewCaseChangingStream(inputStream, true))
+	p := parser.NewSqlParser(antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel))
+	errListener := parser.NewErrorListener()
 	p.AddErrorListener(errListener)
 	tree := p.SingleStatement()
 	if errListener.HasError() {
@@ -220,12 +213,8 @@ func executor(t *testing.T, sqlStr string) {
 	)
 	md := &metadata.Metadata{}
 	aggLoc := aggJob.GetLocation()
-	file, err := os.Open(fmt.Sprintf("%s/%s-%d.txt", tempDir, aggLoc.Name, aggLoc.ChannelIndex))
-	if err != nil {
-		t.Errorf("failed to open file: %v", err)
-		return
-	}
-	if err = util.ReadObject(file, md); err != nil {
+	b := buffers[fmt.Sprintf("%s-%d.txt", aggLoc.Name, aggLoc.ChannelIndex)]
+	if err = util.ReadObject(b, md); err != nil {
 		t.Errorf("read md err: %v", err)
 		return
 	}
@@ -237,7 +226,7 @@ func executor(t *testing.T, sqlStr string) {
 
 	fmt.Println(string(msg))
 
-	rbReader := row.NewRowsBuffer(md, file, nil)
+	rbReader := row.NewRowsBuffer(md, b, nil)
 
 	for {
 		r, err = rbReader.ReadRow()

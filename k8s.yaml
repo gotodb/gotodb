@@ -142,7 +142,7 @@ data:
       http-port: ${CO_HTTP_PORT}
     
     worker:
-      ip: ${HOSTNAME}${SERVICE_NAME}
+      host: ${HOSTNAME}${SERVICE_NAME}
       tcp-port: ${WORKER_TCP_PORT}
       rpc-port: ${WORKER_RPC_PORT}
 
