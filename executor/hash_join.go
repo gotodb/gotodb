@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 	"github.com/gotodb/gotodb/stage"
 	"io"
 	"sync"
@@ -9,7 +9,7 @@ import (
 	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
+	"github.com/gotodb/gotodb/planner"
 	"github.com/gotodb/gotodb/row"
 	"github.com/gotodb/gotodb/util"
 	"github.com/vmihailenco/msgpack"
@@ -80,9 +80,9 @@ func (e *Executor) RunHashJoin() error {
 	rowsMap := make(map[string][]int)
 
 	switch job.JoinType {
-	case plan.InnerJoin:
+	case planner.InnerJoin:
 		fallthrough
-	case plan.LeftJoin:
+	case planner.LeftJoin:
 		//read right
 		var wg sync.WaitGroup
 		var mutex sync.Mutex
@@ -170,7 +170,7 @@ func (e *Executor) RunHashJoin() error {
 							}
 						}
 
-						if job.JoinType == plan.LeftJoin && joinNum == 0 {
+						if job.JoinType == planner.LeftJoin && joinNum == 0 {
 							joinRow := row.NewRow(r.Vals...)
 							joinRow.AppendVals(make([]interface{}, len(mds[1].GetColumnNames()))...)
 							if err = rbWriter.WriteRow(joinRow); err != nil {
@@ -187,7 +187,7 @@ func (e *Executor) RunHashJoin() error {
 
 		wg.Wait()
 
-	case plan.RightJoin:
+	case planner.RightJoin:
 
 	}
 

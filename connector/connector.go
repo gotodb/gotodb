@@ -7,7 +7,7 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/partition"
 	"github.com/gotodb/gotodb/pkg/likematcher"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 	"github.com/gotodb/gotodb/row"
 	"io"
 )

@@ -1,4 +1,4 @@
-package plan
+package planner
 
 import (
 	"github.com/gotodb/gotodb/config"
@@ -43,9 +43,9 @@ func (s ShowNodeType) String() string {
 	return "UNKNOWNSHOWTYPE"
 }
 
-type ShowNode struct {
-	Input    Node
-	Output   Node
+type ShowPlan struct {
+	Input    Plan
+	Output   Plan
 	Metadata *metadata.Metadata
 	ShowType ShowNodeType
 
@@ -57,8 +57,8 @@ type ShowNode struct {
 	Escape      *string
 }
 
-func NewShowNodeTables(_ *config.Runtime, catalog, schema string, like, escape *string) *ShowNode {
-	return &ShowNode{
+func NewShowPlanTables(_ *config.Runtime, catalog, schema string, like, escape *string) *ShowPlan {
+	return &ShowPlan{
 		ShowType:    ShowTables,
 		Catalog:     catalog,
 		Schema:      schema,
@@ -67,16 +67,16 @@ func NewShowNodeTables(_ *config.Runtime, catalog, schema string, like, escape *
 	}
 }
 
-func NewShowNodeCatalogs(_ *config.Runtime, like, escape *string) *ShowNode {
-	return &ShowNode{
+func NewShowPlanCatalogs(_ *config.Runtime, like, escape *string) *ShowPlan {
+	return &ShowPlan{
 		ShowType:    ShowCatalogs,
 		LikePattern: like,
 		Escape:      escape,
 	}
 }
 
-func NewShowNodeSchemas(_ *config.Runtime, catalog string, like, escape *string) *ShowNode {
-	return &ShowNode{
+func NewShowPlanSchemas(_ *config.Runtime, catalog string, like, escape *string) *ShowPlan {
+	return &ShowPlan{
 		ShowType:    ShowSchemas,
 		Catalog:     catalog,
 		LikePattern: like,
@@ -84,8 +84,8 @@ func NewShowNodeSchemas(_ *config.Runtime, catalog string, like, escape *string)
 	}
 }
 
-func NewShowNodeColumns(_ *config.Runtime, catalog, schema, table string) *ShowNode {
-	return &ShowNode{
+func NewShowPlanColumns(_ *config.Runtime, catalog, schema, table string) *ShowPlan {
+	return &ShowPlan{
 		ShowType: ShowColumns,
 		Catalog:  catalog,
 		Schema:   schema,
@@ -93,8 +93,8 @@ func NewShowNodeColumns(_ *config.Runtime, catalog, schema, table string) *ShowN
 	}
 }
 
-func NewShowNodePartitions(_ *config.Runtime, catalog, schema, table string) *ShowNode {
-	return &ShowNode{
+func NewShowPlanPartitions(_ *config.Runtime, catalog, schema, table string) *ShowPlan {
+	return &ShowPlan{
 		ShowType: ShowPartitions,
 		Catalog:  catalog,
 		Schema:   schema,
@@ -102,11 +102,11 @@ func NewShowNodePartitions(_ *config.Runtime, catalog, schema, table string) *Sh
 	}
 }
 
-func (n *ShowNode) GetType() NodeType {
+func (n *ShowPlan) GetType() NodeType {
 	return NodeTypeShow
 }
 
-func (n *ShowNode) SetMetadata() error {
+func (n *ShowPlan) SetMetadata() error {
 	res := metadata.NewMetadata()
 	switch n.ShowType {
 	case ShowCatalogs:
@@ -140,27 +140,27 @@ func (n *ShowNode) SetMetadata() error {
 	return nil
 }
 
-func (n *ShowNode) GetMetadata() *metadata.Metadata {
+func (n *ShowPlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *ShowNode) GetOutput() Node {
+func (n *ShowPlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *ShowNode) SetOutput(output Node) {
+func (n *ShowPlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *ShowNode) GetInputs() []Node {
-	return []Node{n.Input}
+func (n *ShowPlan) GetInputs() []Plan {
+	return []Plan{n.Input}
 }
 
-func (n *ShowNode) SetInputs(_ []Node) {
+func (n *ShowPlan) SetInputs(_ []Plan) {
 }
 
-func (n *ShowNode) String() string {
-	res := "ShowNode {\n"
+func (n *ShowPlan) String() string {
+	res := "ShowPlan {\n"
 	res += "ShowType: " + n.ShowType.String() + "\n"
 	res += "Catalog: " + n.Catalog + "\n"
 	res += "Schema: " + n.Schema + "\n"

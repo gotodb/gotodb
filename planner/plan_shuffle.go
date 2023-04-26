@@ -1,50 +1,50 @@
-package plan
+package planner
 
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
 )
 
-type ShuffleNode struct {
-	Input              Node
-	Output             Node
+type ShufflePlan struct {
+	Input              Plan
+	Output             Plan
 	Metadata           *metadata.Metadata
 	BooleanExpressions []*operator.BooleanExpressionNode
 }
 
-func NewShuffleNode(runtime *config.Runtime, input Node, t parser.IBooleanExpressionContext) *ShuffleNode {
-	res := &ShuffleNode{
+func NewShufflePlan(runtime *config.Runtime, input Plan, t parser.IBooleanExpressionContext) *ShufflePlan {
+	res := &ShufflePlan{
 		Input:              input,
 		Metadata:           metadata.NewMetadata(),
 		BooleanExpressions: []*operator.BooleanExpressionNode{operator.NewBooleanExpressionNode(runtime, t)},
 	}
 	return res
 }
-func (n *ShuffleNode) GetInputs() []Node {
-	return []Node{n.Input}
+func (n *ShufflePlan) GetInputs() []Plan {
+	return []Plan{n.Input}
 }
 
-func (n *ShuffleNode) SetInputs(inputs []Node) {
+func (n *ShufflePlan) SetInputs(inputs []Plan) {
 	n.Input = inputs[0]
 }
 
-func (n *ShuffleNode) GetOutput() Node {
+func (n *ShufflePlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *ShuffleNode) SetOutput(output Node) {
+func (n *ShufflePlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *ShuffleNode) GetType() NodeType {
+func (n *ShufflePlan) GetType() NodeType {
 	return NodeTypeShuffle
 }
 
-func (n *ShuffleNode) SetMetadata() (err error) {
+func (n *ShufflePlan) SetMetadata() (err error) {
 	if err = n.Input.SetMetadata(); err != nil {
 		return err
 	}
@@ -52,18 +52,18 @@ func (n *ShuffleNode) SetMetadata() (err error) {
 	return nil
 }
 
-func (n *ShuffleNode) GetMetadata() *metadata.Metadata {
+func (n *ShufflePlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *ShuffleNode) String() string {
-	res := "ShuffleNode {\n"
+func (n *ShufflePlan) String() string {
+	res := "ShufflePlan {\n"
 	res += "Input: " + n.Input.String() + "\n"
 	res += "BooleanExpressions: " + fmt.Sprint(n.BooleanExpressions) + "\n"
 	res += "}\n"
 	return res
 }
 
-func (n *ShuffleNode) AddBooleanExpressions(nodes ...*operator.BooleanExpressionNode) {
+func (n *ShufflePlan) AddBooleanExpressions(nodes ...*operator.BooleanExpressionNode) {
 	n.BooleanExpressions = append(n.BooleanExpressions, nodes...)
 }

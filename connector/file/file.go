@@ -12,7 +12,7 @@ import (
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 	"github.com/gotodb/gotodb/row"
 )
 

@@ -1,10 +1,10 @@
-package plan
+package planner
 
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type JoinType int32
@@ -16,16 +16,16 @@ const (
 	InnerJoin
 )
 
-type JoinNode struct {
+type JoinPlan struct {
 	Metadata              *metadata.Metadata
-	LeftInput, RightInput Node
-	Output                Node
+	LeftInput, RightInput Plan
+	Output                Plan
 	JoinType              JoinType
 	JoinCriteria          *operator.JoinCriteriaNode
 }
 
-func NewJoinNode(_ *config.Runtime, leftInput Node, rightInput Node, joinType JoinType, joinCriteria *operator.JoinCriteriaNode) *JoinNode {
-	res := &JoinNode{
+func NewJoinPlan(_ *config.Runtime, leftInput Plan, rightInput Plan, joinType JoinType, joinCriteria *operator.JoinCriteriaNode) *JoinPlan {
+	res := &JoinPlan{
 		Metadata:     metadata.NewMetadata(),
 		LeftInput:    leftInput,
 		RightInput:   rightInput,
@@ -35,31 +35,31 @@ func NewJoinNode(_ *config.Runtime, leftInput Node, rightInput Node, joinType Jo
 	return res
 }
 
-func (n *JoinNode) GetInputs() []Node {
-	return []Node{n.LeftInput, n.RightInput}
+func (n *JoinPlan) GetInputs() []Plan {
+	return []Plan{n.LeftInput, n.RightInput}
 }
 
-func (n *JoinNode) SetInputs(inputs []Node) {
+func (n *JoinPlan) SetInputs(inputs []Plan) {
 	n.LeftInput, n.RightInput = inputs[0], inputs[1]
 }
 
-func (n *JoinNode) GetOutput() Node {
+func (n *JoinPlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *JoinNode) SetOutput(output Node) {
+func (n *JoinPlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *JoinNode) GetType() NodeType {
+func (n *JoinPlan) GetType() NodeType {
 	return NodeTypeJoin
 }
 
-func (n *JoinNode) GetMetadata() *metadata.Metadata {
+func (n *JoinPlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *JoinNode) SetMetadata() (err error) {
+func (n *JoinPlan) SetMetadata() (err error) {
 	if err = n.LeftInput.SetMetadata(); err != nil {
 		return err
 	}
@@ -72,8 +72,8 @@ func (n *JoinNode) SetMetadata() (err error) {
 	return nil
 }
 
-func (n *JoinNode) String() string {
-	res := "JoinNode {\n"
+func (n *JoinPlan) String() string {
+	res := "JoinPlan {\n"
 	res += "LeftInput: " + n.LeftInput.String() + "\n"
 	res += "RightInput: " + n.RightInput.String() + "\n"
 	res += "JoinType: " + fmt.Sprint(n.JoinType) + "\n"

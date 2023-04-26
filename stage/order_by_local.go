@@ -3,8 +3,8 @@ package stage
 import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type OrderByLocalJob struct {
@@ -31,7 +31,7 @@ func (n *OrderByLocalJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewOrderByLocalJob(node *plan.OrderByNode, input *pb.Location, output *pb.Location) *OrderByLocalJob {
+func NewOrderByLocalJob(node *planner.OrderByPlan, input *pb.Location, output *pb.Location) *OrderByLocalJob {
 	return &OrderByLocalJob{
 		Location:  output,
 		Input:     input,

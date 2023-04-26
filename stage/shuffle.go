@@ -2,7 +2,7 @@ package stage
 
 import (
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type ShuffleJob struct {

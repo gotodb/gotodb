@@ -1,49 +1,49 @@
-package plan
+package planner
 
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
-type FilterNode struct {
-	Input              Node
-	Output             Node
+type FilterPlan struct {
+	Input              Plan
+	Output             Plan
 	Metadata           *metadata.Metadata
 	BooleanExpressions []*operator.BooleanExpressionNode
 }
 
-func NewFilterNode(runtime *config.Runtime, input Node, t parser.IBooleanExpressionContext) *FilterNode {
-	res := &FilterNode{
+func NewFilterPlan(runtime *config.Runtime, input Plan, t parser.IBooleanExpressionContext) *FilterPlan {
+	res := &FilterPlan{
 		Input:              input,
 		Metadata:           metadata.NewMetadata(),
 		BooleanExpressions: []*operator.BooleanExpressionNode{operator.NewBooleanExpressionNode(runtime, t)},
 	}
 	return res
 }
-func (n *FilterNode) GetInputs() []Node {
-	return []Node{n.Input}
+func (n *FilterPlan) GetInputs() []Plan {
+	return []Plan{n.Input}
 }
 
-func (n *FilterNode) SetInputs(inputs []Node) {
+func (n *FilterPlan) SetInputs(inputs []Plan) {
 	n.Input = inputs[0]
 }
 
-func (n *FilterNode) GetOutput() Node {
+func (n *FilterPlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *FilterNode) SetOutput(output Node) {
+func (n *FilterPlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *FilterNode) GetType() NodeType {
+func (n *FilterPlan) GetType() NodeType {
 	return NodeTypeFilter
 }
 
-func (n *FilterNode) SetMetadata() (err error) {
+func (n *FilterPlan) SetMetadata() (err error) {
 	if err = n.Input.SetMetadata(); err != nil {
 		return err
 	}
@@ -51,18 +51,18 @@ func (n *FilterNode) SetMetadata() (err error) {
 	return nil
 }
 
-func (n *FilterNode) GetMetadata() *metadata.Metadata {
+func (n *FilterPlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *FilterNode) String() string {
-	res := "FilterNode {\n"
+func (n *FilterPlan) String() string {
+	res := "FilterPlan {\n"
 	res += "Input: " + n.Input.String() + "\n"
 	res += "BooleanExpressions: " + fmt.Sprint(n.BooleanExpressions) + "\n"
 	res += "}\n"
 	return res
 }
 
-func (n *FilterNode) AddBooleanExpressions(nodes ...*operator.BooleanExpressionNode) {
+func (n *FilterPlan) AddBooleanExpressions(nodes ...*operator.BooleanExpressionNode) {
 	n.BooleanExpressions = append(n.BooleanExpressions, nodes...)
 }

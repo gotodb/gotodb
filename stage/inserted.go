@@ -3,7 +3,7 @@ package stage
 import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
+	"github.com/gotodb/gotodb/planner"
 )
 
 type InsertedJob struct {
@@ -29,7 +29,7 @@ func (n *InsertedJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewInsertedJob(node *plan.InsertNode, inputs []*pb.Location, output *pb.Location) *InsertedJob {
+func NewInsertedJob(node *planner.InsertPlan, inputs []*pb.Location, output *pb.Location) *InsertedJob {
 	return &InsertedJob{
 		Location: output,
 		Inputs:   inputs,

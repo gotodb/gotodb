@@ -3,8 +3,8 @@ package stage
 import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type DistinctGlobalJob struct {
@@ -40,7 +40,7 @@ func (n *DistinctGlobalJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewDistinctGlobalJob(node *plan.DistinctGlobalNode, inputs []*pb.Location, outputs []*pb.Location) *DistinctGlobalJob {
+func NewDistinctGlobalJob(node *planner.DistinctGlobalPlan, inputs []*pb.Location, outputs []*pb.Location) *DistinctGlobalJob {
 	res := &DistinctGlobalJob{
 		Location:    outputs[0],
 		Inputs:      inputs,

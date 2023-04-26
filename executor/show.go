@@ -6,7 +6,7 @@ import (
 
 	"github.com/gotodb/gotodb/connector"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
+	"github.com/gotodb/gotodb/planner"
 	"github.com/gotodb/gotodb/row"
 	"github.com/gotodb/gotodb/util"
 	"github.com/vmihailenco/msgpack"
@@ -37,15 +37,15 @@ func (e *Executor) RunShow() error {
 	var showReader func() (*row.Row, error)
 	//writer rows
 	switch job.ShowType {
-	case plan.ShowCatalogs:
+	case planner.ShowCatalogs:
 		showReader = connector.ShowCatalogs(job.LikePattern, job.Escape)
-	case plan.ShowSchemas:
+	case planner.ShowSchemas:
 		showReader = ctr.ShowSchemas(job.Catalog, job.LikePattern, job.Escape)
-	case plan.ShowTables:
+	case planner.ShowTables:
 		showReader = ctr.ShowTables(job.Catalog, job.Schema, job.LikePattern, job.Escape)
-	case plan.ShowColumns:
+	case planner.ShowColumns:
 		showReader = ctr.ShowColumns(job.Catalog, job.Schema, job.Table)
-	case plan.ShowPartitions:
+	case planner.ShowPartitions:
 		showReader = ctr.ShowPartitions(job.Catalog, job.Schema, job.Table)
 	}
 

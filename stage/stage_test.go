@@ -7,7 +7,7 @@ import (
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/pb"
 	parser2 "github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/plan"
+	"github.com/gotodb/gotodb/planner"
 	"github.com/gotodb/gotodb/util"
 	"testing"
 )
@@ -25,7 +25,7 @@ func TestStage(t *testing.T) {
 		t.Error(errListener)
 		return
 	}
-	logicalTree := plan.NewNodeFromSingleStatement(config.NewRuntime(), tree)
+	logicalTree := planner.NewPlanFromSingleStatement(config.NewRuntime(), tree)
 
 	//SetMetaData
 	if err := logicalTree.SetMetadata(); err != nil {

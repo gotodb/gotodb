@@ -3,8 +3,8 @@ package stage
 import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type OrderByJob struct {
@@ -31,7 +31,7 @@ func (n *OrderByJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewOrderByJob(node *plan.OrderByNode, inputs []*pb.Location, output *pb.Location) *OrderByJob {
+func NewOrderByJob(node *planner.OrderByPlan, inputs []*pb.Location, output *pb.Location) *OrderByJob {
 	return &OrderByJob{
 		Location:  output,
 		Inputs:    inputs,

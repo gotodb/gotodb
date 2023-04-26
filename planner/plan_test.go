@@ -1,4 +1,4 @@
-package plan
+package planner
 
 import (
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
@@ -19,7 +19,7 @@ func TestPlan(t *testing.T) {
 		t.Error(errListener)
 		return
 	}
-	logicalTree := NewNodeFromSingleStatement(config.NewRuntime(), tree)
+	logicalTree := NewPlanFromSingleStatement(config.NewRuntime(), tree)
 
 	//SetMetaData
 	if err := logicalTree.SetMetadata(); err != nil {

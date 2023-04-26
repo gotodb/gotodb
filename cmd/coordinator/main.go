@@ -12,8 +12,8 @@ import (
 	"github.com/gotodb/gotodb/optimizer"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/plan"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner"
+	"github.com/gotodb/gotodb/planner/operator"
 	"github.com/gotodb/gotodb/row"
 	"github.com/gotodb/gotodb/stage"
 	"github.com/gotodb/gotodb/util"
@@ -94,7 +94,7 @@ func Query(w http.ResponseWriter, req *http.Request) {
 	}
 
 	runtime := config.NewRuntime()
-	logicalTree := plan.NewNodeFromSingleStatement(runtime, tree)
+	logicalTree := planner.NewPlanFromSingleStatement(runtime, tree)
 
 	if err := logicalTree.SetMetadata(); err != nil {
 		_, _ = fmt.Fprintf(w, "%v", err)

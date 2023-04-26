@@ -3,7 +3,7 @@ package stage
 import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
+	"github.com/gotodb/gotodb/planner"
 )
 
 type LimitJob struct {
@@ -30,7 +30,7 @@ func (n *LimitJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewLimitJob(node *plan.LimitNode, inputs []*pb.Location, output *pb.Location) *LimitJob {
+func NewLimitJob(node *planner.LimitPlan, inputs []*pb.Location, output *pb.Location) *LimitJob {
 	return &LimitJob{
 		Location:    output,
 		Inputs:      inputs,

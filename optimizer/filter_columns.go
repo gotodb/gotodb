@@ -5,19 +5,19 @@ import (
 	"sort"
 
 	"github.com/gotodb/gotodb/metadata"
-	"github.com/gotodb/gotodb/plan"
+	"github.com/gotodb/gotodb/planner"
 )
 
-func FilterColumns(node plan.Node, columns []string) error {
+func FilterColumns(node planner.Plan, columns []string) error {
 	if node == nil {
 		return nil
 	}
 	switch node.(type) {
-	case *plan.InsertNode, *plan.JoinNode, *plan.LimitNode, *plan.UnionNode, *plan.CombineNode, *plan.AggregateNode, *plan.AggregateFuncLocalNode:
+	case *planner.InsertPlan, *planner.JoinPlan, *planner.LimitPlan, *planner.UnionPlan, *planner.CombinePlan, *planner.AggregatePlan, *planner.AggregateFuncLocalPlan:
 		var indexes []int
 		var md = node.GetMetadata()
 		//for join node
-		if joinNode, ok := node.(*plan.JoinNode); ok {
+		if joinNode, ok := node.(*planner.JoinPlan); ok {
 			cs, err := joinNode.JoinCriteria.GetColumns()
 			if err != nil {
 				return err
@@ -59,8 +59,8 @@ func FilterColumns(node plan.Node, columns []string) error {
 			}
 		}
 
-	case *plan.FilterNode:
-		filterNode := node.(*plan.FilterNode)
+	case *planner.FilterPlan:
+		filterNode := node.(*planner.FilterPlan)
 		var columnsForInput []string
 		for _, be := range filterNode.BooleanExpressions {
 			cols, err := be.GetColumns()
@@ -72,8 +72,8 @@ func FilterColumns(node plan.Node, columns []string) error {
 		columnsForInput = append(columnsForInput, columns...)
 		return FilterColumns(filterNode.Input, columnsForInput)
 
-	case *plan.GroupByNode:
-		groupByNode := node.(*plan.GroupByNode)
+	case *planner.GroupByPlan:
+		groupByNode := node.(*planner.GroupByPlan)
 		columnsForInput, err := groupByNode.GroupBy.GetColumns()
 		if err != nil {
 			return err
@@ -81,8 +81,8 @@ func FilterColumns(node plan.Node, columns []string) error {
 		columnsForInput = append(columnsForInput, columns...)
 		return FilterColumns(groupByNode.Input, columnsForInput)
 
-	case *plan.OrderByNode:
-		orderByNode := node.(*plan.OrderByNode)
+	case *planner.OrderByPlan:
+		orderByNode := node.(*planner.OrderByPlan)
 		columnsForInput := columns
 		for _, item := range orderByNode.SortItems {
 			cs, err := item.GetColumns()
@@ -93,8 +93,8 @@ func FilterColumns(node plan.Node, columns []string) error {
 		}
 		return FilterColumns(orderByNode.Input, columnsForInput)
 
-	case *plan.SelectNode:
-		selectNode := node.(*plan.SelectNode)
+	case *planner.SelectPlan:
+		selectNode := node.(*planner.SelectPlan)
 		columnsForInput := columns
 		for _, item := range selectNode.SelectItems {
 			cs, err := item.GetColumns(selectNode.Input.GetMetadata())
@@ -112,8 +112,8 @@ func FilterColumns(node plan.Node, columns []string) error {
 		}
 		return FilterColumns(selectNode.Input, columnsForInput)
 
-	case *plan.ScanNode:
-		scanNode := node.(*plan.ScanNode)
+	case *planner.ScanPlan:
+		scanNode := node.(*planner.ScanPlan)
 		scanNode.Metadata = scanNode.Metadata.SelectColumns(columns)
 		parent := scanNode.GetOutput()
 
@@ -123,10 +123,10 @@ func FilterColumns(node plan.Node, columns []string) error {
 		}
 		return nil
 
-	case *plan.ShowNode:
+	case *planner.ShowPlan:
 		return nil
 
-	case *plan.RenameNode: //already use deleteRenameNode
+	case *planner.RenamePlan: //already use deleteRenameNode
 		return nil
 
 	default:

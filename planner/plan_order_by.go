@@ -1,23 +1,23 @@
-package plan
+package planner
 
 import (
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
-type OrderByNode struct {
-	Input     Node
-	Output    Node
+type OrderByPlan struct {
+	Input     Plan
+	Output    Plan
 	Metadata  *metadata.Metadata
 	SortItems []*operator.SortItemNode
 	OrderType datatype.OrderType
 }
 
-func NewOrderByNode(runtime *config.Runtime, input Node, items []parser.ISortItemContext) *OrderByNode {
-	res := &OrderByNode{
+func NewOrderByPlan(runtime *config.Runtime, input Plan, items []parser.ISortItemContext) *OrderByPlan {
+	res := &OrderByPlan{
 		Input:     input,
 		Metadata:  metadata.NewMetadata(),
 		SortItems: []*operator.SortItemNode{},
@@ -29,38 +29,38 @@ func NewOrderByNode(runtime *config.Runtime, input Node, items []parser.ISortIte
 	return res
 }
 
-func (n *OrderByNode) GetInputs() []Node {
-	return []Node{n.Input}
+func (n *OrderByPlan) GetInputs() []Plan {
+	return []Plan{n.Input}
 }
 
-func (n *OrderByNode) SetInputs(inputs []Node) {
+func (n *OrderByPlan) SetInputs(inputs []Plan) {
 	n.Input = inputs[0]
 }
 
-func (n *OrderByNode) GetOutput() Node {
+func (n *OrderByPlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *OrderByNode) SetOutput(output Node) {
+func (n *OrderByPlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *OrderByNode) GetType() NodeType {
+func (n *OrderByPlan) GetType() NodeType {
 	return NodeTypeOrderBy
 }
 
-func (n *OrderByNode) String() string {
-	res := "OrderByNode {\n"
+func (n *OrderByPlan) String() string {
+	res := "OrderByPlan {\n"
 	res += "Input: " + n.Input.String() + "\n"
 	res += "}\n"
 	return res
 }
 
-func (n *OrderByNode) GetMetadata() *metadata.Metadata {
+func (n *OrderByPlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *OrderByNode) SetMetadata() error {
+func (n *OrderByPlan) SetMetadata() error {
 	if err := n.Input.SetMetadata(); err != nil {
 		return err
 	}

@@ -3,7 +3,7 @@ package stage
 import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
+	"github.com/gotodb/gotodb/planner"
 )
 
 // ShowJob show catalogs/schemas/tables/columns/createJob table/createJob view
@@ -11,7 +11,7 @@ type ShowJob struct {
 	Location    *pb.Location
 	Output      *pb.Location
 	Metadata    *metadata.Metadata
-	ShowType    plan.ShowNodeType
+	ShowType    planner.ShowNodeType
 	Catalog     string
 	Schema      string
 	Table       string
@@ -35,7 +35,7 @@ func (n *ShowJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewShowJob(node *plan.ShowNode, output *pb.Location) *ShowJob {
+func NewShowJob(node *planner.ShowPlan, output *pb.Location) *ShowJob {
 	return &ShowJob{
 		Location:    output,
 		Output:      output,

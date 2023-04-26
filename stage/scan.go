@@ -4,8 +4,8 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/partition"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type ScanJob struct {
@@ -35,7 +35,7 @@ func (n *ScanJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewScanJob(node *plan.ScanNode, par *partition.Partition, loc *pb.Location, outputs []*pb.Location) *ScanJob {
+func NewScanJob(node *planner.ScanPlan, par *partition.Partition, loc *pb.Location, outputs []*pb.Location) *ScanJob {
 	par.Encode()
 	return &ScanJob{
 		Location:  loc,

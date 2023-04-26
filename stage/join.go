@@ -3,15 +3,15 @@ package stage
 import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type JoinJob struct {
 	Location              *pb.Location
 	LeftInput, RightInput *pb.Location
 	Output                *pb.Location
-	JoinType              plan.JoinType
+	JoinType              planner.JoinType
 	JoinCriteria          *operator.JoinCriteriaNode
 	Metadata              *metadata.Metadata
 }
@@ -32,7 +32,7 @@ func (n *JoinJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewJoinJob(node *plan.JoinNode, leftInput, rightInput *pb.Location, output *pb.Location) *JoinJob {
+func NewJoinJob(node *planner.JoinPlan, leftInput, rightInput *pb.Location, output *pb.Location) *JoinJob {
 	return &JoinJob{
 		Location:     output,
 		LeftInput:    leftInput,

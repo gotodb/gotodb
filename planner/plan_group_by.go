@@ -1,4 +1,4 @@
-package plan
+package planner
 
 import (
 	"fmt"
@@ -6,45 +6,45 @@ import (
 	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
-type GroupByNode struct {
-	Input    Node
-	Output   Node
+type GroupByPlan struct {
+	Input    Plan
+	Output   Plan
 	Metadata *metadata.Metadata
 	GroupBy  *operator.GroupByNode
 }
 
-func NewGroupByNode(runtime *config.Runtime, input Node, groupBy parser.IGroupByContext) *GroupByNode {
-	return &GroupByNode{
+func NewGroupByPlan(runtime *config.Runtime, input Plan, groupBy parser.IGroupByContext) *GroupByPlan {
+	return &GroupByPlan{
 		Input:    input,
 		Metadata: metadata.NewMetadata(),
 		GroupBy:  operator.NewGroupByNode(runtime, groupBy),
 	}
 }
 
-func (n *GroupByNode) GetInputs() []Node {
-	return []Node{n.Input}
+func (n *GroupByPlan) GetInputs() []Plan {
+	return []Plan{n.Input}
 }
 
-func (n *GroupByNode) SetInputs(inputs []Node) {
+func (n *GroupByPlan) SetInputs(inputs []Plan) {
 	n.Input = inputs[0]
 }
 
-func (n *GroupByNode) GetOutput() Node {
+func (n *GroupByPlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *GroupByNode) SetOutput(output Node) {
+func (n *GroupByPlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *GroupByNode) GetType() NodeType {
+func (n *GroupByPlan) GetType() NodeType {
 	return NodeTypeGroupBy
 }
 
-func (n *GroupByNode) SetMetadata() (err error) {
+func (n *GroupByPlan) SetMetadata() (err error) {
 	if err = n.Input.SetMetadata(); err != nil {
 		return err
 	}
@@ -53,12 +53,12 @@ func (n *GroupByNode) SetMetadata() (err error) {
 	return nil
 }
 
-func (n *GroupByNode) GetMetadata() *metadata.Metadata {
+func (n *GroupByPlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *GroupByNode) String() string {
-	res := "GroupByNode {\n"
+func (n *GroupByPlan) String() string {
+	res := "GroupByPlan {\n"
 	res += "Input: " + n.Input.String() + "\n"
 	res += "GroupBy: " + fmt.Sprint(n.GroupBy) + "\n"
 	res += "}/n"

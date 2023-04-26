@@ -3,8 +3,8 @@ package stage
 import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type GroupByJob struct {
@@ -30,7 +30,7 @@ func (n *GroupByJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewGroupByJob(node *plan.GroupByNode, input, output *pb.Location) *GroupByJob {
+func NewGroupByJob(node *planner.GroupByPlan, input, output *pb.Location) *GroupByJob {
 	return &GroupByJob{
 		Location: output,
 		Input:    input,

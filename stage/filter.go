@@ -3,8 +3,8 @@ package stage
 import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type FilterJob struct {
@@ -30,7 +30,7 @@ func (n *FilterJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewFilterJob(node *plan.FilterNode, input, output *pb.Location) *FilterJob {
+func NewFilterJob(node *planner.FilterPlan, input, output *pb.Location) *FilterJob {
 	return &FilterJob{
 		Location:           output,
 		Input:              input,

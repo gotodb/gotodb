@@ -1,24 +1,24 @@
-package plan
+package planner
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
 )
 
-type HashJoinNode struct {
+type HashJoinPlan struct {
 	Metadata              *metadata.Metadata
-	LeftInput, RightInput Node
-	Output                Node
+	LeftInput, RightInput Plan
+	Output                Plan
 	JoinType              JoinType
 	JoinCriteria          *operator.JoinCriteriaNode
 	LeftKeys, RightKeys   []*operator.ValueExpressionNode
 }
 
-func NewHashJoinNodeFromJoinNode(_ *config.Runtime, node *JoinNode, leftKeys, rightKeys []*operator.ValueExpressionNode) *HashJoinNode {
-	return &HashJoinNode{
+func NewHashJoinNodeFromJoinNode(_ *config.Runtime, node *JoinPlan, leftKeys, rightKeys []*operator.ValueExpressionNode) *HashJoinPlan {
+	return &HashJoinPlan{
 		Metadata:     node.Metadata,
 		LeftInput:    node.LeftInput,
 		RightInput:   node.RightInput,
@@ -29,8 +29,8 @@ func NewHashJoinNodeFromJoinNode(_ *config.Runtime, node *JoinNode, leftKeys, ri
 	}
 }
 
-func NewHashJoinNode(_ *config.Runtime, leftInput Node, rightInput Node, joinType JoinType, joinCriteria *operator.JoinCriteriaNode, leftKeys, rightKeys []*operator.ValueExpressionNode) *HashJoinNode {
-	res := &HashJoinNode{
+func NewHashJoinNode(_ *config.Runtime, leftInput Plan, rightInput Plan, joinType JoinType, joinCriteria *operator.JoinCriteriaNode, leftKeys, rightKeys []*operator.ValueExpressionNode) *HashJoinPlan {
+	res := &HashJoinPlan{
 		Metadata:     metadata.NewMetadata(),
 		LeftInput:    leftInput,
 		RightInput:   rightInput,
@@ -42,31 +42,31 @@ func NewHashJoinNode(_ *config.Runtime, leftInput Node, rightInput Node, joinTyp
 	return res
 }
 
-func (n *HashJoinNode) GetInputs() []Node {
-	return []Node{n.LeftInput, n.RightInput}
+func (n *HashJoinPlan) GetInputs() []Plan {
+	return []Plan{n.LeftInput, n.RightInput}
 }
 
-func (n *HashJoinNode) SetInputs(inputs []Node) {
+func (n *HashJoinPlan) SetInputs(inputs []Plan) {
 	n.LeftInput, n.RightInput = inputs[0], inputs[1]
 }
 
-func (n *HashJoinNode) GetOutput() Node {
+func (n *HashJoinPlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *HashJoinNode) SetOutput(output Node) {
+func (n *HashJoinPlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *HashJoinNode) GetType() NodeType {
+func (n *HashJoinPlan) GetType() NodeType {
 	return NodeTypeHashJoin
 }
 
-func (n *HashJoinNode) GetMetadata() *metadata.Metadata {
+func (n *HashJoinPlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *HashJoinNode) SetMetadata() (err error) {
+func (n *HashJoinPlan) SetMetadata() (err error) {
 	if err = n.LeftInput.SetMetadata(); err != nil {
 		return err
 	}
@@ -79,8 +79,8 @@ func (n *HashJoinNode) SetMetadata() (err error) {
 	return nil
 }
 
-func (n *HashJoinNode) String() string {
-	res := "HashJoinNode {\n"
+func (n *HashJoinPlan) String() string {
+	res := "HashJoinPlan {\n"
 	res += "LeftInput: " + n.LeftInput.String() + "\n"
 	res += "RightInput: " + n.RightInput.String() + "\n"
 	res += "JoinType: " + fmt.Sprint(n.JoinType) + "\n"

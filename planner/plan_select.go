@@ -1,9 +1,9 @@
-package plan
+package planner
 
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
@@ -11,9 +11,9 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 )
 
-type SelectNode struct {
-	Input         Node
-	Output        Node
+type SelectPlan struct {
+	Input         Plan
+	Output        Plan
 	Metadata      *metadata.Metadata
 	SetQuantifier *datatype.QuantifierType
 	SelectItems   []*operator.SelectItemNode
@@ -21,8 +21,8 @@ type SelectNode struct {
 	IsAggregate   bool
 }
 
-func NewSelectNode(runtime *config.Runtime, input Node, sq parser.ISetQuantifierContext, items []parser.ISelectItemContext, having parser.IBooleanExpressionContext) *SelectNode {
-	res := &SelectNode{
+func NewSelectPlan(runtime *config.Runtime, input Plan, sq parser.ISetQuantifierContext, items []parser.ISelectItemContext, having parser.IBooleanExpressionContext) *SelectPlan {
+	res := &SelectPlan{
 		Input:         input,
 		Metadata:      metadata.NewMetadata(),
 		SetQuantifier: nil,
@@ -50,31 +50,31 @@ func NewSelectNode(runtime *config.Runtime, input Node, sq parser.ISetQuantifier
 	return res
 }
 
-func (n *SelectNode) GetType() NodeType {
+func (n *SelectPlan) GetType() NodeType {
 	return NodeTypeSelect
 }
 
-func (n *SelectNode) GetInputs() []Node {
-	return []Node{n.Input}
+func (n *SelectPlan) GetInputs() []Plan {
+	return []Plan{n.Input}
 }
 
-func (n *SelectNode) SetInputs(inputs []Node) {
+func (n *SelectPlan) SetInputs(inputs []Plan) {
 	n.Input = inputs[0]
 }
 
-func (n *SelectNode) GetOutput() Node {
+func (n *SelectPlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *SelectNode) SetOutput(output Node) {
+func (n *SelectPlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *SelectNode) GetMetadata() *metadata.Metadata {
+func (n *SelectPlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *SelectNode) SetMetadata() error {
+func (n *SelectPlan) SetMetadata() error {
 	if err := n.Input.SetMetadata(); err != nil {
 		return err
 	}
@@ -104,8 +104,8 @@ func (n *SelectNode) SetMetadata() error {
 	return nil
 }
 
-func (n *SelectNode) String() string {
-	res := "SelectNode {\n"
+func (n *SelectPlan) String() string {
+	res := "SelectPlan {\n"
 	res += "Input: " + n.Input.String() + "\n"
 	res += "Metadata: " + fmt.Sprint(n.Metadata) + "\n"
 	res += "SelectItems: " + fmt.Sprint(n.SelectItems) + "\n"

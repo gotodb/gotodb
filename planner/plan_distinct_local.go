@@ -1,49 +1,49 @@
-package plan
+package planner
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
 )
 
-type DistinctLocalNode struct {
-	Input       Node
-	Output      Node
+type DistinctLocalPlan struct {
+	Input       Plan
+	Output      Plan
 	Metadata    *metadata.Metadata
 	Expressions []*operator.ExpressionNode
 }
 
-func NewDistinctLocalNode(_ *config.Runtime, eps []*operator.ExpressionNode, input Node) *DistinctLocalNode {
-	res := &DistinctLocalNode{
+func NewDistinctLocalPlan(_ *config.Runtime, eps []*operator.ExpressionNode, input Plan) *DistinctLocalPlan {
+	res := &DistinctLocalPlan{
 		Input:       input,
 		Metadata:    metadata.NewMetadata(),
 		Expressions: eps,
 	}
 	return res
 }
-func (n *DistinctLocalNode) GetInputs() []Node {
-	return []Node{n.Input}
+func (n *DistinctLocalPlan) GetInputs() []Plan {
+	return []Plan{n.Input}
 }
 
-func (n *DistinctLocalNode) SetInputs(inputs []Node) {
+func (n *DistinctLocalPlan) SetInputs(inputs []Plan) {
 	n.Input = inputs[0]
 }
 
-func (n *DistinctLocalNode) GetOutput() Node {
+func (n *DistinctLocalPlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *DistinctLocalNode) SetOutput(output Node) {
+func (n *DistinctLocalPlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *DistinctLocalNode) GetType() NodeType {
+func (n *DistinctLocalPlan) GetType() NodeType {
 	return NodeTypeDistinctLocal
 }
 
-func (n *DistinctLocalNode) SetMetadata() (err error) {
+func (n *DistinctLocalPlan) SetMetadata() (err error) {
 	if err = n.Input.SetMetadata(); err != nil {
 		return err
 	}
@@ -60,18 +60,18 @@ func (n *DistinctLocalNode) SetMetadata() (err error) {
 	return nil
 }
 
-func (n *DistinctLocalNode) GetMetadata() *metadata.Metadata {
+func (n *DistinctLocalPlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *DistinctLocalNode) String() string {
-	res := "DistinctLocalNode {\n"
+func (n *DistinctLocalPlan) String() string {
+	res := "DistinctLocalPlan {\n"
 	res += "Input: " + n.Input.String() + "\n"
 	res += "Expressions: " + fmt.Sprint(n.Expressions) + "\n"
 	res += "}\n"
 	return res
 }
 
-func (n *DistinctLocalNode) AddExpressions(nodes ...*operator.ExpressionNode) {
+func (n *DistinctLocalPlan) AddExpressions(nodes ...*operator.ExpressionNode) {
 	n.Expressions = append(n.Expressions, nodes...)
 }

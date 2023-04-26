@@ -2,11 +2,11 @@ package optimizer
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 	"math/rand"
 
 	"github.com/gotodb/gotodb/datatype"
-	"github.com/gotodb/gotodb/plan"
+	"github.com/gotodb/gotodb/planner"
 )
 
 func ExtractDistinctExpressions(funcs []*operator.FuncCallNode) []*operator.ExpressionNode {
@@ -41,13 +41,13 @@ func ExtractDistinctExpressions(funcs []*operator.FuncCallNode) []*operator.Expr
 	return res
 }
 
-func ExtractAggFunc(node plan.Node) error {
+func ExtractAggFunc(node planner.Plan) error {
 	if node == nil {
 		return nil
 	}
 	switch node.(type) {
-	case *plan.SelectNode:
-		selectNode := node.(*plan.SelectNode)
+	case *planner.SelectPlan:
+		selectNode := node.(*planner.SelectPlan)
 		if selectNode.IsAggregate {
 			var funcs []*operator.FuncCallNode
 			for _, item := range selectNode.SelectItems {
@@ -57,16 +57,16 @@ func ExtractAggFunc(node plan.Node) error {
 				selectNode.Having.ExtractAggFunc(&funcs)
 			}
 
-			var nodeLocal *plan.AggregateFuncLocalNode
+			var nodeLocal *planner.AggregateFuncLocalPlan
 
 			//for distinct
 			distEps := ExtractDistinctExpressions(funcs)
 			if len(distEps) > 0 {
-				distLocalNode := plan.NewDistinctLocalNode(nil, distEps, selectNode.Input)
-				distGlobalNode := plan.NewDistinctGlobalNode(nil, distEps, distLocalNode)
-				nodeLocal = plan.NewAggregateFuncLocalNode(nil, funcs, distGlobalNode)
+				distLocalNode := planner.NewDistinctLocalPlan(nil, distEps, selectNode.Input)
+				distGlobalNode := planner.NewDistinctGlobalPlan(nil, distEps, distLocalNode)
+				nodeLocal = planner.NewAggregateFuncLocalPlan(nil, funcs, distGlobalNode)
 			} else {
-				nodeLocal = plan.NewAggregateFuncLocalNode(nil, funcs, selectNode.Input)
+				nodeLocal = planner.NewAggregateFuncLocalPlan(nil, funcs, selectNode.Input)
 			}
 
 			_ = nodeLocal.SetMetadata()
@@ -98,7 +98,7 @@ func ExtractAggFunc(node plan.Node) error {
 					},
 				}
 			}
-			nodeGlobal := plan.NewAggregateFuncGlobalNode(nil, funcsGlobal, nodeLocal)
+			nodeGlobal := planner.NewAggregateFuncGlobalPlan(nil, funcsGlobal, nodeLocal)
 			selectNode.Input = nodeGlobal
 			if err := selectNode.SetMetadata(); err != nil {
 				return err

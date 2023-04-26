@@ -3,8 +3,8 @@ package stage
 import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type AggregateFuncLocalJob struct {
@@ -40,7 +40,7 @@ func (n *AggregateFuncLocalJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewAggregateFuncLocalJob(node *plan.AggregateFuncLocalNode, input *pb.Location, output *pb.Location) *AggregateFuncLocalJob {
+func NewAggregateFuncLocalJob(node *planner.AggregateFuncLocalPlan, input *pb.Location, output *pb.Location) *AggregateFuncLocalJob {
 	res := &AggregateFuncLocalJob{
 		Location:  output,
 		Input:     input,

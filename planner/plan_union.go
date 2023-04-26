@@ -1,4 +1,4 @@
-package plan
+package planner
 
 import (
 	"fmt"
@@ -17,15 +17,15 @@ const (
 	EXCEPT
 )
 
-type UnionNode struct {
-	LeftInput  Node
-	RightInput Node
-	Output     Node
+type UnionPlan struct {
+	LeftInput  Plan
+	RightInput Plan
+	Output     Plan
 	Operator   UnionType
 	Metadata   *metadata.Metadata
 }
 
-func NewUnionNode(_ *config.Runtime, left, right Node, op antlr.Token) *UnionNode {
+func NewUnionPlan(_ *config.Runtime, left, right Plan, op antlr.Token) *UnionPlan {
 	var operator UnionType
 	switch op.GetText() {
 	case "INTERSECT":
@@ -36,7 +36,7 @@ func NewUnionNode(_ *config.Runtime, left, right Node, op antlr.Token) *UnionNod
 		operator = EXCEPT
 	}
 
-	res := &UnionNode{
+	res := &UnionPlan{
 		LeftInput:  left,
 		RightInput: right,
 		Operator:   operator,
@@ -45,31 +45,31 @@ func NewUnionNode(_ *config.Runtime, left, right Node, op antlr.Token) *UnionNod
 	return res
 }
 
-func (n *UnionNode) GetInputs() []Node {
-	return []Node{n.LeftInput, n.RightInput}
+func (n *UnionPlan) GetInputs() []Plan {
+	return []Plan{n.LeftInput, n.RightInput}
 }
 
-func (n *UnionNode) SetInputs(inputs []Node) {
+func (n *UnionPlan) SetInputs(inputs []Plan) {
 	n.LeftInput, n.RightInput = inputs[0], inputs[1]
 }
 
-func (n *UnionNode) GetOutput() Node {
+func (n *UnionPlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *UnionNode) SetOutput(output Node) {
+func (n *UnionPlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *UnionNode) GetType() NodeType {
+func (n *UnionPlan) GetType() NodeType {
 	return NodeTypeUnion
 }
 
-func (n *UnionNode) GetMetadata() *metadata.Metadata {
+func (n *UnionPlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *UnionNode) SetMetadata() (err error) {
+func (n *UnionPlan) SetMetadata() (err error) {
 	if err = n.LeftInput.SetMetadata(); err != nil {
 		return err
 	}
@@ -80,8 +80,8 @@ func (n *UnionNode) SetMetadata() (err error) {
 	return nil
 }
 
-func (n *UnionNode) String() string {
-	res := "UnionNode {\n"
+func (n *UnionPlan) String() string {
+	res := "UnionPlan {\n"
 	res += "LeftInput: " + n.LeftInput.String() + "\n"
 	res += "RightInput: " + n.RightInput.String() + "\n"
 	res += "Operator: " + fmt.Sprint(n.Operator) + "\n"

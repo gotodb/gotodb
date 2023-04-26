@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
+	"github.com/gotodb/gotodb/planner"
 	"github.com/gotodb/gotodb/row"
 	"github.com/gotodb/gotodb/stage"
 	"github.com/gotodb/gotodb/util"
@@ -56,9 +56,9 @@ func (e *Executor) RunJoin() error {
 	//write rows
 	rs := make([]*row.Row, 0)
 	switch job.JoinType {
-	case plan.InnerJoin:
+	case planner.InnerJoin:
 		fallthrough
-	case plan.LeftJoin:
+	case planner.LeftJoin:
 		for {
 			r, err := rightRbReader.ReadRow()
 			if err == io.EOF {
@@ -95,7 +95,7 @@ func (e *Executor) RunJoin() error {
 					return err
 				}
 			}
-			if job.JoinType == plan.LeftJoin && joinNum == 0 {
+			if job.JoinType == planner.LeftJoin && joinNum == 0 {
 				joinRow := row.NewRow(r.Vals...)
 				joinRow.AppendVals(make([]interface{}, len(mds[1].GetColumnNames()))...)
 				if err = rbWriter.WriteRow(joinRow); err != nil {
@@ -104,7 +104,7 @@ func (e *Executor) RunJoin() error {
 			}
 		}
 
-	case plan.RightJoin:
+	case planner.RightJoin:
 	}
 
 	if err := rbWriter.Flush(); err != nil {

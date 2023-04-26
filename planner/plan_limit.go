@@ -1,4 +1,4 @@
-package plan
+package planner
 
 import (
 	"fmt"
@@ -8,15 +8,15 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 )
 
-type LimitNode struct {
-	Input       Node
-	Output      Node
+type LimitPlan struct {
+	Input       Plan
+	Output      Plan
 	Metadata    *metadata.Metadata
 	LimitNumber *int64
 }
 
-func NewLimitNode(_ *config.Runtime, input Node, t antlr.TerminalNode) *LimitNode {
-	res := &LimitNode{
+func NewLimitPlan(_ *config.Runtime, input Plan, t antlr.TerminalNode) *LimitPlan {
+	res := &LimitPlan{
 		Input:    input,
 		Metadata: metadata.NewMetadata(),
 	}
@@ -28,31 +28,31 @@ func NewLimitNode(_ *config.Runtime, input Node, t antlr.TerminalNode) *LimitNod
 	return res
 }
 
-func (n *LimitNode) GetInputs() []Node {
-	return []Node{n.Input}
+func (n *LimitPlan) GetInputs() []Plan {
+	return []Plan{n.Input}
 }
 
-func (n *LimitNode) SetInputs(inputs []Node) {
+func (n *LimitPlan) SetInputs(inputs []Plan) {
 	n.Input = inputs[0]
 }
 
-func (n *LimitNode) GetOutput() Node {
+func (n *LimitPlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *LimitNode) SetOutput(output Node) {
+func (n *LimitPlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *LimitNode) GetType() NodeType {
+func (n *LimitPlan) GetType() NodeType {
 	return NodeTypeLimit
 }
 
-func (n *LimitNode) GetMetadata() *metadata.Metadata {
+func (n *LimitPlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *LimitNode) SetMetadata() error {
+func (n *LimitPlan) SetMetadata() error {
 	if err := n.Input.SetMetadata(); err != nil {
 		return err
 	}
@@ -60,8 +60,8 @@ func (n *LimitNode) SetMetadata() error {
 	return nil
 }
 
-func (n *LimitNode) String() string {
-	res := "LimitNode {\n"
+func (n *LimitPlan) String() string {
+	res := "LimitPlan {\n"
 	res += "Input: " + n.Input.String() + "\n"
 	res += "LimitNubmer: " + fmt.Sprint(*n.LimitNumber) + "\n"
 	res += "}\n"

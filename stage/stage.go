@@ -5,8 +5,8 @@ import (
 	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/partition"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type JobType int32
@@ -103,7 +103,7 @@ type Worker interface {
 	GetExecutorLoc() *pb.Location
 }
 
-func CreateJob(node plan.Node, executorHeap Worker, pn int) ([]Job, error) {
+func CreateJob(node planner.Plan, executorHeap Worker, pn int) ([]Job, error) {
 	if !executorHeap.HasExecutor() {
 		return nil, fmt.Errorf("there are no available executor")
 	}
@@ -123,16 +123,16 @@ func CreateJob(node plan.Node, executorHeap Worker, pn int) ([]Job, error) {
 	return *jobs, err
 }
 
-func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job, error) {
+func createJob(inode planner.Plan, jobs *[]Job, executorHeap Worker, pn int) ([]Job, error) {
 	var res []Job
 	switch node := inode.(type) {
-	case *plan.ShowNode:
+	case *planner.ShowPlan:
 		output := executorHeap.GetExecutorLoc()
 		res = append(res, NewShowJob(node, output))
 		*jobs = append(*jobs, res...)
 		return res, nil
 
-	case *plan.ScanNode:
+	case *planner.ScanPlan:
 		scanNodePar, err := node.Connector.GetPartition(pn)
 		if err != nil {
 			return res, err
@@ -211,7 +211,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		*jobs = append(*jobs, resScan...)
 		return resScan, nil
 
-	case *plan.SelectNode:
+	case *planner.SelectPlan:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
 		if err != nil {
 			return res, err
@@ -257,7 +257,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		}
 		return res, nil
 
-	case *plan.InsertNode:
+	case *planner.InsertPlan:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
 		if err != nil {
 			return nil, err
@@ -285,7 +285,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		*jobs = append(*jobs, localRes...)
 		*jobs = append(*jobs, newInsertedJob)
 		return res, nil
-	case *plan.GroupByNode:
+	case *planner.GroupByPlan:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
 		if err != nil {
 			return res, err
@@ -299,7 +299,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 
 		*jobs = append(*jobs, res...)
 		return res, nil
-	case *plan.JoinNode:
+	case *planner.JoinPlan:
 		leftInputJobs, err1 := createJob(node.LeftInput, jobs, executorHeap, pn)
 		if err1 != nil {
 			return nil, err1
@@ -351,7 +351,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		*jobs = append(*jobs, res...)
 		return res, nil
 
-	case *plan.HashJoinNode:
+	case *planner.HashJoinPlan:
 		leftInputJobs, err1 := createJob(node.LeftInput, jobs, executorHeap, pn)
 		if err1 != nil {
 			return nil, err1
@@ -439,7 +439,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		*jobs = append(*jobs, res...)
 		return res, nil
 
-	case *plan.LimitNode:
+	case *planner.LimitPlan:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
 		if err != nil {
 			return res, err
@@ -455,7 +455,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		*jobs = append(*jobs, res...)
 		return res, nil
 
-	case *plan.DistinctLocalNode:
+	case *planner.DistinctLocalPlan:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
 		if err != nil {
 			return res, err
@@ -473,7 +473,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		*jobs = append(*jobs, res...)
 		return res, nil
 
-	case *plan.DistinctGlobalNode:
+	case *planner.DistinctGlobalPlan:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
 		if err != nil {
 			return res, err
@@ -495,7 +495,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		*jobs = append(*jobs, res...)
 		return res, nil
 
-	case *plan.AggregateNode:
+	case *planner.AggregatePlan:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
 		if err != nil {
 			return res, err
@@ -509,7 +509,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		*jobs = append(*jobs, res...)
 		return res, nil
 
-	case *plan.AggregateFuncGlobalNode:
+	case *planner.AggregateFuncGlobalPlan:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
 		if err != nil {
 			return res, err
@@ -523,7 +523,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		*jobs = append(*jobs, res...)
 		return res, nil
 
-	case *plan.AggregateFuncLocalNode:
+	case *planner.AggregateFuncLocalPlan:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
 		if err != nil {
 			return res, err
@@ -537,7 +537,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		*jobs = append(*jobs, res...)
 		return res, nil
 
-	case *plan.FilterNode:
+	case *planner.FilterPlan:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
 		if err != nil {
 			return res, err
@@ -551,7 +551,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		*jobs = append(*jobs, res...)
 		return res, nil
 
-	case *plan.UnionNode:
+	case *planner.UnionPlan:
 		leftInputJobs, err := createJob(node.LeftInput, jobs, executorHeap, pn)
 		if err != nil {
 			return nil, err
@@ -602,7 +602,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		*jobs = append(*jobs, res...)
 		return res, nil
 
-	case *plan.OrderByNode:
+	case *planner.OrderByPlan:
 		inputJobs, err := createJob(node.Input, jobs, executorHeap, pn)
 		if err != nil {
 			return nil, err

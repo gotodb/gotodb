@@ -1,48 +1,48 @@
-package plan
+package planner
 
 import (
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
 )
 
-type CombineNode struct {
-	Inputs   []Node
-	Output   Node
+type CombinePlan struct {
+	Inputs   []Plan
+	Output   Plan
 	Metadata *metadata.Metadata
 }
 
-func NewCombineNode(_ *config.Runtime, inputs []Node) *CombineNode {
-	return &CombineNode{
+func NewCombinePlan(_ *config.Runtime, inputs []Plan) *CombinePlan {
+	return &CombinePlan{
 		Inputs:   inputs,
 		Metadata: metadata.NewMetadata(),
 	}
 }
 
-func (n *CombineNode) GetInputs() []Node {
+func (n *CombinePlan) GetInputs() []Plan {
 	return n.Inputs
 }
 
-func (n *CombineNode) SetInputs(inputs []Node) {
+func (n *CombinePlan) SetInputs(inputs []Plan) {
 	n.Inputs = inputs
 }
 
-func (n *CombineNode) GetOutput() Node {
+func (n *CombinePlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *CombineNode) SetOutput(output Node) {
+func (n *CombinePlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *CombineNode) GetType() NodeType {
+func (n *CombinePlan) GetType() NodeType {
 	return NodeTypeCombine
 }
 
-func (n *CombineNode) GetMetadata() *metadata.Metadata {
+func (n *CombinePlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *CombineNode) SetMetadata() (err error) {
+func (n *CombinePlan) SetMetadata() (err error) {
 	n.Metadata = metadata.NewMetadata()
 	for _, input := range n.Inputs {
 		if err = input.SetMetadata(); err != nil {
@@ -53,8 +53,8 @@ func (n *CombineNode) SetMetadata() (err error) {
 	return nil
 }
 
-func (n *CombineNode) String() string {
-	res := "CombineNode {\n"
+func (n *CombinePlan) String() string {
+	res := "CombinePlan {\n"
 	for _, n := range n.Inputs {
 		res += n.String()
 	}

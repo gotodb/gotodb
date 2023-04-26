@@ -1,16 +1,16 @@
 package optimizer
 
 import (
-	"github.com/gotodb/gotodb/plan"
+	"github.com/gotodb/gotodb/planner"
 )
 
-func DeleteRenameNode(node plan.Node) error {
+func DeleteRenameNode(node planner.Plan) error {
 	if node == nil {
 		return nil
 	}
 	switch node.(type) {
-	case *plan.RenameNode:
-		renameNode := node.(*plan.RenameNode)
+	case *planner.RenamePlan:
+		renameNode := node.(*planner.RenamePlan)
 		if err := DeleteRenameNode(renameNode.Input); err != nil {
 			return err
 		}

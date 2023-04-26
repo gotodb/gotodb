@@ -1,27 +1,27 @@
-package plan
+package planner
 
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/connector"
 	"github.com/gotodb/gotodb/metadata"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
-type ScanNode struct {
+type ScanPlan struct {
 	Catalog   string
 	Schema    string
 	Table     string
 	Name      string
 	Metadata  *metadata.Metadata
 	Connector connector.Connector
-	Output    Node
+	Output    Plan
 	Filters   []*operator.BooleanExpressionNode
 }
 
-func NewScanNode(runtime *config.Runtime, name string) *ScanNode {
+func NewScanPlan(runtime *config.Runtime, name string) *ScanPlan {
 	catalog, schema, table := metadata.SplitTableName(runtime, name)
-	res := &ScanNode{
+	res := &ScanPlan{
 		Catalog: catalog,
 		Schema:  schema,
 		Table:   table,
@@ -30,12 +30,12 @@ func NewScanNode(runtime *config.Runtime, name string) *ScanNode {
 	return res
 }
 
-func (n *ScanNode) GetType() NodeType {
+func (n *ScanPlan) GetType() NodeType {
 	return NodeTypeScan
 }
 
-func (n *ScanNode) String() string {
-	res := "ScanNode {\n"
+func (n *ScanPlan) String() string {
+	res := "ScanPlan {\n"
 	res += "Name: " + n.Name + "\n"
 	res += "Metadata:" + fmt.Sprintf("%v", n.Metadata) + "\n"
 	res += "Filters:" + fmt.Sprintf("%v", n.Filters) + "\n"
@@ -43,26 +43,26 @@ func (n *ScanNode) String() string {
 	return res
 }
 
-func (n *ScanNode) GetInputs() []Node {
-	return []Node{}
+func (n *ScanPlan) GetInputs() []Plan {
+	return []Plan{}
 }
 
-func (n *ScanNode) SetInputs(_ []Node) {
+func (n *ScanPlan) SetInputs(_ []Plan) {
 }
 
-func (n *ScanNode) GetOutput() Node {
+func (n *ScanPlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *ScanNode) SetOutput(output Node) {
+func (n *ScanPlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *ScanNode) GetMetadata() *metadata.Metadata {
+func (n *ScanPlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *ScanNode) SetMetadata() error {
+func (n *ScanPlan) SetMetadata() error {
 	if n.Metadata != nil {
 		return nil
 	}

@@ -1,10 +1,10 @@
-package plan
+package planner
 
 import (
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 	"strings"
 )
 
@@ -34,33 +34,33 @@ const (
 	NodeTypeShow
 )
 
-type Node interface {
+type Plan interface {
 	GetType() NodeType
 	SetMetadata() error
 	GetMetadata() *metadata.Metadata
 
-	GetOutput() Node
-	SetOutput(output Node)
+	GetOutput() Plan
+	SetOutput(output Plan)
 
-	GetInputs() []Node
-	SetInputs(input []Node)
+	GetInputs() []Plan
+	SetInputs(input []Plan)
 
 	String() string
 }
 
-func NewNodeFromSingleStatement(runtime *config.Runtime, t parser.ISingleStatementContext) Node {
-	return NewNodeFromStatement(runtime, t.(*parser.SingleStatementContext).Statement())
+func NewPlanFromSingleStatement(runtime *config.Runtime, t parser.ISingleStatementContext) Plan {
+	return NewPlanFromStatement(runtime, t.(*parser.SingleStatementContext).Statement())
 }
 
-func NewNodeFromStatement(runtime *config.Runtime, t parser.IStatementContext) Node {
+func NewPlanFromStatement(runtime *config.Runtime, t parser.IStatementContext) Plan {
 	tt := t.(*parser.StatementContext)
 
 	if tt.INSERT() != nil {
-		return NewNodeFromInsert(runtime, tt)
+		return NewPlanFromInsert(runtime, tt)
 	}
 
 	if tt.Query() != nil {
-		return NewNodeFromQuery(runtime, tt.Query())
+		return NewPlanFromQuery(runtime, tt.Query())
 	}
 
 	//use
@@ -77,7 +77,7 @@ func NewNodeFromStatement(runtime *config.Runtime, t parser.IStatementContext) N
 			schema = schemaNode.GetText()
 		}
 
-		return NewUseNode(runtime, catalog, schema)
+		return NewUsePlan(runtime, catalog, schema)
 	}
 
 	//show tables
@@ -94,7 +94,7 @@ func NewNodeFromStatement(runtime *config.Runtime, t parser.IStatementContext) N
 			}
 		}
 		var like, escape *string
-		return NewShowNodeTables(runtime, catalog, schema, like, escape)
+		return NewShowPlanTables(runtime, catalog, schema, like, escape)
 	}
 
 	//show schemas
@@ -111,7 +111,7 @@ func NewNodeFromStatement(runtime *config.Runtime, t parser.IStatementContext) N
 			escape = stringValue.Str
 		}
 
-		return NewShowNodeCatalogs(runtime, &like, &escape)
+		return NewShowPlanCatalogs(runtime, &like, &escape)
 	}
 
 	if tt.SHOW() != nil && tt.SCHEMAS() != nil {
@@ -120,7 +120,7 @@ func NewNodeFromStatement(runtime *config.Runtime, t parser.IStatementContext) N
 			catalog = operator.NewIdentifierNode(runtime, id).GetText()
 		}
 		var like, escape *string
-		return NewShowNodeSchemas(runtime, catalog, like, escape)
+		return NewShowPlanSchemas(runtime, catalog, like, escape)
 	}
 
 	//show columns
@@ -130,7 +130,7 @@ func NewNodeFromStatement(runtime *config.Runtime, t parser.IStatementContext) N
 			name := operator.NewQualifiedNameNode(runtime, qname).Result()
 			catalog, schema, table = metadata.SplitTableName(runtime, name)
 		}
-		return NewShowNodeColumns(runtime, catalog, schema, table)
+		return NewShowPlanColumns(runtime, catalog, schema, table)
 	}
 
 	//show partitions
@@ -140,26 +140,26 @@ func NewNodeFromStatement(runtime *config.Runtime, t parser.IStatementContext) N
 			name := operator.NewQualifiedNameNode(runtime, qname).Result()
 			catalog, schema, table = metadata.SplitTableName(runtime, name)
 		}
-		var res Node
-		res = NewShowNodePartitions(runtime, catalog, schema, table)
+		var res Plan
+		res = NewShowPlanPartitions(runtime, catalog, schema, table)
 		if wh := tt.GetWhere(); wh != nil {
-			filterNode := NewFilterNode(runtime, res, wh)
+			filterNode := NewFilterPlan(runtime, res, wh)
 			res.SetOutput(filterNode)
 			res = filterNode
 		}
 
 		if tt.ORDER() != nil {
-			orderNode := NewOrderByNode(runtime, res, tt.AllSortItem())
+			orderNode := NewOrderByPlan(runtime, res, tt.AllSortItem())
 			res.SetOutput(orderNode)
 			res = orderNode
 		}
 		if tt.LIMIT() != nil {
 			if iv := tt.INTEGER_VALUE(); iv != nil {
-				limitNode := NewLimitNode(runtime, res, iv)
+				limitNode := NewLimitPlan(runtime, res, iv)
 				res.SetOutput(limitNode)
 				res = limitNode
 			} else if ia := tt.ALL(); ia != nil {
-				limitNode := NewLimitNode(runtime, res, ia)
+				limitNode := NewLimitPlan(runtime, res, ia)
 				res.SetOutput(limitNode)
 				res = limitNode
 			}
@@ -170,38 +170,38 @@ func NewNodeFromStatement(runtime *config.Runtime, t parser.IStatementContext) N
 	return nil
 }
 
-func NewNodeFromInsert(runtime *config.Runtime, t parser.IStatementContext) Node {
-	var res Node
+func NewPlanFromInsert(runtime *config.Runtime, t parser.IStatementContext) Plan {
+	var res Plan
 
-	queryNode := NewNodeFromQuery(runtime, t.Query())
+	queryNode := NewPlanFromQuery(runtime, t.Query())
 	res = queryNode
 
-	insertNode := NewInsertNode(runtime, res, t.QualifiedName(), t.ColumnAliases())
+	insertNode := NewInsertPlan(runtime, res, t.QualifiedName(), t.ColumnAliases())
 	res.SetOutput(insertNode)
 	res = insertNode
 
 	return res
 }
 
-func NewNodeFromQuery(runtime *config.Runtime, t parser.IQueryContext) Node {
+func NewPlanFromQuery(runtime *config.Runtime, t parser.IQueryContext) Plan {
 	tt := t.(*parser.QueryContext)
-	var res Node
-	queryNode := NewNodeFromQueryTerm(runtime, tt.QueryTerm())
+	var res Plan
+	queryNode := NewPlanFromQueryTerm(runtime, tt.QueryTerm())
 	res = queryNode
 
 	if tt.ORDER() != nil {
-		orderNode := NewOrderByNode(runtime, res, tt.AllSortItem())
+		orderNode := NewOrderByPlan(runtime, res, tt.AllSortItem())
 		res.SetOutput(orderNode)
 		res = orderNode
 	}
 
 	if tt.LIMIT() != nil {
 		if iv := tt.INTEGER_VALUE(); iv != nil {
-			limitNode := NewLimitNode(runtime, res, iv)
+			limitNode := NewLimitPlan(runtime, res, iv)
 			res.SetOutput(limitNode)
 			res = limitNode
 		} else if ia := tt.ALL(); ia != nil {
-			limitNode := NewLimitNode(runtime, res, ia)
+			limitNode := NewLimitPlan(runtime, res, ia)
 			res.SetOutput(limitNode)
 			res = limitNode
 		}
@@ -209,17 +209,17 @@ func NewNodeFromQuery(runtime *config.Runtime, t parser.IQueryContext) Node {
 	return res
 }
 
-func NewNodeFromQueryTerm(runtime *config.Runtime, t parser.IQueryTermContext) Node {
-	var res Node
+func NewPlanFromQueryTerm(runtime *config.Runtime, t parser.IQueryTermContext) Plan {
+	var res Plan
 	tt := t.(*parser.QueryTermContext)
 	if tqp := tt.QueryPrimary(); tqp != nil {
-		res = NewNodeFromQueryPrimary(runtime, tqp)
+		res = NewPlanFromQueryPrimary(runtime, tqp)
 
 	} else {
-		left := NewNodeFromQueryTerm(runtime, tt.GetLeft())
-		right := NewNodeFromQueryTerm(runtime, tt.GetRight())
+		left := NewPlanFromQueryTerm(runtime, tt.GetLeft())
+		right := NewPlanFromQueryTerm(runtime, tt.GetRight())
 		op := tt.GetOperator()
-		unionNode := NewUnionNode(runtime, left, right, op)
+		unionNode := NewUnionPlan(runtime, left, right, op)
 		left.SetOutput(unionNode)
 		right.SetOutput(unionNode)
 		res = unionNode
@@ -228,37 +228,37 @@ func NewNodeFromQueryTerm(runtime *config.Runtime, t parser.IQueryTermContext) N
 	return res
 }
 
-func NewNodeFromQueryPrimary(runtime *config.Runtime, t parser.IQueryPrimaryContext) Node {
-	var res Node
+func NewPlanFromQueryPrimary(runtime *config.Runtime, t parser.IQueryPrimaryContext) Plan {
+	var res Plan
 	tt := t.(*parser.QueryPrimaryContext)
 	if tqs := tt.QuerySpecification(); tqs != nil {
-		res = NewNodeFromQuerySpecification(runtime, tqs)
+		res = NewPlanFromQuerySpecification(runtime, tqs)
 	} else {
-		res = NewNodeFromQuery(runtime, tt.Query())
+		res = NewPlanFromQuery(runtime, tt.Query())
 	}
 	return res
 }
 
-func NewNodeFromQuerySpecification(runtime *config.Runtime, t parser.IQuerySpecificationContext) Node {
+func NewPlanFromQuerySpecification(runtime *config.Runtime, t parser.IQuerySpecificationContext) Plan {
 	tt := t.(*parser.QuerySpecificationContext)
-	var res Node
+	var res Plan
 	if rels := tt.AllRelation(); rels != nil && len(rels) > 0 {
-		res = NewNodeFromRelations(runtime, rels)
+		res = NewPlanFromRelations(runtime, rels)
 
 	}
 	if wh := tt.GetWhere(); wh != nil {
-		filterNode := NewFilterNode(runtime, res, wh)
+		filterNode := NewFilterPlan(runtime, res, wh)
 		res.SetOutput(filterNode)
 		res = filterNode
 	}
 
 	if gb := tt.GroupBy(); gb != nil {
-		groupByNode := NewGroupByNode(runtime, res, gb)
+		groupByNode := NewGroupByPlan(runtime, res, gb)
 		res.SetOutput(groupByNode)
 		res = groupByNode
 	}
 
-	selectNode := NewSelectNode(runtime, res, tt.SetQuantifier(), tt.AllSelectItem(), tt.GetHaving())
+	selectNode := NewSelectPlan(runtime, res, tt.SetQuantifier(), tt.AllSelectItem(), tt.GetHaving())
 
 	res.SetOutput(selectNode)
 
@@ -266,43 +266,43 @@ func NewNodeFromQuerySpecification(runtime *config.Runtime, t parser.IQuerySpeci
 	return res
 }
 
-func NewNodeFromSampleRelation(runtime *config.Runtime, t parser.ISampledRelationContext) Node {
+func NewPlanFromSampleRelation(runtime *config.Runtime, t parser.ISampledRelationContext) Plan {
 	tt := t.(*parser.SampledRelationContext)
-	res := NewNodeFromRelationPrimary(runtime, tt.RelationPrimary())
+	res := NewPlanFromRelationPrimary(runtime, tt.RelationPrimary())
 	if id := tt.Identifier(); id != nil {
 		idNode := operator.NewIdentifierNode(runtime, id)
 		rename := idNode.GetText()
-		renameNode := NewRenameNode(runtime, res, rename)
+		renameNode := NewRenamePlan(runtime, res, rename)
 		res.SetOutput(renameNode)
 		res = renameNode
 	}
 	return res
 }
 
-func NewNodeFromRelationPrimary(runtime *config.Runtime, t parser.IRelationPrimaryContext) Node {
+func NewPlanFromRelationPrimary(runtime *config.Runtime, t parser.IRelationPrimaryContext) Plan {
 	tt := t.(*parser.RelationPrimaryContext)
 	if tn := tt.QualifiedName(); tn != nil {
 		ttn := tn.(*parser.QualifiedNameContext)
 		qname := ttn.GetText()
-		return NewScanNode(runtime, qname)
+		return NewScanPlan(runtime, qname)
 
 	} else if tq := tt.Query(); tq != nil {
-		return NewNodeFromQuery(runtime, tq)
+		return NewPlanFromQuery(runtime, tq)
 
 	} else if tr := tt.Relation(); tr != nil {
-		return NewNodeFromRelation(runtime, tr)
+		return NewPlanFromRelation(runtime, tr)
 	}
 	return nil
 }
 
-func NewNodeFromRelation(runtime *config.Runtime, t parser.IRelationContext) Node {
+func NewPlanFromRelation(runtime *config.Runtime, t parser.IRelationContext) Plan {
 	tt := t.(*parser.RelationContext)
 	if sr := tt.SampledRelation(); sr != nil {
-		return NewNodeFromSampleRelation(runtime, sr)
+		return NewPlanFromSampleRelation(runtime, sr)
 
 	} else { //join
 		leftRelation, rightRelation := t.GetLeftRelation(), t.GetRightRelation()
-		leftNode, rightNode := NewNodeFromRelation(runtime, leftRelation), NewNodeFromRelation(runtime, rightRelation)
+		leftNode, rightNode := NewPlanFromRelation(runtime, leftRelation), NewPlanFromRelation(runtime, rightRelation)
 		joinText := tt.JoinType().(*parser.JoinTypeContext).GetText()
 		var joinType JoinType
 		if joinText == "" || joinText[0:1] == "I" {
@@ -313,20 +313,20 @@ func NewNodeFromRelation(runtime *config.Runtime, t parser.IRelationContext) Nod
 			joinType = RightJoin
 		}
 		joinCriteriaNode := operator.NewJoinCriteriaNode(runtime, tt.JoinCriteria())
-		res := NewJoinNode(runtime, leftNode, rightNode, joinType, joinCriteriaNode)
+		res := NewJoinPlan(runtime, leftNode, rightNode, joinType, joinCriteriaNode)
 		leftNode.SetOutput(res)
 		rightNode.SetOutput(res)
 		return res
 	}
 }
 
-func NewNodeFromRelations(runtime *config.Runtime, ts []parser.IRelationContext) Node {
+func NewPlanFromRelations(runtime *config.Runtime, ts []parser.IRelationContext) Plan {
 	if len(ts) == 1 {
-		return NewNodeFromRelation(runtime, ts[0])
+		return NewPlanFromRelation(runtime, ts[0])
 	}
-	res := NewCombineNode(runtime, []Node{})
+	res := NewCombinePlan(runtime, []Plan{})
 	for _, t := range ts {
-		relationNode := NewNodeFromRelation(runtime, t)
+		relationNode := NewPlanFromRelation(runtime, t)
 		res.Inputs = append(res.Inputs, relationNode)
 		relationNode.SetOutput(res)
 	}

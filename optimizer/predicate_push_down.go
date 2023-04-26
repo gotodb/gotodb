@@ -2,8 +2,8 @@ package optimizer
 
 import (
 	"github.com/gotodb/gotodb/datatype"
-	"github.com/gotodb/gotodb/plan"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
 func ExtractPredicates(node *operator.BooleanExpressionNode, t datatype.Operator) []*operator.BooleanExpressionNode {
@@ -31,14 +31,14 @@ func ExtractPredicates(node *operator.BooleanExpressionNode, t datatype.Operator
 	return res
 }
 
-func PredicatePushDown(node plan.Node, predicates []*operator.BooleanExpressionNode) error {
+func PredicatePushDown(node planner.Plan, predicates []*operator.BooleanExpressionNode) error {
 	if node == nil {
 		return nil
 	}
 
 	switch node.(type) {
-	case *plan.FilterNode:
-		filterNode := node.(*plan.FilterNode)
+	case *planner.FilterPlan:
+		filterNode := node.(*planner.FilterPlan)
 		for _, be := range filterNode.BooleanExpressions {
 			predicates = append(predicates, ExtractPredicates(be, datatype.AND)...)
 		}
@@ -64,8 +64,8 @@ func PredicatePushDown(node plan.Node, predicates []*operator.BooleanExpressionN
 			}
 		}
 
-	case *plan.SelectNode:
-		selectNode := node.(*plan.SelectNode)
+	case *planner.SelectPlan:
+		selectNode := node.(*planner.SelectPlan)
 		md := selectNode.GetMetadata()
 
 		var res []*operator.BooleanExpressionNode
@@ -80,17 +80,17 @@ func PredicatePushDown(node plan.Node, predicates []*operator.BooleanExpressionN
 		}
 		if len(res) > 0 {
 			output := selectNode.GetOutput()
-			if _, ok := output.(*plan.FilterNode); !ok {
-				newFilterNode := &plan.FilterNode{
+			if _, ok := output.(*planner.FilterPlan); !ok {
+				newFilterNode := &planner.FilterPlan{
 					Input:              node,
 					Output:             output,
 					Metadata:           node.GetMetadata().Copy(),
 					BooleanExpressions: []*operator.BooleanExpressionNode{},
 				}
-				output.SetInputs([]plan.Node{newFilterNode})
+				output.SetInputs([]planner.Plan{newFilterNode})
 				node.SetOutput(newFilterNode)
 			}
-			outputNode := selectNode.GetOutput().(*plan.FilterNode)
+			outputNode := selectNode.GetOutput().(*planner.FilterPlan)
 			outputNode.AddBooleanExpressions(res...)
 		}
 
@@ -102,8 +102,8 @@ func PredicatePushDown(node plan.Node, predicates []*operator.BooleanExpressionN
 
 		return nil
 
-	case *plan.ScanNode:
-		scanNode := node.(*plan.ScanNode)
+	case *planner.ScanPlan:
+		scanNode := node.(*planner.ScanPlan)
 		md := node.GetMetadata()
 		for _, predicate := range predicates {
 			cols, err := predicate.GetColumns()
@@ -114,7 +114,7 @@ func PredicatePushDown(node plan.Node, predicates []*operator.BooleanExpressionN
 				scanNode.Filters = append(scanNode.Filters, predicate)
 			}
 		}
-	case *plan.ShowNode:
+	case *planner.ShowPlan:
 		return nil
 
 	default:

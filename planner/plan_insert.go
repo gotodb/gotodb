@@ -1,4 +1,4 @@
-package plan
+package planner
 
 import (
 	"fmt"
@@ -6,12 +6,12 @@ import (
 	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
-type InsertNode struct {
-	Input    Node
-	Output   Node
+type InsertPlan struct {
+	Input    Plan
+	Output   Plan
 	Metadata *metadata.Metadata
 	Catalog  string
 	Schema   string
@@ -20,12 +20,12 @@ type InsertNode struct {
 	Columns  []string
 }
 
-func NewInsertNode(runtime *config.Runtime, input Node, qualifiedName parser.IQualifiedNameContext, columns parser.IColumnAliasesContext) *InsertNode {
+func NewInsertPlan(runtime *config.Runtime, input Plan, qualifiedName parser.IQualifiedNameContext, columns parser.IColumnAliasesContext) *InsertPlan {
 
 	name := qualifiedName.GetText()
 	catalog, schema, table := metadata.SplitTableName(runtime, name)
 
-	res := &InsertNode{
+	res := &InsertPlan{
 		Input:    input,
 		Metadata: metadata.NewMetadata(),
 		Catalog:  catalog,
@@ -44,31 +44,31 @@ func NewInsertNode(runtime *config.Runtime, input Node, qualifiedName parser.IQu
 	return res
 }
 
-func (n *InsertNode) GetType() NodeType {
+func (n *InsertPlan) GetType() NodeType {
 	return NodeTypeSelect
 }
 
-func (n *InsertNode) GetInputs() []Node {
-	return []Node{n.Input}
+func (n *InsertPlan) GetInputs() []Plan {
+	return []Plan{n.Input}
 }
 
-func (n *InsertNode) SetInputs(inputs []Node) {
+func (n *InsertPlan) SetInputs(inputs []Plan) {
 	n.Input = inputs[0]
 }
 
-func (n *InsertNode) GetOutput() Node {
+func (n *InsertPlan) GetOutput() Plan {
 	return n.Output
 }
 
-func (n *InsertNode) SetOutput(output Node) {
+func (n *InsertPlan) SetOutput(output Plan) {
 	n.Output = output
 }
 
-func (n *InsertNode) GetMetadata() *metadata.Metadata {
+func (n *InsertPlan) GetMetadata() *metadata.Metadata {
 	return n.Metadata
 }
 
-func (n *InsertNode) SetMetadata() error {
+func (n *InsertPlan) SetMetadata() error {
 	if err := n.Input.SetMetadata(); err != nil {
 		return err
 	}
@@ -80,8 +80,8 @@ func (n *InsertNode) SetMetadata() error {
 	return nil
 }
 
-func (n *InsertNode) String() string {
-	res := "InsertNode {\n"
+func (n *InsertPlan) String() string {
+	res := "InsertPlan {\n"
 	res += "Input: " + n.Input.String() + "\n"
 	res += "Name: " + n.Name + "\n"
 	res += "Metadata:" + fmt.Sprintf("%v", n.Metadata) + "\n"

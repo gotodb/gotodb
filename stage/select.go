@@ -4,8 +4,8 @@ import (
 	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/plan"
-	"github.com/gotodb/gotodb/plan/operator"
+	"github.com/gotodb/gotodb/planner"
+	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type SelectJob struct {
@@ -34,7 +34,7 @@ func (n *SelectJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewSelectJob(node *plan.SelectNode, input, output *pb.Location) *SelectJob {
+func NewSelectJob(node *planner.SelectPlan, input, output *pb.Location) *SelectJob {
 	return &SelectJob{
 		Location:      output,
 		Input:         input,
