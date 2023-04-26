@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -32,7 +32,7 @@ func (e *Executor) RunGroupBy() error {
 
 	//write metadata
 	job.Metadata.ClearKeys()
-	job.Metadata.AppendKeyByType(gtype.STRING)
+	job.Metadata.AppendKeyByType(datatype.STRING)
 	if err := util.WriteObject(writer, job.Metadata); err != nil {
 		return err
 	}

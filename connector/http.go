@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
 )
@@ -51,7 +51,7 @@ func NewHttpMetadata(conf *config.HttpConnector) (*metadata.Metadata, error) {
 			Schema:     conf.Schema,
 			Table:      conf.Table,
 			ColumnName: conf.ColumnNames[i],
-			ColumnType: gtype.NameToType(conf.ColumnTypes[i]),
+			ColumnType: datatype.FromString(conf.ColumnTypes[i]),
 		}
 		res.AppendColumn(col)
 	}
@@ -265,7 +265,7 @@ func (c *Http) GetReader(file *partition.FileLocation, md *metadata.Metadata, fi
 					} else if col.ColumnName == c.Config.ResultColumn {
 						rg.Vals[index] = append(rg.Vals[index], string(respBody))
 					} else if value, ok := data[col.ColumnName]; ok {
-						rg.Vals[index] = append(rg.Vals[index], gtype.ToType(value, md.Columns[index].ColumnType))
+						rg.Vals[index] = append(rg.Vals[index], datatype.ToValue(value, md.Columns[index].ColumnType))
 					} else {
 						rg.Vals[index] = append(rg.Vals[index], nil)
 					}

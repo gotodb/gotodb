@@ -2,25 +2,25 @@ package operator
 
 import (
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/pkg/parser"
 )
 
-func NewComparisonOperator(runtime *config.Runtime, t parser.IComparisonOperatorContext) *gtype.Operator {
+func NewComparisonOperator(runtime *config.Runtime, t parser.IComparisonOperatorContext) *datatype.Operator {
 	tt := t.(*parser.ComparisonOperatorContext)
-	var op gtype.Operator
+	var op datatype.Operator
 	if tt.EQ() != nil {
-		op = gtype.EQ
+		op = datatype.EQ
 	} else if tt.NEQ() != nil {
-		op = gtype.NEQ
+		op = datatype.NEQ
 	} else if tt.LT() != nil {
-		op = gtype.LT
+		op = datatype.LT
 	} else if tt.LTE() != nil {
-		op = gtype.LTE
+		op = datatype.LTE
 	} else if tt.GT() != nil {
-		op = gtype.GT
+		op = datatype.GT
 	} else if tt.GTE() != nil {
-		op = gtype.GTE
+		op = datatype.GTE
 	}
 	return &op
 }

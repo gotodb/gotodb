@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
 )
@@ -105,18 +105,18 @@ func (n *PrimaryExpressionNode) ExtractAggFunc(res *[]*FuncCallNode) {
 
 }
 
-func (n *PrimaryExpressionNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
+func (n *PrimaryExpressionNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
 	if n.Number != nil {
 		return n.Number.GetType(md)
 
 	} else if n.Identifier != nil && n.StringValue != nil {
 		if n.Identifier.NonReserved == nil {
-			return gtype.UNKNOWNTYPE, fmt.Errorf("GetType: wrong PrimaryExpressionNode")
+			return datatype.UnknownType, fmt.Errorf("GetType: wrong PrimaryExpressionNode")
 		}
 		t := strings.ToUpper(*n.Identifier.NonReserved)
 		switch t {
 		case "TIMESTAMP":
-			return gtype.TIMESTAMP, nil
+			return datatype.TIMESTAMP, nil
 		}
 
 	} else if n.BooleanValue != nil {
@@ -140,7 +140,7 @@ func (n *PrimaryExpressionNode) GetType(md *metadata.Metadata) (gtype.Type, erro
 	} else if n.Base != nil {
 		return md.GetTypeByName(n.Name)
 	}
-	return gtype.UNKNOWNTYPE, fmt.Errorf("GetType: wrong PrimaryExpressionNode")
+	return datatype.UnknownType, fmt.Errorf("GetType: wrong PrimaryExpressionNode")
 }
 
 func (n *PrimaryExpressionNode) GetColumns() ([]string, error) {
@@ -222,7 +222,7 @@ func (n *PrimaryExpressionNode) Result(input *row.RowsGroup) (interface{}, error
 			}
 			res := resi.([]interface{})
 			for i := 0; i < len(res); i++ {
-				res[i] = gtype.ToTimestamp(res[i])
+				res[i] = datatype.ToTimestamp(res[i])
 			}
 			return res, nil
 		}

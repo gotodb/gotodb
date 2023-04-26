@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -86,8 +86,8 @@ func (e *Executor) RunOrderByLocal() error {
 	return nil
 }
 
-func (e *Executor) GetOrderLocal(job *stage.OrderByLocalJob) []gtype.OrderType {
-	var res []gtype.OrderType
+func (e *Executor) GetOrderLocal(job *stage.OrderByLocalJob) []datatype.OrderType {
+	var res []datatype.OrderType
 	for _, item := range job.SortItems {
 		res = append(res, item.OrderType)
 	}

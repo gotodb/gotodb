@@ -3,7 +3,7 @@ package config
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"log"
 	"strings"
 
@@ -103,7 +103,7 @@ func (m MysqlConnectors) Check() error {
 						log.Fatal(err)
 					}
 					temp.ColumnNames = append(temp.ColumnNames, column.Field)
-					temp.ColumnTypes = append(temp.ColumnTypes, gtype.ConvertMysqlType(column.DataType, strings.Contains(column.ColumnType, "unsigned")).String())
+					temp.ColumnTypes = append(temp.ColumnTypes, datatype.FromMysql(column.DataType, strings.Contains(column.ColumnType, "unsigned")).String())
 
 				}
 				m[fmt.Sprintf("%s.%s.%s", ns[0], dbname, tableName)] = &temp

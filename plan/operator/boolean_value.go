@@ -2,7 +2,7 @@ package operator
 
 import (
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/row"
@@ -38,8 +38,8 @@ func (n *BooleanValueNode) Result(input *row.RowsGroup) (interface{}, error) {
 	return res, nil
 }
 
-func (n *BooleanValueNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
-	return gtype.BOOL, nil
+func (n *BooleanValueNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
+	return datatype.BOOL, nil
 }
 
 func (n *BooleanValueNode) IsAggregate() bool {

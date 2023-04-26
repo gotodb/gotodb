@@ -5,7 +5,7 @@ import (
 	"github.com/gotodb/gotodb/pkg/parser"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
 )
@@ -46,7 +46,7 @@ func NewIdentifierNode(_ *config.Runtime, t parser.IIdentifierContext) *Identifi
 	return res
 }
 
-func (n *IdentifierNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
+func (n *IdentifierNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
 	if n.Digit != nil {
 		index := *n.Digit
 		return md.GetTypeByIndex(int(index))
@@ -54,7 +54,7 @@ func (n *IdentifierNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
 	} else if n.Str != nil {
 		return md.GetTypeByName(*n.Str)
 	}
-	return gtype.UNKNOWNTYPE, fmt.Errorf("wrong IdentifierNode")
+	return datatype.UnknownType, fmt.Errorf("wrong IdentifierNode")
 }
 
 func (n *IdentifierNode) GetColumns() ([]string, error) {

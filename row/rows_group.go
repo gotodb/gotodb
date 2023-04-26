@@ -3,7 +3,7 @@ package row
 import (
 	"io"
 
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 )
 
@@ -130,7 +130,7 @@ func (rg *RowsGroup) GetColumnIndex(name string) int {
 func (rg *RowsGroup) GetKeyString(index int) string {
 	res := ""
 	for _, ks := range rg.Keys {
-		res += gtype.ToKeyString(ks[index]) + ":"
+		res += datatype.ToKeyString(ks[index]) + ":"
 	}
 	return res
 }

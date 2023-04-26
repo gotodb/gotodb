@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
 )
@@ -46,7 +46,7 @@ func NewMysqlMetadata(conf *config.MysqlConnector) (*metadata.Metadata, error) {
 			Schema:     conf.Schema,
 			Table:      conf.Table,
 			ColumnName: conf.ColumnNames[i],
-			ColumnType: gtype.NameToType(conf.ColumnTypes[i]),
+			ColumnType: datatype.FromString(conf.ColumnTypes[i]),
 		}
 		res.AppendColumn(col)
 	}
@@ -125,7 +125,7 @@ func (c *Mysql) GetReader(file *partition.FileLocation, md *metadata.Metadata, f
 			for i, column := range md.Columns {
 				index := md.ColumnMap[column.ColumnName]
 				b := *record[i].(*interface{})
-				rg.Vals[index] = append(rg.Vals[index], gtype.BytesToType(b.([]byte), column.ColumnType))
+				rg.Vals[index] = append(rg.Vals[index], datatype.ToValue(b.([]byte), column.ColumnType))
 			}
 			rg.RowsNumber++
 		}
@@ -173,7 +173,7 @@ func (c *Mysql) Insert(rb *row.RowsBuffer, columns []string) (affectedRows int64
 		sqlStr := sqlCache
 		for r := 0; r < rg.RowsNumber; r++ {
 			for columnNum, index := range indexes {
-				vals = append(vals, gtype.ToType(rg.Vals[columnNum][r], c.Metadata.Columns[index].ColumnType))
+				vals = append(vals, datatype.ToValue(rg.Vals[columnNum][r], c.Metadata.Columns[index].ColumnType))
 			}
 
 			sqlStr += "(" + placeholder + "),"

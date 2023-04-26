@@ -5,7 +5,7 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
 )
@@ -20,14 +20,14 @@ func NewAbsFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
 			if len(es) < 1 {
-				return gtype.UNKNOWNTYPE, fmt.Errorf("not enough parameters in Abs")
+				return datatype.UnknownType, fmt.Errorf("not enough parameters in Abs")
 			}
 			return es[0].GetType(md)
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in Abs")
 			}
@@ -42,28 +42,28 @@ func NewAbsFunc() *IFunc {
 				return nil, err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return nil, fmt.Errorf("type cann't use ABS function")
-			case gtype.FLOAT64:
+			case datatype.FLOAT64:
 				v := tmp.(float64)
 				if v < 0 {
 					v *= -1
 				}
 				return v, nil
-			case gtype.FLOAT32:
+			case datatype.FLOAT32:
 				v := tmp.(float32)
 				if v < 0 {
 					v *= -1
 				}
 				return v, nil
-			case gtype.INT64:
+			case datatype.INT64:
 				v := tmp.(int64)
 				if v < 0 {
 					v *= -1
 				}
 				return v, nil
-			case gtype.INT32:
+			case datatype.INT32:
 				v := tmp.(int32)
 				if v < 0 {
 					v *= -1
@@ -87,11 +87,11 @@ func NewSqrtFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in SQRT")
 			}
@@ -106,12 +106,12 @@ func NewSqrtFunc() *IFunc {
 				return nil, err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return nil, fmt.Errorf("type cann't use SQRT function")
 
 			default:
-				return math.Sqrt(gtype.ToFloat64(tmp)), nil
+				return math.Sqrt(datatype.ToFloat64(tmp)), nil
 			}
 		},
 	}
@@ -129,11 +129,11 @@ func NewPowFunc() *IFunc {
 			return es[0].IsAggregate() || es[1].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 2 {
 				return float64(0), fmt.Errorf("not enough parameters in POW")
 			}
@@ -153,16 +153,16 @@ func NewPowFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp1) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp1) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use POW function")
 
 			default:
-				switch gtype.TypeOf(tmp2) {
-				case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+				switch datatype.TypeOf(tmp2) {
+				case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 					return float64(0), fmt.Errorf("type cann't use POW function")
 				}
-				v1, v2 := gtype.ToFloat64(tmp1), gtype.ToFloat64(tmp2)
+				v1, v2 := datatype.ToFloat64(tmp1), datatype.ToFloat64(tmp2)
 				return math.Pow(v1, v2), nil
 			}
 		},
@@ -181,11 +181,11 @@ func NewLogFunc() *IFunc {
 
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 2 {
 				return float64(0), fmt.Errorf("not enough parameters in LOG")
 			}
@@ -205,16 +205,16 @@ func NewLogFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp1) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp1) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use LOG function")
 
 			default:
-				switch gtype.TypeOf(tmp2) {
-				case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+				switch datatype.TypeOf(tmp2) {
+				case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 					return float64(0), fmt.Errorf("type cann't use LOG function")
 				}
-				v1, v2 := gtype.ToFloat64(tmp1), gtype.ToFloat64(tmp2)
+				v1, v2 := datatype.ToFloat64(tmp1), datatype.ToFloat64(tmp2)
 				return math.Log(v1) / math.Log(v2), nil
 			}
 		},
@@ -232,11 +232,11 @@ func NewLog10Func() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in LOG10")
 			}
@@ -251,12 +251,12 @@ func NewLog10Func() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use LOG10 function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Log10(v), nil
 			}
 		},
@@ -274,11 +274,11 @@ func NewLog2Func() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in LOG10")
 			}
@@ -293,12 +293,12 @@ func NewLog2Func() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use LOG10 function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Log2(v), nil
 			}
 		},
@@ -316,11 +316,11 @@ func NewLnFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in LOG10")
 			}
@@ -335,12 +335,12 @@ func NewLnFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use LOG10 function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Log(v), nil
 			}
 		},
@@ -358,11 +358,11 @@ func NewCeilFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in CEIL")
 			}
@@ -377,12 +377,12 @@ func NewCeilFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use CEIL function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Ceil(v), nil
 			}
 		},
@@ -400,11 +400,11 @@ func NewFloorFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in FLOOR")
 			}
@@ -419,12 +419,12 @@ func NewFloorFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use FLOOR function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Floor(v), nil
 			}
 		},
@@ -442,11 +442,11 @@ func NewRoundFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in ROUND")
 			}
@@ -461,12 +461,12 @@ func NewRoundFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use ROUND function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Round(v), nil
 			}
 		},
@@ -484,11 +484,11 @@ func NewSinFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in SIN")
 			}
@@ -503,12 +503,12 @@ func NewSinFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use SIN function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Sin(v), nil
 			}
 		},
@@ -526,11 +526,11 @@ func NewCosFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in COS")
 			}
@@ -545,12 +545,12 @@ func NewCosFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use COS function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Cos(v), nil
 			}
 		},
@@ -568,11 +568,11 @@ func NewTanFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in TAN")
 			}
@@ -587,12 +587,12 @@ func NewTanFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use TAN function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Tan(v), nil
 			}
 		},
@@ -610,11 +610,11 @@ func NewASinFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in ASIN")
 			}
@@ -629,12 +629,12 @@ func NewASinFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use ASIN function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Asin(v), nil
 			}
 		},
@@ -652,11 +652,11 @@ func NewACosFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in ACOS")
 			}
@@ -671,12 +671,12 @@ func NewACosFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use ACOS function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Acos(v), nil
 			}
 		},
@@ -694,11 +694,11 @@ func NewATanFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in ATAN")
 			}
@@ -713,12 +713,12 @@ func NewATanFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use ATAN function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Atan(v), nil
 			}
 		},
@@ -736,11 +736,11 @@ func NewSinhFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in SINH")
 			}
@@ -755,12 +755,12 @@ func NewSinhFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use SINH function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Sinh(v), nil
 			}
 		},
@@ -778,11 +778,11 @@ func NewCoshFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in COSH")
 			}
@@ -797,12 +797,12 @@ func NewCoshFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use COSH function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Cosh(v), nil
 			}
 		},
@@ -820,11 +820,11 @@ func NewTanhFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in TANH")
 			}
@@ -839,12 +839,12 @@ func NewTanhFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use TANH function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Tanh(v), nil
 			}
 		},
@@ -862,11 +862,11 @@ func NewASinhFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in ASINH")
 			}
@@ -881,12 +881,12 @@ func NewASinhFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use ASINH function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Asinh(v), nil
 			}
 		},
@@ -904,11 +904,11 @@ func NewACoshFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in ACOSH")
 			}
@@ -923,12 +923,12 @@ func NewACoshFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use ACOSH function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Acosh(v), nil
 			}
 		},
@@ -946,11 +946,11 @@ func NewATanhFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return float64(0), fmt.Errorf("not enough parameters in ATANH")
 			}
@@ -965,12 +965,12 @@ func NewATanhFunc() *IFunc {
 				return float64(0), err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.STRING, gtype.BOOL, gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.STRING, datatype.BOOL, datatype.TIMESTAMP:
 				return float64(0), fmt.Errorf("type cann't use ATANH function")
 
 			default:
-				v := gtype.ToFloat64(tmp)
+				v := datatype.ToFloat64(tmp)
 				return math.Atanh(v), nil
 			}
 		},
@@ -985,11 +985,11 @@ func NewRandomFunc() *IFunc {
 			return false
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			return rand.Float64(), nil
 		},
 	}
@@ -1003,11 +1003,11 @@ func NewEFunc() *IFunc {
 			return false
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			return math.E, nil
 		},
 	}
@@ -1021,11 +1021,11 @@ func NewPiFunc() *IFunc {
 			return false
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			return math.Pi, nil
 		},
 	}

@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
 )
@@ -72,7 +72,7 @@ func (csv *CSV) Read(indexes []int) (*row.RowsGroup, error) {
 			break
 		}
 		for i, index := range csv.Indexes {
-			rg.Vals[i] = append(rg.Vals[i], gtype.ToType(record[index], csv.Metadata.Columns[index].ColumnType))
+			rg.Vals[i] = append(rg.Vals[i], datatype.ToValue(record[index], csv.Metadata.Columns[index].ColumnType))
 		}
 		rg.RowsNumber++
 	}
@@ -109,7 +109,7 @@ func (csv *CSV) Write(rb *row.RowsBuffer, indexes []int) (affectedRows int64, er
 		}
 		for r := 0; r < rg.RowsNumber; r++ {
 			for columnNum, index := range csv.Indexes {
-				record[index] = gtype.ToType(rg.Vals[columnNum][r], gtype.STRING).(string)
+				record[index] = datatype.ToValue(rg.Vals[columnNum][r], datatype.STRING).(string)
 			}
 			if err = csv.Writer.Write(record); err != nil {
 				return

@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -88,7 +88,7 @@ func (e *Executor) RunDistinctGlobal() error {
 					r := rg0.GetRow(i)
 					for j, index := range indexes {
 						c := r.Vals[index]
-						ckey := gtype.ToKeyString(c)
+						ckey := datatype.ToKeyString(c)
 						if _, ok := distinctMap[j][ckey]; ok {
 							r.Vals[index] = nil
 						} else {

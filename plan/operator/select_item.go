@@ -2,7 +2,7 @@ package operator
 
 import (
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/row"
@@ -40,8 +40,8 @@ func (n *SelectItemNode) GetNames() []string {
 	return n.Names
 }
 
-func (n *SelectItemNode) GetNamesAndTypes(md *metadata.Metadata) ([]string, []gtype.Type, error) {
-	var types []gtype.Type
+func (n *SelectItemNode) GetNamesAndTypes(md *metadata.Metadata) ([]string, []datatype.Type, error) {
+	var types []datatype.Type
 	if n.Expression != nil {
 		t, err := n.Expression.GetType(md)
 		if err != nil {

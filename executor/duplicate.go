@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -36,7 +36,7 @@ func (e *Executor) RunDuplicate() error {
 	//write md
 	if job.Keys != nil && len(job.Keys) > 0 {
 		mdOutput.ClearKeys()
-		mdOutput.AppendKeyByType(gtype.STRING)
+		mdOutput.AppendKeyByType(datatype.STRING)
 	}
 
 	rbWriters := make([]*row.RowsBuffer, len(e.Writers))

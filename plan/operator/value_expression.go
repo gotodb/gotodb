@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/row"
@@ -13,7 +13,7 @@ import (
 type ValueExpressionNode struct {
 	Name                  string
 	PrimaryExpression     *PrimaryExpressionNode
-	Operator              *gtype.Operator
+	Operator              *datatype.Operator
 	ValueExpression       *ValueExpressionNode
 	BinaryValueExpression *BinaryValueExpressionNode
 }
@@ -30,17 +30,17 @@ func NewValueExpressionNode(runtime *config.Runtime, t parser.IValueExpressionCo
 	case 2: //ValueExpression
 		ops := "+"
 		if tt.MINUS() != nil {
-			res.Operator = gtype.NewOperatorFromString("-")
+			res.Operator = datatype.NewOperatorFromString("-")
 			ops = "-"
 		} else {
-			res.Operator = gtype.NewOperatorFromString("+")
+			res.Operator = datatype.NewOperatorFromString("+")
 			ops = "+"
 		}
 		res.ValueExpression = NewValueExpressionNode(runtime, children[1].(parser.IValueExpressionContext))
 		res.Name = ops + res.ValueExpression.Name
 
 	case 3: //BinaryValueExpression
-		op := gtype.NewOperatorFromString(children[1].(*antlr.TerminalNodeImpl).GetText())
+		op := datatype.NewOperatorFromString(children[1].(*antlr.TerminalNodeImpl).GetText())
 		res.BinaryValueExpression = NewBinaryValueExpressionNode(runtime, tt.GetLeft(), tt.GetRight(), op)
 		res.Name = res.BinaryValueExpression.Name
 	}
@@ -57,7 +57,7 @@ func (n *ValueExpressionNode) ExtractAggFunc(res *[]*FuncCallNode) {
 	}
 }
 
-func (n *ValueExpressionNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
+func (n *ValueExpressionNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
 	if n.PrimaryExpression != nil {
 		return n.PrimaryExpression.GetType(md)
 	} else if n.ValueExpression != nil {
@@ -65,7 +65,7 @@ func (n *ValueExpressionNode) GetType(md *metadata.Metadata) (gtype.Type, error)
 	} else if n.BinaryValueExpression != nil {
 		return n.BinaryValueExpression.GetType(md)
 	}
-	return gtype.UNKNOWNTYPE, fmt.Errorf("ValueExpressionNode type error")
+	return datatype.UnknownType, fmt.Errorf("ValueExpressionNode type error")
 }
 
 func (n *ValueExpressionNode) GetColumns() ([]string, error) {
@@ -97,14 +97,14 @@ func (n *ValueExpressionNode) Result(input *row.RowsGroup) (interface{}, error) 
 		return n.PrimaryExpression.Result(input)
 
 	} else if n.ValueExpression != nil {
-		if *n.Operator == gtype.MINUS {
+		if *n.Operator == datatype.MINUS {
 			resi, err := n.ValueExpression.Result(input)
 			if err != nil {
 				return nil, err
 			}
 			res := resi.([]interface{})
 			for i := 0; i < len(res); i++ {
-				res[i] = gtype.OperatorFunc(-1, res[i], gtype.ASTERISK)
+				res[i] = datatype.OperatorFunc(-1, res[i], datatype.ASTERISK)
 			}
 			return res, nil
 		}
@@ -133,14 +133,14 @@ type BinaryValueExpressionNode struct {
 	Name                 string
 	LeftValueExpression  *ValueExpressionNode
 	RightValueExpression *ValueExpressionNode
-	Operator             *gtype.Operator
+	Operator             *datatype.Operator
 }
 
 func NewBinaryValueExpressionNode(
 	runtime *config.Runtime,
 	left parser.IValueExpressionContext,
 	right parser.IValueExpressionContext,
-	op *gtype.Operator) *BinaryValueExpressionNode {
+	op *datatype.Operator) *BinaryValueExpressionNode {
 
 	res := &BinaryValueExpressionNode{
 		LeftValueExpression:  NewValueExpressionNode(runtime, left),
@@ -156,16 +156,23 @@ func (n *BinaryValueExpressionNode) ExtractAggFunc(res *[]*FuncCallNode) {
 	n.RightValueExpression.ExtractAggFunc(res)
 }
 
-func (n *BinaryValueExpressionNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
-	lt, errL := n.LeftValueExpression.GetType(md)
-	if errL != nil {
-		return lt, errL
+func (n *BinaryValueExpressionNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
+	lt, err := n.LeftValueExpression.GetType(md)
+	if err != nil {
+		return lt, err
 	}
-	rt, errR := n.RightValueExpression.GetType(md)
-	if errR != nil {
-		return rt, errR
+	rt, err := n.RightValueExpression.GetType(md)
+	if err != nil {
+		return rt, err
 	}
-	return gtype.CheckType(lt, rt, *n.Operator)
+
+	if lt != rt {
+		return datatype.UnknownType, fmt.Errorf("type not match")
+	} else if lt == datatype.UnknownType {
+		return datatype.UnknownType, fmt.Errorf("type can not recongized")
+	}
+
+	return lt, nil
 }
 
 func (n *BinaryValueExpressionNode) GetColumns() ([]string, error) {
@@ -216,7 +223,7 @@ func (n *BinaryValueExpressionNode) Result(input *row.RowsGroup) (interface{}, e
 	}
 	res := make([]interface{}, len(leftVals))
 	for i := 0; i < len(leftVals); i++ {
-		res[i] = gtype.OperatorFunc(leftVals[i], rightVals[i], *n.Operator)
+		res[i] = datatype.OperatorFunc(leftVals[i], rightVals[i], *n.Operator)
 	}
 	return res, nil
 }

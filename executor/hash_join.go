@@ -6,7 +6,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/plan"
@@ -31,7 +31,7 @@ func CalHashKey(es []*operator.ExpressionNode, rg *row.RowsGroup) (string, error
 		if err != nil {
 			return res, err
 		}
-		res += gtype.ToKeyString(r.([]interface{})[0]) + ":"
+		res += datatype.ToKeyString(r.([]interface{})[0]) + ":"
 	}
 	return res, nil
 }

@@ -3,7 +3,7 @@ package metadata
 import (
 	"fmt"
 
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 )
 
 type ColumnMetadata struct {
@@ -11,10 +11,10 @@ type ColumnMetadata struct {
 	Schema     string
 	Table      string
 	ColumnName string
-	ColumnType gtype.Type
+	ColumnType datatype.Type
 }
 
-func NewColumnMetadata(t gtype.Type, metrics ...string) *ColumnMetadata {
+func NewColumnMetadata(t datatype.Type, metrics ...string) *ColumnMetadata {
 	res := &ColumnMetadata{
 		Catalog:    "default",
 		Schema:     "default",

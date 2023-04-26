@@ -3,7 +3,7 @@ package operator
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/row"
@@ -32,11 +32,11 @@ func NewBooleanExpressionNode(runtime *config.Runtime, t parser.IBooleanExpressi
 		res.Name = res.NotBooleanExpression.Name
 
 	case 3: //Binary
-		var o gtype.Operator
+		var o datatype.Operator
 		if tt.AND() != nil {
-			o = gtype.AND
+			o = datatype.AND
 		} else if tt.OR() != nil {
-			o = gtype.OR
+			o = datatype.OR
 		}
 		res.BinaryBooleanExpression = NewBinaryBooleanExpressionNode(runtime, tt.GetLeft(), tt.GetRight(), o)
 		res.Name = res.BinaryBooleanExpression.Name
@@ -60,7 +60,7 @@ func (n *BooleanExpressionNode) ExtractAggFunc(res *[]*FuncCallNode) {
 	}
 }
 
-func (n *BooleanExpressionNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
+func (n *BooleanExpressionNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
 	if n.Predicated != nil {
 		return n.Predicated.GetType(md)
 	} else if n.NotBooleanExpression != nil {
@@ -68,7 +68,7 @@ func (n *BooleanExpressionNode) GetType(md *metadata.Metadata) (gtype.Type, erro
 	} else if n.BinaryBooleanExpression != nil {
 		return n.BinaryBooleanExpression.GetType(md)
 	}
-	return gtype.UNKNOWNTYPE, fmt.Errorf("GetType: wrong BooleanExpressionNode")
+	return datatype.UnknownType, fmt.Errorf("GetType: wrong BooleanExpressionNode")
 }
 
 func (n *BooleanExpressionNode) GetColumns() ([]string, error) {
@@ -132,12 +132,12 @@ func (n *NotBooleanExpressionNode) ExtractAggFunc(res *[]*FuncCallNode) {
 	n.BooleanExpression.ExtractAggFunc(res)
 }
 
-func (n *NotBooleanExpressionNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
+func (n *NotBooleanExpressionNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
 	t, err := n.BooleanExpression.GetType(md)
 	if err != nil {
 		return t, err
 	}
-	if t != gtype.BOOL {
+	if t != datatype.BOOL {
 		return t, fmt.Errorf("expression type error")
 	}
 	return t, nil
@@ -172,14 +172,14 @@ type BinaryBooleanExpressionNode struct {
 	Name                   string
 	LeftBooleanExpression  *BooleanExpressionNode
 	RightBooleanExpression *BooleanExpressionNode
-	Operator               *gtype.Operator
+	Operator               *datatype.Operator
 }
 
 func NewBinaryBooleanExpressionNode(
 	runtime *config.Runtime,
 	left parser.IBooleanExpressionContext,
 	right parser.IBooleanExpressionContext,
-	op gtype.Operator) *BinaryBooleanExpressionNode {
+	op datatype.Operator) *BinaryBooleanExpressionNode {
 
 	res := &BinaryBooleanExpressionNode{
 		LeftBooleanExpression:  NewBooleanExpressionNode(runtime, left),
@@ -195,23 +195,23 @@ func (n *BinaryBooleanExpressionNode) ExtractAggFunc(res *[]*FuncCallNode) {
 	n.RightBooleanExpression.ExtractAggFunc(res)
 }
 
-func (n *BinaryBooleanExpressionNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
+func (n *BinaryBooleanExpressionNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
 	lt, err1 := n.LeftBooleanExpression.GetType(md)
 	if err1 != nil {
-		return gtype.UNKNOWNTYPE, err1
+		return datatype.UnknownType, err1
 	}
-	if lt != gtype.BOOL {
+	if lt != datatype.BOOL {
 		return lt, fmt.Errorf("expression type error")
 	}
 	rt, err2 := n.RightBooleanExpression.GetType(md)
 	if err2 != nil {
-		return gtype.UNKNOWNTYPE, err2
+		return datatype.UnknownType, err2
 	}
-	if rt != gtype.BOOL {
+	if rt != datatype.BOOL {
 		return rt, fmt.Errorf("expression type error")
 	}
 
-	return gtype.BOOL, nil
+	return datatype.BOOL, nil
 }
 
 func (n *BinaryBooleanExpressionNode) GetColumns() ([]string, error) {
@@ -259,9 +259,9 @@ func (n *BinaryBooleanExpressionNode) Result(input *row.RowsGroup) (interface{},
 
 	leftRes, rightRes := leftResi.([]interface{}), rightResi.([]interface{})
 	for i := 0; i < input.GetRowsNumber(); i++ {
-		if *n.Operator == gtype.AND {
+		if *n.Operator == datatype.AND {
 			leftRes[i] = leftRes[i].(bool) && rightRes[i].(bool)
-		} else if *n.Operator == gtype.OR {
+		} else if *n.Operator == datatype.OR {
 			leftRes[i] = leftRes[i].(bool) || rightRes[i].(bool)
 		}
 	}

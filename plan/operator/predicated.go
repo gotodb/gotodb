@@ -2,7 +2,7 @@ package operator
 
 import (
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/row"
@@ -32,7 +32,7 @@ func (n *PredicatedNode) ExtractAggFunc(res *[]*FuncCallNode) {
 	}
 }
 
-func (n *PredicatedNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
+func (n *PredicatedNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
 	t, err := n.ValueExpression.GetType(md)
 	if err != nil {
 		return t, err

@@ -6,16 +6,16 @@ import (
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
 )
 
 type IFunc struct {
 	Name        string
-	Result      func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error)
+	Result      func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error)
 	IsAggregate func(es []*ExpressionNode) bool
-	GetType     func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error)
+	GetType     func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error)
 	Init        func()
 }
 
@@ -95,7 +95,7 @@ type FuncCallNode struct {
 	FuncName      string
 	ResColName    string //used in ExtractAggFunc
 	Func          *IFunc
-	SetQuantifier *gtype.QuantifierType
+	SetQuantifier *datatype.QuantifierType
 	Expressions   []*ExpressionNode
 }
 
@@ -111,7 +111,7 @@ func NewFuncCallNode(runtime *config.Runtime, name string, sq parser.ISetQuantif
 	}
 
 	if sq != nil {
-		q := gtype.StrToQuantifierType(sq.GetText())
+		q := datatype.ToQuantifierType(sq.GetText())
 		res.SetQuantifier = &q
 	}
 	return res
@@ -142,11 +142,11 @@ func (n *FuncCallNode) Result(input *row.RowsGroup) (interface{}, error) {
 	return nil, fmt.Errorf("unkown function %v", n.FuncName)
 }
 
-func (n *FuncCallNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
+func (n *FuncCallNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
 	if fun, ok := Funcs[n.FuncName]; ok {
 		return fun().GetType(md, n.Expressions)
 	}
-	return gtype.UNKNOWNTYPE, fmt.Errorf("unkown function %v", n.FuncName)
+	return datatype.UnknownType, fmt.Errorf("unkown function %v", n.FuncName)
 }
 
 func (n *FuncCallNode) GetColumns() ([]string, error) {

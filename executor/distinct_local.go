@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -86,7 +86,7 @@ func (e *Executor) RunDistinctLocal() (err error) {
 					distCols[i] = res.([]interface{})
 					mutex.Lock()
 					for j, c := range distCols[i] {
-						ckey := gtype.ToKeyString(c)
+						ckey := datatype.ToKeyString(c)
 						if _, ok := distinctMap[i][ckey]; ok {
 							distCols[i][j] = nil
 						} else {

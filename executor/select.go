@@ -2,7 +2,7 @@ package executor
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -61,7 +61,7 @@ func (e *Executor) RunSelect() error {
 		}
 
 		//for distinct
-		if job.SetQuantifier != nil && (*job.SetQuantifier) == gtype.DISTINCT {
+		if job.SetQuantifier != nil && (*job.SetQuantifier) == datatype.DISTINCT {
 			for i := 0; i < res.GetRowsNumber(); i++ {
 				r := res.GetRow(i)
 				key := fmt.Sprintf("%v", r)

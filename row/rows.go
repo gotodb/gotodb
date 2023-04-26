@@ -3,16 +3,16 @@ package row
 import (
 	"sort"
 
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 )
 
 // Rows for sort rows
 type Rows struct {
 	Data  []*Row
-	Order []gtype.OrderType
+	Order []datatype.OrderType
 }
 
-func NewRows(order []gtype.OrderType) *Rows {
+func NewRows(order []datatype.OrderType) *Rows {
 	return &Rows{
 		Data:  []*Row{},
 		Order: order,
@@ -41,11 +41,11 @@ func (r *Rows) Less(i, j int) bool {
 	rowi, rowj := r.Data[i], r.Data[j]
 	for k := 0; k < len(r.Order); k++ {
 		vi, vj := rowi.Keys[k], rowj.Keys[k]
-		if gtype.EQFunc(vi, vj).(bool) {
+		if datatype.EQFunc(vi, vj).(bool) {
 			continue
 		}
-		res := gtype.LTFunc(vi, vj).(bool)
-		if r.Order[k] == gtype.DESC {
+		res := datatype.LTFunc(vi, vj).(bool)
+		if r.Order[k] == datatype.DESC {
 			res = !res
 		}
 		return res

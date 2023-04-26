@@ -3,7 +3,7 @@ package plan
 import (
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/connector"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 )
 
@@ -110,18 +110,18 @@ func (n *ShowNode) SetMetadata() error {
 	res := metadata.NewMetadata()
 	switch n.ShowType {
 	case ShowCatalogs:
-		col := metadata.NewColumnMetadata(gtype.STRING, "*", "*", "*", "catalog")
+		col := metadata.NewColumnMetadata(datatype.STRING, "*", "*", "*", "catalog")
 		res.AppendColumn(col)
 	case ShowTables:
-		col := metadata.NewColumnMetadata(gtype.STRING, n.Catalog, n.Schema, "*", "table")
+		col := metadata.NewColumnMetadata(datatype.STRING, n.Catalog, n.Schema, "*", "table")
 		res.AppendColumn(col)
 	case ShowSchemas:
-		col := metadata.NewColumnMetadata(gtype.STRING, n.Catalog, "*", "*", "schema")
+		col := metadata.NewColumnMetadata(datatype.STRING, n.Catalog, "*", "*", "schema")
 		res.AppendColumn(col)
 	case ShowColumns:
-		col := metadata.NewColumnMetadata(gtype.STRING, n.Catalog, n.Schema, n.Table, "NAME")
+		col := metadata.NewColumnMetadata(datatype.STRING, n.Catalog, n.Schema, n.Table, "NAME")
 		res.AppendColumn(col)
-		col = metadata.NewColumnMetadata(gtype.STRING, n.Catalog, n.Schema, n.Table, "TYPE")
+		col = metadata.NewColumnMetadata(datatype.STRING, n.Catalog, n.Schema, n.Table, "TYPE")
 		res.AppendColumn(col)
 	case ShowPartitions:
 		ctr, err := connector.NewConnector(n.Catalog, n.Schema, n.Table)

@@ -3,7 +3,7 @@ package plan
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/plan/operator"
@@ -49,7 +49,7 @@ func (n *GroupByNode) SetMetadata() (err error) {
 		return err
 	}
 	n.Metadata = n.Input.GetMetadata().Copy()
-	n.Metadata.AppendKeyByType(gtype.STRING)
+	n.Metadata.AppendKeyByType(datatype.STRING)
 	return nil
 }
 

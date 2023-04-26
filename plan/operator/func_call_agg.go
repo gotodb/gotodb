@@ -2,7 +2,7 @@ package operator
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
 )
@@ -36,11 +36,11 @@ func NewCountGlobalFunc() *IFunc {
 			funcRes = make(map[string]interface{})
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.INT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.INT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in SUM")
 			}
@@ -60,7 +60,7 @@ func NewCountGlobalFunc() *IFunc {
 				if _, ok := funcRes[key]; !ok || funcRes[key] == nil {
 					funcRes[key] = es[i]
 				} else if es[i] != nil {
-					funcRes[key] = gtype.OperatorFunc(funcRes[key], es[i], gtype.PLUS)
+					funcRes[key] = datatype.OperatorFunc(funcRes[key], es[i], datatype.PLUS)
 				}
 			}
 			return funcRes, err
@@ -82,11 +82,11 @@ func NewCountFunc() *IFunc {
 			funcRes = make(map[string]interface{})
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.INT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.INT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in SUM")
 			}
@@ -138,14 +138,14 @@ func NewSumFunc() *IFunc {
 			funcRes = make(map[string]interface{})
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
 			if len(es) < 1 {
-				return gtype.UNKNOWNTYPE, fmt.Errorf("not enough parameters in SUM")
+				return datatype.UnknownType, fmt.Errorf("not enough parameters in SUM")
 			}
 			return es[0].GetType(md)
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in SUM")
 			}
@@ -169,7 +169,7 @@ func NewSumFunc() *IFunc {
 				if _, ok := funcRes[key]; !ok || funcRes[key] == nil {
 					funcRes[key] = es[i]
 				} else if es[i] != nil {
-					funcRes[key] = gtype.OperatorFunc(funcRes[key], es[i], gtype.PLUS)
+					funcRes[key] = datatype.OperatorFunc(funcRes[key], es[i], datatype.PLUS)
 				}
 			}
 			return funcRes, err
@@ -191,11 +191,11 @@ func NewAvgGlobalFunc() *IFunc {
 			funcRes = make(map[string]interface{})
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in AVG")
 			}
@@ -249,11 +249,11 @@ func NewAvgFunc() *IFunc {
 			funcRes = make(map[string]interface{})
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.FLOAT64, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.FLOAT64, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in AVG")
 			}
@@ -279,7 +279,7 @@ func NewAvgFunc() *IFunc {
 				} else if es[i] != nil {
 					var sumc, cntc float64
 					fmt.Sscanf(funcRes[key].(string), "%f:%f", &sumc, &cntc)
-					sumc = sumc + gtype.ToFloat64(es[i])
+					sumc = sumc + datatype.ToFloat64(es[i])
 					cntc = cntc + float64(1)
 					funcRes[key] = fmt.Sprintf("%v:%v", sumc, cntc)
 				}
@@ -309,14 +309,14 @@ func NewMinFunc() *IFunc {
 			funcRes = make(map[string]interface{})
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
 			if len(es) < 1 {
-				return gtype.UNKNOWNTYPE, fmt.Errorf("not enough parameters in MIN")
+				return datatype.UnknownType, fmt.Errorf("not enough parameters in MIN")
 			}
 			return es[0].GetType(md)
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in MIN")
 			}
@@ -340,7 +340,7 @@ func NewMinFunc() *IFunc {
 				if _, ok := funcRes[key]; !ok || funcRes[key] == nil {
 					funcRes[key] = es[i]
 				} else if es[i] != nil {
-					if gtype.GTFunc(funcRes[key], es[i]).(bool) {
+					if datatype.GTFunc(funcRes[key], es[i]).(bool) {
 						funcRes[key] = es[i]
 					}
 				}
@@ -370,14 +370,14 @@ func NewMaxFunc() *IFunc {
 			funcRes = make(map[string]interface{})
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
 			if len(es) < 1 {
-				return gtype.UNKNOWNTYPE, fmt.Errorf("not enough parameters in MAX")
+				return datatype.UnknownType, fmt.Errorf("not enough parameters in MAX")
 			}
 			return es[0].GetType(md)
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in MAX")
 			}
@@ -400,7 +400,7 @@ func NewMaxFunc() *IFunc {
 				if _, ok := funcRes[key]; !ok || funcRes[key] == nil {
 					funcRes[key] = es[i]
 				} else if es[i] != nil {
-					if gtype.LTFunc(funcRes[key], es[i]).(bool) {
+					if datatype.LTFunc(funcRes[key], es[i]).(bool) {
 						funcRes[key] = es[i]
 					}
 				}

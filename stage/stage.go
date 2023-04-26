@@ -2,7 +2,7 @@ package stage
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/partition"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/plan"
@@ -216,7 +216,7 @@ func createJob(inode plan.Node, jobs *[]Job, executorHeap Worker, pn int) ([]Job
 		if err != nil {
 			return res, err
 		}
-		if node.SetQuantifier == nil || (*node.SetQuantifier != gtype.DISTINCT) || len(inputJobs) == 1 {
+		if node.SetQuantifier == nil || (*node.SetQuantifier != datatype.DISTINCT) || len(inputJobs) == 1 {
 			var inputs []*pb.Location
 			for _, inputNode := range inputJobs {
 				inputs = append(inputs, inputNode.GetOutputs()...)

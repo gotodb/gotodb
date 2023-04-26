@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/antlr/antlr4/runtime/Go/antlr/v4"
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/optimizer"
 	"github.com/gotodb/gotodb/pb"
@@ -226,7 +226,7 @@ func Query(w http.ResponseWriter, req *http.Request) {
 			line := make(map[string]interface{})
 			for i := 0; i < len(r.Vals); i++ {
 				col := md.Columns[i]
-				line[col.ColumnName] = gtype.ToType(r.Vals[i], col.ColumnType)
+				line[col.ColumnName] = datatype.ToValue(r.Vals[i], col.ColumnType)
 			}
 			res = append(res, line)
 		}

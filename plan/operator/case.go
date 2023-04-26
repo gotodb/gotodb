@@ -3,7 +3,7 @@ package operator
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/row"
@@ -57,11 +57,11 @@ func (n *CaseNode) GetColumns() ([]string, error) {
 	return res, nil
 }
 
-func (n *CaseNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
+func (n *CaseNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
 	for _, w := range n.Whens {
 		return w.GetType(md)
 	}
-	return gtype.UNKNOWNTYPE, fmt.Errorf("unknown type")
+	return datatype.UnknownType, fmt.Errorf("unknown type")
 }
 
 func (n *CaseNode) Init(md *metadata.Metadata) error {
@@ -142,7 +142,7 @@ func (n *WhenClauseNode) GetColumns() ([]string, error) {
 	return res, nil
 }
 
-func (n *WhenClauseNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
+func (n *WhenClauseNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
 	return n.Res.GetType(md)
 }
 

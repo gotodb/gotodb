@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/plan/operator"
 	"github.com/gotodb/gotodb/row"
@@ -50,7 +50,7 @@ func NewFileMetadata(conf *config.FileConnector) (*metadata.Metadata, error) {
 			Schema:     conf.Schema,
 			Table:      conf.Table,
 			ColumnName: conf.ColumnNames[i],
-			ColumnType: gtype.NameToType(conf.ColumnTypes[i]),
+			ColumnType: datatype.FromString(conf.ColumnTypes[i]),
 		}
 		res.AppendColumn(col)
 	}

@@ -5,7 +5,7 @@ import (
 	"github.com/gotodb/gotodb/pkg/parser"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
 )
@@ -53,13 +53,13 @@ func (n *NumberNode) Result(input *row.RowsGroup) (interface{}, error) {
 	return res, nil
 }
 
-func (n *NumberNode) GetType(_ *metadata.Metadata) (gtype.Type, error) {
+func (n *NumberNode) GetType(_ *metadata.Metadata) (datatype.Type, error) {
 	if n.DoubleVal != nil {
-		return gtype.FLOAT64, nil
+		return datatype.FLOAT64, nil
 	} else if n.IntVal != nil {
-		return gtype.INT64, nil
+		return datatype.INT64, nil
 	}
-	return gtype.UNKNOWNTYPE, fmt.Errorf("wrong NumberNode")
+	return datatype.UnknownType, fmt.Errorf("wrong NumberNode")
 }
 
 func (n *NumberNode) GetText() string {

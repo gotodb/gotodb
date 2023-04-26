@@ -3,7 +3,7 @@ package operator
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/likematcher"
 	"github.com/gotodb/gotodb/pkg/parser"
@@ -12,7 +12,7 @@ import (
 
 type PredicateNode struct {
 	Type                   PredicateType
-	ComparisonOperator     *gtype.Operator
+	ComparisonOperator     *datatype.Operator
 	IsNot                  bool
 	FirstValueExpression   *ValueExpressionNode
 	SecondValueExpression  *ValueExpressionNode
@@ -51,10 +51,10 @@ func NewPredicateNode(runtime *config.Runtime, t parser.IPredicateContext) *Pred
 			// IS NOT? DISTINCT FROM right=valueExpression
 			res.Type = PredicateTypeDistinctFrom
 			if res.IsNot {
-				op := gtype.EQ
+				op := datatype.EQ
 				res.ComparisonOperator = &op
 			} else {
-				op := gtype.NEQ
+				op := datatype.NEQ
 				res.ComparisonOperator = &op
 			}
 		}
@@ -82,8 +82,8 @@ func NewPredicateNode(runtime *config.Runtime, t parser.IPredicateContext) *Pred
 	return res
 }
 
-func (n *PredicateNode) GetType(_ *metadata.Metadata) (gtype.Type, error) {
-	return gtype.BOOL, nil
+func (n *PredicateNode) GetType(_ *metadata.Metadata) (datatype.Type, error) {
+	return datatype.BOOL, nil
 }
 
 func (n *PredicateNode) ExtractAggFunc(res *[]*FuncCallNode) {
@@ -168,7 +168,7 @@ func (n *PredicateNode) Result(valsi interface{}, input *row.RowsGroup) (interfa
 		}
 		vals, res := valsi.([]interface{}), resi.([]interface{})
 		for i := 0; i < len(res); i++ {
-			res[i] = gtype.OperatorFunc(vals[i], res[i], *n.ComparisonOperator)
+			res[i] = datatype.OperatorFunc(vals[i], res[i], *n.ComparisonOperator)
 		}
 		return res, nil
 
@@ -188,7 +188,7 @@ func (n *PredicateNode) Result(valsi interface{}, input *row.RowsGroup) (interfa
 		res := make([]interface{}, len(vals))
 
 		for i := 0; i < len(res); i++ {
-			res[i] = gtype.OperatorFunc(vals[i], lower[i], gtype.GTE).(bool) && gtype.OperatorFunc(vals[i], upper[i], gtype.LTE).(bool)
+			res[i] = datatype.OperatorFunc(vals[i], lower[i], datatype.GTE).(bool) && datatype.OperatorFunc(vals[i], upper[i], datatype.LTE).(bool)
 			if n.IsNot {
 				res[i] = !res[i].(bool)
 			}
@@ -209,7 +209,7 @@ func (n *PredicateNode) Result(valsi interface{}, input *row.RowsGroup) (interfa
 
 		for i := 0; i < len(res); i++ {
 			for _, item := range inItems {
-				res[i] = gtype.EQFunc(vals[i], item.([]interface{})[i])
+				res[i] = datatype.EQFunc(vals[i], item.([]interface{})[i])
 				if res[i].(bool) {
 					break
 				}
@@ -246,7 +246,7 @@ func (n *PredicateNode) Result(valsi interface{}, input *row.RowsGroup) (interfa
 		vals := valsi.([]interface{})
 		res := make([]interface{}, len(vals))
 		for i := 0; i < len(res); i++ {
-			res[i] = matcher.Match([]byte(gtype.ToString(vals[i])))
+			res[i] = matcher.Match([]byte(datatype.ToString(vals[i])))
 			if n.IsNot {
 				res[i] = !res[i].(bool)
 			}

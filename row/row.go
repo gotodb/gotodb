@@ -1,7 +1,7 @@
 package row
 
 import (
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 )
 
 type Row struct {
@@ -32,7 +32,7 @@ func (r *Row) GetKeyString() string {
 		r.Keys = []interface{}{}
 	}
 	for _, key := range r.Keys {
-		res += gtype.ToKeyString(key) + ":"
+		res += datatype.ToKeyString(key) + ":"
 	}
 	return res
 }

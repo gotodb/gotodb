@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -44,7 +44,7 @@ func (e *Executor) RunShuffle() error {
 	//write md
 	if job.Keys != nil && len(job.Keys) > 0 {
 		mdOutput.ClearKeys()
-		mdOutput.AppendKeyByType(gtype.STRING)
+		mdOutput.AppendKeyByType(datatype.STRING)
 	}
 	for _, writer := range e.Writers {
 		if err := util.WriteObject(writer, mdOutput); err != nil {

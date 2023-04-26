@@ -1,4 +1,4 @@
-package gtype
+package datatype
 
 type Operator int32
 
@@ -52,11 +52,11 @@ func NewOperatorFromString(name string) *Operator {
 	return &res
 }
 
-func PLUSFunc(va interface{}, vb interface{}) interface{} {
+func PLUSFunc(va any, vb any) any {
 	if va == nil || vb == nil {
 		return nil
 	} else {
-		va, vb = ToSameType(va, vb)
+		va, vb = ToSameTypeValue(va, vb)
 		t := TypeOf(va)
 		switch t {
 		case BOOL:
@@ -90,11 +90,11 @@ func PLUSFunc(va interface{}, vb interface{}) interface{} {
 	return nil
 }
 
-func MINUSFunc(va interface{}, vb interface{}) interface{} {
+func MINUSFunc(va any, vb any) any {
 	if va == nil || vb == nil {
 		return nil
 	} else {
-		va, vb = ToSameType(va, vb)
+		va, vb = ToSameTypeValue(va, vb)
 		t := TypeOf(va)
 		switch t {
 		case BOOL:
@@ -130,11 +130,11 @@ func MINUSFunc(va interface{}, vb interface{}) interface{} {
 	return nil
 }
 
-func ASTERISKFunc(va interface{}, vb interface{}) interface{} {
+func ASTERISKFunc(va any, vb any) any {
 	if va == nil || vb == nil {
 		return nil
 	} else {
-		va, vb = ToSameType(va, vb)
+		va, vb = ToSameTypeValue(va, vb)
 		t := TypeOf(va)
 		switch t {
 		case BOOL:
@@ -170,11 +170,11 @@ func ASTERISKFunc(va interface{}, vb interface{}) interface{} {
 	return nil
 }
 
-func SLASHFunc(va interface{}, vb interface{}) interface{} {
+func SLASHFunc(va any, vb any) any {
 	if va == nil || vb == nil {
 		return nil
 	} else {
-		va, vb = ToSameType(va, vb)
+		va, vb = ToSameTypeValue(va, vb)
 		t := TypeOf(va)
 		switch t {
 		case BOOL:
@@ -240,11 +240,11 @@ func SLASHFunc(va interface{}, vb interface{}) interface{} {
 	return nil
 }
 
-func PERCENTFunc(va interface{}, vb interface{}) interface{} {
+func PERCENTFunc(va any, vb any) any {
 	if va == nil || vb == nil {
 		return nil
 	} else {
-		va, vb = ToSameType(va, vb)
+		va, vb = ToSameTypeValue(va, vb)
 		t := TypeOf(va)
 		switch t {
 		case BOOL:
@@ -304,7 +304,7 @@ func PERCENTFunc(va interface{}, vb interface{}) interface{} {
 	return nil
 }
 
-func ANDFunc(va interface{}, vb interface{}) interface{} {
+func ANDFunc(va any, vb any) any {
 	if va == nil || vb == nil {
 		return nil
 	} else {
@@ -312,7 +312,7 @@ func ANDFunc(va interface{}, vb interface{}) interface{} {
 	}
 }
 
-func ORFunc(va interface{}, vb interface{}) interface{} {
+func ORFunc(va any, vb any) any {
 	if va == nil || vb == nil {
 		return nil
 	} else {
@@ -320,16 +320,16 @@ func ORFunc(va interface{}, vb interface{}) interface{} {
 	}
 }
 
-func EQFunc(va interface{}, vb interface{}) interface{} {
-	va, vb = ToSameType(va, vb)
+func EQFunc(va any, vb any) any {
+	va, vb = ToSameTypeValue(va, vb)
 	return va == vb
 }
 
-func NEQFunc(va interface{}, vb interface{}) interface{} {
+func NEQFunc(va any, vb any) any {
 	return !EQFunc(va, vb).(bool)
 }
 
-func LTFunc(va interface{}, vb interface{}) interface{} {
+func LTFunc(va any, vb any) any {
 	if va == nil && vb != nil {
 		return true
 	} else if va != nil && vb == nil {
@@ -339,7 +339,7 @@ func LTFunc(va interface{}, vb interface{}) interface{} {
 	} else if va == vb {
 		return false
 	} else {
-		va, vb = ToSameType(va, vb)
+		va, vb = ToSameTypeValue(va, vb)
 		t := TypeOf(va)
 		switch t {
 		case BOOL:
@@ -381,7 +381,7 @@ func LTFunc(va interface{}, vb interface{}) interface{} {
 	return false
 }
 
-func LTEFunc(va interface{}, vb interface{}) interface{} {
+func LTEFunc(va any, vb any) any {
 	if va == nil && vb != nil {
 		return true
 	} else if va != nil && vb == nil {
@@ -391,7 +391,7 @@ func LTEFunc(va interface{}, vb interface{}) interface{} {
 	} else if va == vb {
 		return true
 	} else {
-		va, vb = ToSameType(va, vb)
+		va, vb = ToSameTypeValue(va, vb)
 		t := TypeOf(va)
 		switch t {
 		case BOOL:
@@ -433,7 +433,7 @@ func LTEFunc(va interface{}, vb interface{}) interface{} {
 	return false
 }
 
-func GTFunc(va interface{}, vb interface{}) interface{} {
+func GTFunc(va any, vb any) any {
 	if va == nil && vb != nil {
 		return true
 	} else if va != nil && vb == nil {
@@ -443,7 +443,7 @@ func GTFunc(va interface{}, vb interface{}) interface{} {
 	} else if va == vb {
 		return false
 	} else {
-		va, vb = ToSameType(va, vb)
+		va, vb = ToSameTypeValue(va, vb)
 		t := TypeOf(va)
 		switch t {
 		case BOOL:
@@ -485,7 +485,7 @@ func GTFunc(va interface{}, vb interface{}) interface{} {
 	return false
 }
 
-func GTEFunc(va interface{}, vb interface{}) interface{} {
+func GTEFunc(va any, vb any) any {
 	if va == nil && vb != nil {
 		return true
 	} else if va != nil && vb == nil {
@@ -495,9 +495,8 @@ func GTEFunc(va interface{}, vb interface{}) interface{} {
 	} else if va == vb {
 		return true
 	} else {
-		va, vb = ToSameType(va, vb)
-		t := TypeOf(va)
-		switch t {
+		va, vb = ToSameTypeValue(va, vb)
+		switch TypeOf(va) {
 		case BOOL:
 			a, b := va.(bool), vb.(bool)
 			if (a && !b) || (a == b) {
@@ -537,7 +536,7 @@ func GTEFunc(va interface{}, vb interface{}) interface{} {
 	return false
 }
 
-func OperatorFunc(va interface{}, vb interface{}, op Operator) interface{} {
+func OperatorFunc(va any, vb any, op Operator) any {
 	switch op {
 	case AND:
 		return ANDFunc(va, vb)

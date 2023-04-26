@@ -2,7 +2,7 @@ package executor
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/row"
@@ -72,7 +72,7 @@ func (e *Executor) RunUnion() error {
 			for i, column := range readerMDs[index].Columns {
 				if column.ColumnType != md.Columns[i].ColumnType {
 					for j := range rg.Vals {
-						rg.Vals[i][j] = gtype.ToType(rg.Vals[i][j], md.Columns[i].ColumnType)
+						rg.Vals[i][j] = datatype.ToValue(rg.Vals[i][j], md.Columns[i].ColumnType)
 					}
 				}
 			}

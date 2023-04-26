@@ -2,7 +2,7 @@ package operator
 
 import (
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/row"
@@ -31,7 +31,7 @@ func (n *GroupingElementNode) GetColumns() ([]string, error) {
 	return n.Expression.GetColumns()
 }
 
-func (n *GroupingElementNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
+func (n *GroupingElementNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
 	return n.Expression.GetType(md)
 }
 

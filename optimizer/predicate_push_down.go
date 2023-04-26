@@ -1,12 +1,12 @@
 package optimizer
 
 import (
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/plan"
 	"github.com/gotodb/gotodb/plan/operator"
 )
 
-func ExtractPredicates(node *operator.BooleanExpressionNode, t gtype.Operator) []*operator.BooleanExpressionNode {
+func ExtractPredicates(node *operator.BooleanExpressionNode, t datatype.Operator) []*operator.BooleanExpressionNode {
 	var res []*operator.BooleanExpressionNode
 	if node.Predicated != nil {
 		res = append(res, node)
@@ -40,7 +40,7 @@ func PredicatePushDown(node plan.Node, predicates []*operator.BooleanExpressionN
 	case *plan.FilterNode:
 		filterNode := node.(*plan.FilterNode)
 		for _, be := range filterNode.BooleanExpressions {
-			predicates = append(predicates, ExtractPredicates(be, gtype.AND)...)
+			predicates = append(predicates, ExtractPredicates(be, datatype.AND)...)
 		}
 
 		inputs := filterNode.GetInputs()

@@ -2,7 +2,7 @@ package operator
 
 import (
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/row"
@@ -10,19 +10,19 @@ import (
 
 type SortItemNode struct {
 	Expression *ExpressionNode
-	OrderType  gtype.OrderType
+	OrderType  datatype.OrderType
 }
 
 func NewSortItemNode(runtime *config.Runtime, t parser.ISortItemContext) *SortItemNode {
 	tt := t.(*parser.SortItemContext)
 	res := &SortItemNode{
 		Expression: NewExpressionNode(runtime, tt.Expression()),
-		OrderType:  gtype.ASC,
+		OrderType:  datatype.ASC,
 	}
 
 	if ot := tt.GetOrdering(); ot != nil {
 		if ot.GetText() != "ASC" {
-			res.OrderType = gtype.DESC
+			res.OrderType = datatype.DESC
 		}
 	}
 
@@ -45,6 +45,6 @@ func (n *SortItemNode) IsAggregate() bool {
 	return n.Expression.IsAggregate()
 }
 
-func (n *SortItemNode) GetType(md *metadata.Metadata) (gtype.Type, error) {
+func (n *SortItemNode) GetType(md *metadata.Metadata) (datatype.Type, error) {
 	return n.Expression.GetType(md)
 }

@@ -5,14 +5,14 @@ import (
 	"github.com/gotodb/gotodb/plan/operator"
 	"math/rand"
 
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/plan"
 )
 
 func ExtractDistinctExpressions(funcs []*operator.FuncCallNode) []*operator.ExpressionNode {
 	var res []*operator.ExpressionNode
 	for _, f := range funcs {
-		if f.SetQuantifier != nil && (*f.SetQuantifier) == gtype.DISTINCT {
+		if f.SetQuantifier != nil && (*f.SetQuantifier) == datatype.DISTINCT {
 			res = append(res, f.Expressions...)
 			colName := fmt.Sprintf("DIST_%v_%v", len(res), rand.Int())
 			f.Expressions[0].Name = colName

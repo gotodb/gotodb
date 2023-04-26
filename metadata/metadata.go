@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 )
 
 type Metadata struct {
@@ -40,8 +40,8 @@ func (m *Metadata) GetColumnNames() []string {
 	return res
 }
 
-func (m *Metadata) GetColumnTypes() []gtype.Type {
-	var res []gtype.Type
+func (m *Metadata) GetColumnTypes() []datatype.Type {
+	var res []datatype.Type
 	for _, c := range m.Columns {
 		res = append(res, c.ColumnType)
 	}
@@ -83,24 +83,24 @@ func (m *Metadata) GetKeyNumber() int {
 	return len(m.Keys)
 }
 
-func (m *Metadata) GetTypeByIndex(index int) (gtype.Type, error) {
+func (m *Metadata) GetTypeByIndex(index int) (datatype.Type, error) {
 	if index >= len(m.Columns) {
-		return gtype.UNKNOWNTYPE, fmt.Errorf("index out of range")
+		return datatype.UnknownType, fmt.Errorf("index out of range")
 	}
 	return m.Columns[index].ColumnType, nil
 }
 
-func (m *Metadata) GetKeyTypeByIndex(index int) (gtype.Type, error) {
+func (m *Metadata) GetKeyTypeByIndex(index int) (datatype.Type, error) {
 	if index >= len(m.Keys) {
-		return gtype.UNKNOWNTYPE, fmt.Errorf("index out of range")
+		return datatype.UnknownType, fmt.Errorf("index out of range")
 	}
 	return m.Keys[index].ColumnType, nil
 }
 
-func (m *Metadata) GetTypeByName(name string) (gtype.Type, error) {
+func (m *Metadata) GetTypeByName(name string) (datatype.Type, error) {
 	index, ok := m.ColumnMap[name]
 	if !ok {
-		return gtype.UNKNOWNTYPE, fmt.Errorf("unknown column name: %v", name)
+		return datatype.UnknownType, fmt.Errorf("unknown column name: %v", name)
 	}
 	return m.GetTypeByIndex(index)
 }
@@ -122,7 +122,7 @@ func (m *Metadata) AppendKey(key *ColumnMetadata) {
 	m.Keys = append(m.Keys, key)
 }
 
-func (m *Metadata) AppendKeyByType(t gtype.Type) {
+func (m *Metadata) AppendKeyByType(t datatype.Type) {
 	k := &ColumnMetadata{
 		ColumnType: t,
 	}

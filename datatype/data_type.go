@@ -1,4 +1,4 @@
-package gtype
+package datatype
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 type Type int32
 
 const (
-	UNKNOWNTYPE Type = iota
+	UnknownType Type = iota
 	STRING
 	FLOAT64
 	FLOAT32
@@ -26,6 +26,22 @@ const (
 	TIMESTAMP
 	DATE
 )
+
+type Date struct {
+	Sec int64
+}
+
+func (d Date) String() string {
+	return time.Unix(d.Sec, 0).Format("2006-01-02")
+}
+
+type Timestamp struct {
+	Sec int64
+}
+
+func (ts Timestamp) String() string {
+	return time.Unix(ts.Sec, 0).Format("2006-01-02 15:04:05")
+}
 
 func (t Type) String() string {
 	switch t {
@@ -58,10 +74,10 @@ func (t Type) String() string {
 	case DATE:
 		return "DATE"
 	}
-	return "UNKNOWNTYPE"
+	return "UnknownType"
 }
 
-func ConvertMysqlType(name string, unsigned bool) Type {
+func FromMysql(name string, unsigned bool) Type {
 	switch name {
 	case "varchar", "decimal", "text":
 		return STRING
@@ -96,11 +112,11 @@ func ConvertMysqlType(name string, unsigned bool) Type {
 	case "datetime":
 		return STRING
 	default:
-		return UNKNOWNTYPE
+		return UnknownType
 	}
 }
 
-func NameToType(name string) Type {
+func FromString(name string) Type {
 	switch name {
 	case "STRING":
 		return STRING
@@ -131,11 +147,11 @@ func NameToType(name string) Type {
 	case "DATE":
 		return DATE
 	default:
-		return UNKNOWNTYPE
+		return UnknownType
 	}
 }
 
-func TypeOf(v interface{}) Type {
+func TypeOf(v any) Type {
 	switch v.(type) {
 	case bool:
 		return BOOL
@@ -166,15 +182,21 @@ func TypeOf(v interface{}) Type {
 	case Date:
 		return DATE
 	default:
-		return UNKNOWNTYPE
+		return UnknownType
 	}
 }
 
-func ToString(v interface{}) string {
-	return fmt.Sprintf("%v", v)
+func ToString(iv any) string {
+	switch v := iv.(type) {
+	case []byte:
+		return string(v)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
+
 }
 
-func ToInt8(iv interface{}) int8 {
+func ToInt8(iv any) int8 {
 	var res int8
 	switch v := iv.(type) {
 	case bool:
@@ -203,20 +225,23 @@ func ToInt8(iv interface{}) int8 {
 		res = int8(v)
 	case string:
 		tmp, err := strconv.ParseInt(v, 10, 64)
-		if err != nil {
-			res = 0
-		} else {
+		if err == nil {
 			res = int8(tmp)
 		}
 	case Timestamp:
 		res = int8(v.Sec)
 	case Date:
 		res = int8(v.Sec)
+	case []byte:
+		d, err := strconv.ParseInt(string(v), 10, 8)
+		if err == nil {
+			res = int8(d)
+		}
 	}
 	return res
 }
 
-func ToInt16(iv interface{}) int16 {
+func ToInt16(iv any) int16 {
 	var res int16
 	switch v := iv.(type) {
 	case bool:
@@ -245,20 +270,23 @@ func ToInt16(iv interface{}) int16 {
 		res = int16(v)
 	case string:
 		tmp, err := strconv.ParseInt(v, 10, 64)
-		if err != nil {
-			res = 0
-		} else {
+		if err == nil {
 			res = int16(tmp)
 		}
 	case Timestamp:
 		res = int16(v.Sec)
 	case Date:
 		res = int16(v.Sec)
+	case []byte:
+		d, err := strconv.ParseInt(string(v), 10, 16)
+		if err == nil {
+			res = int16(d)
+		}
 	}
 	return res
 }
 
-func ToInt32(iv interface{}) int32 {
+func ToInt32(iv any) int32 {
 	var res int32
 	switch v := iv.(type) {
 	case bool:
@@ -287,20 +315,23 @@ func ToInt32(iv interface{}) int32 {
 		res = int32(v)
 	case string:
 		tmp, err := strconv.ParseInt(v, 10, 64)
-		if err != nil {
-			res = 0
-		} else {
+		if err == nil {
 			res = int32(tmp)
 		}
 	case Timestamp:
 		res = int32(v.Sec)
 	case Date:
 		res = int32(v.Sec)
+	case []byte:
+		d, err := strconv.ParseInt(string(v), 10, 32)
+		if err == nil {
+			res = int32(d)
+		}
 	}
 	return res
 }
 
-func ToInt64(iv interface{}) int64 {
+func ToInt64(iv any) int64 {
 	var res int64
 	switch v := iv.(type) {
 	case bool:
@@ -329,20 +360,23 @@ func ToInt64(iv interface{}) int64 {
 		res = int64(v)
 	case string:
 		tmp, err := strconv.ParseInt(v, 10, 64)
-		if err != nil {
-			res = 0
-		} else {
+		if err == nil {
 			res = tmp
 		}
 	case time.Time:
 		res = v.Unix()
 	case Date:
 		res = v.Sec
+	case []byte:
+		d, err := strconv.ParseInt(string(v), 10, 64)
+		if err == nil {
+			res = d
+		}
 	}
 	return res
 }
 
-func ToUint8(iv interface{}) uint8 {
+func ToUint8(iv any) uint8 {
 	var res uint8
 	switch v := iv.(type) {
 	case bool:
@@ -371,20 +405,23 @@ func ToUint8(iv interface{}) uint8 {
 		res = uint8(v)
 	case string:
 		tmp, err := strconv.ParseUint(v, 10, 64)
-		if err != nil {
-			res = 0
-		} else {
+		if err == nil {
 			res = uint8(tmp)
 		}
 	case Timestamp:
 		res = uint8(v.Sec)
 	case Date:
 		res = uint8(v.Sec)
+	case []byte:
+		d, err := strconv.ParseUint(string(v), 10, 8)
+		if err == nil {
+			res = uint8(d)
+		}
 	}
 	return res
 }
 
-func ToUint16(iv interface{}) uint16 {
+func ToUint16(iv any) uint16 {
 	var res uint16
 	switch v := iv.(type) {
 	case bool:
@@ -413,20 +450,23 @@ func ToUint16(iv interface{}) uint16 {
 		res = uint16(v)
 	case string:
 		tmp, err := strconv.ParseUint(v, 10, 64)
-		if err != nil {
-			res = 0
-		} else {
+		if err == nil {
 			res = uint16(tmp)
 		}
 	case Timestamp:
 		res = uint16(v.Sec)
 	case Date:
 		res = uint16(v.Sec)
+	case []byte:
+		d, err := strconv.ParseUint(string(v), 10, 16)
+		if err == nil {
+			res = uint16(d)
+		}
 	}
 	return res
 }
 
-func ToUint32(iv interface{}) uint32 {
+func ToUint32(iv any) uint32 {
 	var res uint32
 	switch v := iv.(type) {
 	case bool:
@@ -455,20 +495,23 @@ func ToUint32(iv interface{}) uint32 {
 		res = uint32(v)
 	case string:
 		tmp, err := strconv.ParseUint(v, 10, 64)
-		if err != nil {
-			res = 0
-		} else {
+		if err == nil {
 			res = uint32(tmp)
 		}
 	case Timestamp:
 		res = uint32(v.Sec)
 	case Date:
 		res = uint32(v.Sec)
+	case []byte:
+		d, err := strconv.ParseUint(string(v), 10, 32)
+		if err == nil {
+			res = uint32(d)
+		}
 	}
 	return res
 }
 
-func ToUint64(iv interface{}) uint64 {
+func ToUint64(iv any) uint64 {
 	var res uint64
 	switch v := iv.(type) {
 	case bool:
@@ -506,11 +549,16 @@ func ToUint64(iv interface{}) uint64 {
 		res = uint64(v.Unix())
 	case Date:
 		res = uint64(v.Sec)
+	case []byte:
+		d, err := strconv.ParseUint(string(v), 10, 64)
+		if err == nil {
+			res = d
+		}
 	}
 	return res
 }
 
-func ToFloat32(iv interface{}) float32 {
+func ToFloat32(iv any) float32 {
 	var res float32
 	switch v := iv.(type) {
 	case bool:
@@ -539,20 +587,23 @@ func ToFloat32(iv interface{}) float32 {
 		res = float32(v)
 	case string:
 		tmp, err := strconv.ParseFloat(v, 32)
-		if err != nil {
-			res = 0
-		} else {
+		if err == nil {
 			res = float32(tmp)
 		}
 	case time.Time:
 		res = float32(v.Unix())
 	case Date:
 		res = float32(v.Sec)
+	case []byte:
+		d, err := strconv.ParseFloat(string(v), 32)
+		if err == nil {
+			res = float32(d)
+		}
 	}
 	return res
 }
 
-func ToFloat64(iv interface{}) float64 {
+func ToFloat64(iv any) float64 {
 	var res float64
 	switch v := iv.(type) {
 	case bool:
@@ -581,20 +632,23 @@ func ToFloat64(iv interface{}) float64 {
 		res = v
 	case string:
 		tmp, err := strconv.ParseFloat(v, 64)
-		if err != nil {
-			res = 0
-		} else {
+		if err == nil {
 			res = tmp
 		}
 	case time.Time:
 		res = float64(v.Unix())
 	case Date:
 		res = float64(v.Sec)
+	case []byte:
+		d, err := strconv.ParseFloat(string(v), 64)
+		if err == nil {
+			res = d
+		}
 	}
 	return res
 }
 
-func ToTimestamp(iv interface{}) Timestamp {
+func ToTimestamp(iv any) Timestamp {
 	var res Timestamp
 	var err error
 	var sec int64
@@ -652,12 +706,17 @@ func ToTimestamp(iv interface{}) Timestamp {
 		sec = v.Sec
 	case Date:
 		sec = v.Sec
+	case []byte:
+		d, err := strconv.ParseInt(string(v), 10, 64)
+		if err == nil {
+			res = Timestamp{Sec: d}
+		}
 	}
 	res.Sec = sec
 	return res
 }
 
-func ToDate(iv interface{}) Date {
+func ToDate(iv any) Date {
 	var res Date
 	var err error
 	var sec int64
@@ -715,12 +774,17 @@ func ToDate(iv interface{}) Date {
 		sec = v.Sec
 	case Date:
 		sec = v.Sec
+	case []byte:
+		d, err := strconv.ParseInt(string(v), 10, 64)
+		if err == nil {
+			res = Date{Sec: d}
+		}
 	}
 	res.Sec = sec
 	return res
 }
 
-func ToBool(iv interface{}) bool {
+func ToBool(iv any) bool {
 	var res bool
 	switch v := iv.(type) {
 	case bool:
@@ -773,11 +837,13 @@ func ToBool(iv interface{}) bool {
 		res = true
 	case Date:
 		res = true
+	case []byte:
+		res = v[0] > 0
 	}
 	return res
 }
 
-func ToBytes(iv interface{}) []byte {
+func ToBytes(iv any) []byte {
 	var res []byte
 	switch v := iv.(type) {
 	case bool:
@@ -879,8 +945,8 @@ func ToBytes(iv interface{}) []byte {
 	return res
 }
 
-func ToType(v interface{}, t Type) interface{} {
-	var res interface{}
+func ToValue(v any, t Type) any {
+	var res any
 	switch t {
 	case BOOL:
 		res = ToBool(v)
@@ -914,92 +980,7 @@ func ToType(v interface{}, t Type) interface{} {
 	return res
 }
 
-func BytesToType(b []byte, t Type) interface{} {
-	var res interface{}
-	s := string(b)
-	switch t {
-	case BOOL:
-		res = b[0] > 0
-	case INT8:
-		v, err := strconv.ParseInt(s, 10, 8)
-		if err != nil {
-			res = nil
-		}
-		res = int8(v)
-	case INT16:
-		v, err := strconv.ParseInt(s, 10, 16)
-		if err != nil {
-			res = nil
-		}
-		res = int16(v)
-	case INT32:
-		v, err := strconv.ParseInt(s, 10, 32)
-		if err != nil {
-			res = nil
-		}
-		res = int32(v)
-	case INT64:
-		v, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			res = nil
-		}
-		res = v
-	case UINT8:
-		v, err := strconv.ParseUint(s, 10, 8)
-		if err != nil {
-			res = nil
-		}
-		res = uint8(v)
-	case UINT16:
-		v, err := strconv.ParseUint(s, 10, 16)
-		if err != nil {
-			res = nil
-		}
-		res = uint16(v)
-	case UINT32:
-		v, err := strconv.ParseUint(s, 10, 32)
-		if err != nil {
-			res = nil
-		}
-		res = uint32(v)
-	case UINT64:
-		v, err := strconv.ParseUint(s, 10, 64)
-		if err != nil {
-			res = nil
-		}
-		res = v
-	case FLOAT32:
-		v, err := strconv.ParseFloat(s, 32)
-		if err != nil {
-			res = nil
-		}
-		res = v
-	case FLOAT64:
-		v, err := strconv.ParseFloat(s, 64)
-		if err != nil {
-			res = nil
-		}
-		res = v
-	case STRING:
-		res = string(b)
-	case TIMESTAMP:
-		v, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			res = nil
-		}
-		res = Timestamp{Sec: v}
-	case DATE:
-		v, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			res = nil
-		}
-		res = Date{Sec: v}
-	}
-
-	return res
-}
-
-func ToSameType(va interface{}, vb interface{}) (interface{}, interface{}) {
+func ToSameTypeValue(va any, vb any) (any, any) {
 	ta, tb := TypeOf(va), TypeOf(vb)
 	var t Type
 	if tb >= ta {
@@ -1007,5 +988,5 @@ func ToSameType(va interface{}, vb interface{}) (interface{}, interface{}) {
 	} else {
 		t = tb
 	}
-	return ToType(va, t), ToType(vb, t)
+	return ToValue(va, t), ToValue(vb, t)
 }

@@ -2,7 +2,7 @@ package plan
 
 import (
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/plan/operator"
@@ -13,7 +13,7 @@ type OrderByNode struct {
 	Output    Node
 	Metadata  *metadata.Metadata
 	SortItems []*operator.SortItemNode
-	OrderType gtype.OrderType
+	OrderType datatype.OrderType
 }
 
 func NewOrderByNode(runtime *config.Runtime, input Node, items []parser.ISortItemContext) *OrderByNode {

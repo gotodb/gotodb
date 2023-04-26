@@ -1,7 +1,7 @@
 package stage
 
 import (
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/plan"
@@ -11,7 +11,7 @@ import (
 type SelectJob struct {
 	Location      *pb.Location
 	Input, Output *pb.Location
-	SetQuantifier *gtype.QuantifierType
+	SetQuantifier *datatype.QuantifierType
 	SelectItems   []*operator.SelectItemNode
 	Having        *operator.BooleanExpressionNode
 	Metadata      *metadata.Metadata

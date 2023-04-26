@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/util"
 )
@@ -72,14 +72,14 @@ func (rb *RowsBuffer) writeRows() error {
 
 	//for 0 cols, just need send the number of rows
 	if ln <= 0 {
-		buf := gtype.EncodeValues([]interface{}{int64(rb.RowsNumber)}, gtype.INT64)
+		buf := datatype.EncodeValues([]interface{}{int64(rb.RowsNumber)}, datatype.INT64)
 		return util.WriteMessage(rb.Writer, buf)
 	}
 
 	//for several cols
 	for i := 0; i < ln; i++ {
 		col := rb.ValueNilFlags[i]
-		buf := gtype.EncodeBool(col)
+		buf := datatype.EncodeBool(col)
 		if err := util.WriteMessage(rb.Writer, buf); err != nil {
 			return err
 		}
@@ -89,7 +89,7 @@ func (rb *RowsBuffer) writeRows() error {
 		if err != nil {
 			return err
 		}
-		buf = gtype.EncodeValues(col, t)
+		buf = datatype.EncodeValues(col, t)
 		if err := util.WriteMessage(rb.Writer, buf); err != nil {
 			return err
 		}
@@ -98,7 +98,7 @@ func (rb *RowsBuffer) writeRows() error {
 	ln = len(rb.KeyBuffers)
 	for i := 0; i < ln; i++ {
 		col := rb.KeyNilFlags[i]
-		buf := gtype.EncodeBool(col)
+		buf := datatype.EncodeBool(col)
 		if err := util.WriteMessage(rb.Writer, buf); err != nil {
 			return err
 		}
@@ -108,7 +108,7 @@ func (rb *RowsBuffer) writeRows() error {
 		if err != nil {
 			return err
 		}
-		buf = gtype.EncodeValues(col, t)
+		buf = datatype.EncodeValues(col, t)
 		if err := util.WriteMessage(rb.Writer, buf); err != nil {
 			return err
 		}
@@ -129,7 +129,7 @@ func (rb *RowsBuffer) readRows() error {
 		if err != nil {
 			return err
 		}
-		vals, err := gtype.DecodeINT64(bytes.NewReader(buf))
+		vals, err := datatype.DecodeINT64(bytes.NewReader(buf))
 		if err != nil || len(vals) <= 0 {
 			return err
 		}
@@ -143,7 +143,7 @@ func (rb *RowsBuffer) readRows() error {
 			return err
 		}
 
-		rb.ValueNilFlags[i], err = gtype.DecodeBOOL(bytes.NewReader(buf))
+		rb.ValueNilFlags[i], err = datatype.DecodeBOOL(bytes.NewReader(buf))
 		if err != nil {
 			return err
 		}
@@ -157,7 +157,7 @@ func (rb *RowsBuffer) readRows() error {
 		if err != nil {
 			return err
 		}
-		values, err := gtype.DecodeValue(bytes.NewReader(buf), t)
+		values, err := datatype.DecodeValue(bytes.NewReader(buf), t)
 		if err != nil {
 			return err
 		}
@@ -183,7 +183,7 @@ func (rb *RowsBuffer) readRows() error {
 		if err != nil {
 			return err
 		}
-		rb.KeyNilFlags[i], err = gtype.DecodeBOOL(bytes.NewReader(buf))
+		rb.KeyNilFlags[i], err = datatype.DecodeBOOL(bytes.NewReader(buf))
 		if err != nil {
 			return err
 		}
@@ -193,7 +193,7 @@ func (rb *RowsBuffer) readRows() error {
 		if err != nil {
 			return err
 		}
-		keys, err := gtype.DecodeValue(bytes.NewReader(buf), t)
+		keys, err := datatype.DecodeValue(bytes.NewReader(buf), t)
 		if err != nil {
 			return err
 		}

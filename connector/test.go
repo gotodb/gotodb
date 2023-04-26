@@ -3,7 +3,7 @@ package connector
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/connector/file"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/partition"
 	"github.com/gotodb/gotodb/plan/operator"
@@ -24,18 +24,18 @@ type Test struct {
 	Partition *partition.Partition
 }
 
-var columns = map[string]gtype.Type{
-	"process_date": gtype.TIMESTAMP,
-	"var1":         gtype.INT64,
-	"var2":         gtype.FLOAT64,
-	"var3":         gtype.STRING,
-	"data_source":  gtype.STRING,
-	"network_id":   gtype.INT64,
-	"event_date":   gtype.DATE,
+var columns = map[string]datatype.Type{
+	"process_date": datatype.TIMESTAMP,
+	"var1":         datatype.INT64,
+	"var2":         datatype.FLOAT64,
+	"var3":         datatype.STRING,
+	"data_source":  datatype.STRING,
+	"network_id":   datatype.INT64,
+	"event_date":   datatype.DATE,
 }
 var tempDir = os.TempDir()
 
-func GenerateTestRows(columns map[string]gtype.Type) error {
+func GenerateTestRows(columns map[string]datatype.Type) error {
 	f1, err := os.Create(tempDir + "/test01.csv")
 	if err != nil {
 		return err
@@ -93,7 +93,7 @@ func GenerateTestRows(columns map[string]gtype.Type) error {
 	return nil
 }
 
-func GenerateTestMetadata(columns map[string]gtype.Type, table string) *metadata.Metadata {
+func GenerateTestMetadata(columns map[string]datatype.Type, table string) *metadata.Metadata {
 	res := metadata.NewMetadata()
 	keys := make([]string, 0)
 	for k := range columns {

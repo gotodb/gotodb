@@ -3,7 +3,7 @@ package plan
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/plan/operator"
@@ -74,7 +74,7 @@ func (n *InsertNode) SetMetadata() error {
 	}
 
 	n.Metadata = metadata.NewMetadata()
-	col := metadata.NewColumnMetadata(gtype.INT64, n.Catalog, n.Schema, n.Table, "affected")
+	col := metadata.NewColumnMetadata(datatype.INT64, n.Catalog, n.Schema, n.Table, "affected")
 	n.Metadata.AppendColumn(col)
 
 	return nil

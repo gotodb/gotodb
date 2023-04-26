@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/row"
 )
@@ -16,11 +16,11 @@ func NewNowFunc() *IFunc {
 			return false
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.TIMESTAMP, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.TIMESTAMP, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			return time.Now(), nil
 		},
 	}
@@ -37,11 +37,11 @@ func NewDayFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.INT32, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.INT32, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in DAY")
 			}
@@ -56,8 +56,8 @@ func NewDayFunc() *IFunc {
 				return nil, err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.TIMESTAMP:
 				return int32(tmp.(time.Time).Day()), nil
 			default:
 				return nil, fmt.Errorf("type cann't use DAY function")
@@ -77,11 +77,11 @@ func NewMonthFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.INT32, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.INT32, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in MONTH")
 			}
@@ -96,8 +96,8 @@ func NewMonthFunc() *IFunc {
 				return nil, err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.TIMESTAMP:
 				return int32(tmp.(time.Time).Month()), nil
 			default:
 				return nil, fmt.Errorf("type cann't use MONTH function")
@@ -117,11 +117,11 @@ func NewYearFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.INT32, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.INT32, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in YEAR")
 			}
@@ -136,8 +136,8 @@ func NewYearFunc() *IFunc {
 				return nil, err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.TIMESTAMP:
 				return int32(tmp.(time.Time).Year()), nil
 			default:
 				return nil, fmt.Errorf("type cann't use YEAR function")
@@ -157,11 +157,11 @@ func NewHourFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.INT32, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.INT32, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in HOUR")
 			}
@@ -176,8 +176,8 @@ func NewHourFunc() *IFunc {
 				return nil, err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.TIMESTAMP:
 				return int32(tmp.(time.Time).Hour()), nil
 			default:
 				return nil, fmt.Errorf("type cann't use HOUR function")
@@ -197,11 +197,11 @@ func NewMinuteFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.INT32, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.INT32, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in MINUTE")
 			}
@@ -216,8 +216,8 @@ func NewMinuteFunc() *IFunc {
 				return nil, err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.TIMESTAMP:
 				return int32(tmp.(time.Time).Minute()), nil
 			default:
 				return nil, fmt.Errorf("type cann't use MINUE function")
@@ -237,11 +237,11 @@ func NewSecondFunc() *IFunc {
 			return es[0].IsAggregate()
 		},
 
-		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (gtype.Type, error) {
-			return gtype.INT32, nil
+		GetType: func(md *metadata.Metadata, es []*ExpressionNode) (datatype.Type, error) {
+			return datatype.INT32, nil
 		},
 
-		Result: func(input *row.RowsGroup, sq *gtype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
+		Result: func(input *row.RowsGroup, sq *datatype.QuantifierType, Expressions []*ExpressionNode) (interface{}, error) {
 			if len(Expressions) < 1 {
 				return nil, fmt.Errorf("not enough parameters in SECOND")
 			}
@@ -256,8 +256,8 @@ func NewSecondFunc() *IFunc {
 				return nil, err
 			}
 
-			switch gtype.TypeOf(tmp) {
-			case gtype.TIMESTAMP:
+			switch datatype.TypeOf(tmp) {
+			case datatype.TIMESTAMP:
 				return int32(tmp.(time.Time).Second()), nil
 			default:
 				return nil, fmt.Errorf("type cann't use SECOND function")

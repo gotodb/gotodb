@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
-	"github.com/gotodb/gotodb/gtype"
+	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 )
 
@@ -15,7 +15,7 @@ type SelectNode struct {
 	Input         Node
 	Output        Node
 	Metadata      *metadata.Metadata
-	SetQuantifier *gtype.QuantifierType
+	SetQuantifier *datatype.QuantifierType
 	SelectItems   []*operator.SelectItemNode
 	Having        *operator.BooleanExpressionNode
 	IsAggregate   bool
@@ -30,7 +30,7 @@ func NewSelectNode(runtime *config.Runtime, input Node, sq parser.ISetQuantifier
 		Having:        nil,
 	}
 	if sq != nil {
-		q := gtype.StrToQuantifierType(sq.GetText())
+		q := datatype.ToQuantifierType(sq.GetText())
 		res.SetQuantifier = &q
 	}
 	for i := 0; i < len(items); i++ {
@@ -80,7 +80,7 @@ func (n *SelectNode) SetMetadata() error {
 	}
 	md := n.Input.GetMetadata()
 	var colNames []string
-	var colTypes []gtype.Type
+	var colTypes []datatype.Type
 	for _, item := range n.SelectItems {
 		names, types, err := item.GetNamesAndTypes(md)
 		if err != nil {
