@@ -46,6 +46,15 @@ func (n *FilterPlan) SetMetadata() (err error) {
 	if err = n.Input.SetMetadata(); err != nil {
 		return err
 	}
+
+	for _, expression := range n.BooleanExpressions {
+		if expression.IsSetSubQuery() {
+			if err = expression.Predicated.Predicate.QueryPlan.SetMetadata(); err != nil {
+				return err
+			}
+		}
+	}
+
 	n.Metadata = n.Input.GetMetadata().Copy()
 	return nil
 }

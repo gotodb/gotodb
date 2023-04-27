@@ -14,6 +14,7 @@ type PredicateNode struct {
 	Type                   PredicateType
 	ComparisonOperator     *datatype.Operator
 	IsNot                  bool
+	QueryPlan              Plan `msgpack:"-"`
 	FirstValueExpression   *ValueExpressionNode
 	SecondValueExpression  *ValueExpressionNode
 	BooleanExpressionNodes []*BooleanExpressionNode
@@ -66,10 +67,16 @@ func NewPredicateNode(runtime *config.Runtime, t parser.IPredicateContext) *Pred
 		res.SecondValueExpression = NewValueExpressionNode(runtime, tt.GetUpper())
 	} else if tt.IN() != nil {
 		// NOT? IN '(' expression (',' expression)* ')'
-		res.Type = PredicateTypeIn
-		for _, exp := range tt.AllExpression() {
-			res.BooleanExpressionNodes = append(res.BooleanExpressionNodes, NewBooleanExpressionNode(runtime, exp.BooleanExpression()))
+		if q := tt.Query(); q != nil {
+			res.Type = PredicateTypeInQuery
+			res.QueryPlan = NewPlanFromQuery(runtime, q)
+		} else {
+			res.Type = PredicateTypeIn
+			for _, exp := range tt.AllExpression() {
+				res.BooleanExpressionNodes = append(res.BooleanExpressionNodes, NewBooleanExpressionNode(runtime, exp.BooleanExpression()))
+			}
 		}
+
 	} else if tt.LIKE() != nil {
 		res.Type = PredicateTypeLike
 		res.FirstValueExpression = NewValueExpressionNode(runtime, tt.GetPattern())
@@ -210,6 +217,24 @@ func (n *PredicateNode) Result(valsi interface{}, input *row.RowsGroup) (interfa
 		for i := 0; i < len(res); i++ {
 			for _, item := range inItems {
 				res[i] = datatype.EQFunc(vals[i], item.([]interface{})[i])
+				if res[i].(bool) {
+					break
+				}
+			}
+
+			if n.IsNot {
+				res[i] = !res[i].(bool)
+			}
+		}
+
+		return res, nil
+	case PredicateTypeInQuery:
+		vals := valsi.([]interface{})
+		res := make([]interface{}, len(vals))
+
+		for i := 0; i < len(res); i++ {
+			for _, item := range input.GetRowKeys(0) {
+				res[i] = datatype.EQFunc(vals[i], item)
 				if res[i].(bool) {
 					break
 				}

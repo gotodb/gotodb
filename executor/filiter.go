@@ -40,17 +40,39 @@ func (e *Executor) RunFilter() (err error) {
 	rbReader := row.NewRowsBuffer(md, reader, nil)
 	rbWriter := row.NewRowsBuffer(md, nil, writer)
 
-	//write rows
-	jobs := make(chan *row.Row)
-	var wg sync.WaitGroup
-
-	//init
+	var subQueryRows [][]*row.Row
+	readerIndex := 1
 	for _, be := range job.BooleanExpressions {
 		if err := be.Init(md); err != nil {
 			return err
 		}
+
+		if be.IsSetSubQuery() {
+			subQueryMD := &metadata.Metadata{}
+			if err := util.ReadObject(e.Readers[readerIndex], subQueryMD); err != nil {
+				return err
+			}
+			subReader := row.NewRowsBuffer(subQueryMD, e.Readers[readerIndex], nil)
+			var rs []*row.Row
+			for {
+				r, err := subReader.ReadRow()
+				if err == io.EOF {
+					err = nil
+					break
+				}
+				if err != nil {
+					return err
+				}
+				rs = append(rs, r)
+			}
+			subQueryRows = append(subQueryRows, rs)
+			readerIndex++
+		}
 	}
 
+	//write rows
+	jobs := make(chan *row.Row)
+	var wg sync.WaitGroup
 	for i := 0; i < config.Conf.Runtime.ParallelNumber; i++ {
 		wg.Add(1)
 		go func() {
@@ -62,9 +84,18 @@ func (e *Executor) RunFilter() (err error) {
 				r, ok := <-jobs
 				if ok {
 					rg := row.NewRowsGroup(md)
+
 					rg.Write(r)
 					flag := true
+					readerIndex = 0
 					for _, booleanExpression := range job.BooleanExpressions {
+						if booleanExpression.IsSetSubQuery() {
+							for _, subQueryRow := range subQueryRows[readerIndex] {
+								// rows to columns
+								rg.AppendKeyColumns(subQueryRow.Vals)
+							}
+						}
+						readerIndex++
 						if ok, err := booleanExpression.Result(rg); err == nil && !ok.([]interface{})[0].(bool) {
 							flag = false
 							break
@@ -73,7 +104,7 @@ func (e *Executor) RunFilter() (err error) {
 							break
 						}
 					}
-
+					readerIndex = 0
 					if flag {
 						err = rbWriter.WriteRow(r)
 					}

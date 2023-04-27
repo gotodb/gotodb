@@ -68,6 +68,13 @@ func FilterColumns(node planner.Plan, columns []string) error {
 				return err
 			}
 			columnsForInput = append(columnsForInput, cols...)
+
+			if be.IsSetSubQuery() {
+				err = FilterColumns(be.Predicated.Predicate.QueryPlan, columnsForInput)
+				if err != nil {
+					return err
+				}
+			}
 		}
 		columnsForInput = append(columnsForInput, columns...)
 		return FilterColumns(filterNode.Input, columnsForInput)

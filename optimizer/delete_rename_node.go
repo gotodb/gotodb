@@ -31,7 +31,20 @@ func DeleteRenameNode(node planner.Plan) error {
 		parent.SetInputs(parInputs)
 
 		return nil
-
+	case *planner.FilterPlan:
+		filterNode := node.(*planner.FilterPlan)
+		for _, be := range filterNode.BooleanExpressions {
+			if be.IsSetSubQuery() {
+				if err := DeleteRenameNode(be.Predicated.Predicate.QueryPlan); err != nil {
+					return err
+				}
+			}
+		}
+		for _, input := range node.GetInputs() {
+			if err := DeleteRenameNode(input); err != nil {
+				return err
+			}
+		}
 	default:
 		for _, input := range node.GetInputs() {
 			if err := DeleteRenameNode(input); err != nil {

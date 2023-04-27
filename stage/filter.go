@@ -8,7 +8,8 @@ import (
 
 type FilterJob struct {
 	Location           *pb.Location
-	Input, Output      *pb.Location
+	Inputs             []*pb.Location
+	Output             *pb.Location
 	BooleanExpressions []*planner.BooleanExpressionNode
 	Metadata           *metadata.Metadata
 }
@@ -18,7 +19,7 @@ func (n *FilterJob) GetType() JobType {
 }
 
 func (n *FilterJob) GetInputs() []*pb.Location {
-	return []*pb.Location{n.Input}
+	return n.Inputs
 }
 
 func (n *FilterJob) GetOutputs() []*pb.Location {
@@ -29,10 +30,10 @@ func (n *FilterJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewFilterJob(node *planner.FilterPlan, input, output *pb.Location) *FilterJob {
+func NewFilterJob(node *planner.FilterPlan, inputs []*pb.Location, output *pb.Location) *FilterJob {
 	return &FilterJob{
 		Location:           output,
-		Input:              input,
+		Inputs:             inputs,
 		Output:             output,
 		BooleanExpressions: node.BooleanExpressions,
 		Metadata:           node.GetMetadata(),

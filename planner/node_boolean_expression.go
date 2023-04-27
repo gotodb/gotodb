@@ -115,6 +115,10 @@ func (n *BooleanExpressionNode) IsAggregate() bool {
 	return false
 }
 
+func (n *BooleanExpressionNode) IsSetSubQuery() bool {
+	return n.Predicated != nil && n.Predicated.Predicate != nil && n.Predicated.Predicate.Type == PredicateTypeInQuery
+}
+
 type NotBooleanExpressionNode struct {
 	Name              string
 	BooleanExpression *BooleanExpressionNode

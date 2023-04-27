@@ -8,7 +8,9 @@ import (
 func ExtractPredicates(node *planner.BooleanExpressionNode, t datatype.Operator) []*planner.BooleanExpressionNode {
 	var res []*planner.BooleanExpressionNode
 	if node.Predicated != nil {
-		res = append(res, node)
+		if !node.IsSetSubQuery() {
+			res = append(res, node)
+		}
 
 	} else if node.NotBooleanExpression != nil {
 		res = append(res, node)
@@ -40,6 +42,11 @@ func PredicatePushDown(node planner.Plan, predicates []*planner.BooleanExpressio
 		filterNode := node.(*planner.FilterPlan)
 		for _, be := range filterNode.BooleanExpressions {
 			predicates = append(predicates, ExtractPredicates(be, datatype.AND)...)
+			if be.IsSetSubQuery() {
+				if err := PredicatePushDown(be.Predicated.Predicate.QueryPlan, []*planner.BooleanExpressionNode{}); err != nil {
+					return err
+				}
+			}
 		}
 
 		inputs := filterNode.GetInputs()

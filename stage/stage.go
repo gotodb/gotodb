@@ -541,11 +541,50 @@ func createJob(inode planner.Plan, jobs *[]Job, executorHeap Worker, pn int) ([]
 		if err != nil {
 			return res, err
 		}
+
+		var subInputJobs [][]Job
+		for _, be := range node.BooleanExpressions {
+			if be.IsSetSubQuery() {
+				subInputJob, err := CreateJob(be.Predicated.Predicate.QueryPlan, executorHeap, pn)
+				if err != nil {
+					return res, err
+				}
+				subInputJobs = append(subInputJobs, subInputJob)
+				*jobs = append(*jobs, subInputJob...)
+			}
+		}
+
+		var inputs []*pb.Location
 		for _, inputJob := range inputJobs {
 			for _, input := range inputJob.GetOutputs() {
-				output := executorHeap.GetExecutorLoc()
-				res = append(res, NewFilterJob(node, input, output))
+				inputs = append(inputs, input)
 			}
+		}
+
+		var outputs [][]*pb.Location
+		if len(subInputJobs) > 0 {
+
+			for _, subInputJob := range subInputJobs {
+				var subOutputs []*pb.Location
+				loc := executorHeap.GetExecutorLoc()
+				for i := range inputs {
+					subOutputs = append(subOutputs, loc.NewChannel(int32(i)))
+				}
+
+				duplicateJob := NewDuplicateJob(subInputJob[len(subInputJob)-1].GetOutputs(), subOutputs, nil)
+				*jobs = append(*jobs, duplicateJob)
+				outputs = append(outputs, subOutputs)
+			}
+
+		}
+		for i, input := range inputs {
+			filterInputs := []*pb.Location{input}
+			if len(outputs) > 0 {
+				for _, output := range outputs {
+					filterInputs = append(filterInputs, output[i])
+				}
+			}
+			res = append(res, NewFilterJob(node, filterInputs, executorHeap.GetExecutorLoc()))
 		}
 		*jobs = append(*jobs, res...)
 		return res, nil

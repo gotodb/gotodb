@@ -103,6 +103,15 @@ func ExtractAggFunc(node planner.Plan) error {
 				return err
 			}
 		}
+	case *planner.FilterPlan:
+		filterNode := node.(*planner.FilterPlan)
+		for _, be := range filterNode.BooleanExpressions {
+			if be.IsSetSubQuery() {
+				if err := ExtractAggFunc(be.Predicated.Predicate.QueryPlan); err != nil {
+					return err
+				}
+			}
+		}
 	}
 
 	for _, input := range node.GetInputs() {
