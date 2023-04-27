@@ -4,7 +4,6 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/planner"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type JoinJob struct {
@@ -12,7 +11,7 @@ type JoinJob struct {
 	LeftInput, RightInput *pb.Location
 	Output                *pb.Location
 	JoinType              planner.JoinType
-	JoinCriteria          *operator.JoinCriteriaNode
+	JoinCriteria          *planner.JoinCriteriaNode
 	Metadata              *metadata.Metadata
 }
 

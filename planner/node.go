@@ -1,4 +1,4 @@
-package operator
+package planner
 
 import (
 	"github.com/gotodb/gotodb/datatype"

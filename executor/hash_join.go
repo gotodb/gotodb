@@ -1,7 +1,6 @@
 package executor
 
 import (
-	"github.com/gotodb/gotodb/planner/operator"
 	"github.com/gotodb/gotodb/stage"
 	"io"
 	"sync"
@@ -24,7 +23,7 @@ func (e *Executor) SetInstructionHashJoin(instruction *pb.Instruction) error {
 	return nil
 }
 
-func CalHashKey(es []*operator.ExpressionNode, rg *row.RowsGroup) (string, error) {
+func CalHashKey(es []*planner.ExpressionNode, rg *row.RowsGroup) (string, error) {
 	res := ""
 	for _, e := range es {
 		r, err := e.Result(rg)

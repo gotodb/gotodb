@@ -4,13 +4,12 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/planner"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type GroupByJob struct {
 	Location      *pb.Location
 	Input, Output *pb.Location
-	GroupBy       *operator.GroupByNode
+	GroupBy       *planner.GroupByNode
 	Metadata      *metadata.Metadata
 }
 

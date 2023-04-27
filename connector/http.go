@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gotodb/gotodb/partition"
-	"github.com/gotodb/gotodb/planner/operator"
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -74,11 +74,15 @@ func (c *Http) GetPartition(partitionNumber int) (*partition.Partition, error) {
 	return c.Partition, nil
 }
 
-func (c *Http) GetReader(file *partition.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) (row.GroupReader, error) {
+func (c *Http) GetReader(file *partition.FileLocation, md *metadata.Metadata, filters []string) (row.GroupReader, error) {
 	var _http string
+	re := regexp.MustCompile(fmt.Sprintf(`%s\s*=\s*["']{[^{}]*}["']`, c.Config.FilterColumn))
+
 	for _, filter := range filters {
-		if filter.Name == c.Config.FilterColumn {
-			_http = filter.Predicated.Predicate.FirstValueExpression.PrimaryExpression.StringValue.Str
+		_httpExpression := re.FindString(filter)
+		if _httpExpression != "" {
+			_httpOption := strings.SplitN(_httpExpression, "=", 2)
+			_http = strings.Trim(_httpOption[1], " '\"")
 			break
 		}
 	}

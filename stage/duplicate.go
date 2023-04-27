@@ -2,12 +2,12 @@ package stage
 
 import (
 	"github.com/gotodb/gotodb/pb"
-	"github.com/gotodb/gotodb/planner/operator"
+	"github.com/gotodb/gotodb/planner"
 )
 
 type DuplicateJob struct {
 	Location        *pb.Location
-	Keys            []*operator.ValueExpressionNode
+	Keys            []*planner.ValueExpressionNode
 	Inputs, Outputs []*pb.Location
 }
 
@@ -27,7 +27,7 @@ func (n *DuplicateJob) GetLocation() *pb.Location {
 	return n.Location
 }
 
-func NewDuplicateJob(inputs, outputs []*pb.Location, keys []*operator.ValueExpressionNode) *DuplicateJob {
+func NewDuplicateJob(inputs, outputs []*pb.Location, keys []*planner.ValueExpressionNode) *DuplicateJob {
 	return &DuplicateJob{
 		Location: outputs[0],
 		Keys:     keys,

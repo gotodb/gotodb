@@ -4,14 +4,13 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/planner"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type DistinctGlobalJob struct {
 	Location    *pb.Location
 	Inputs      []*pb.Location
 	Outputs     []*pb.Location
-	Expressions []*operator.ExpressionNode
+	Expressions []*planner.ExpressionNode
 	Metadata    *metadata.Metadata
 }
 

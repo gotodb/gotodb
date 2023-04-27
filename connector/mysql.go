@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gotodb/gotodb/partition"
-	"github.com/gotodb/gotodb/planner/operator"
 	"io"
 	"strings"
 
@@ -68,7 +67,7 @@ func (c *Mysql) GetPartition(partitionNumber int) (*partition.Partition, error) 
 	return c.Partition, nil
 }
 
-func (c *Mysql) GetReader(file *partition.FileLocation, md *metadata.Metadata, filters []*operator.BooleanExpressionNode) (row.GroupReader, error) {
+func (c *Mysql) GetReader(file *partition.FileLocation, md *metadata.Metadata, filters []string) (row.GroupReader, error) {
 	alias := ""
 	if c.Config.Table != md.Columns[0].Table {
 		alias = md.Columns[0].Table + "."
@@ -82,7 +81,7 @@ func (c *Mysql) GetReader(file *partition.FileLocation, md *metadata.Metadata, f
 
 	var clauses []string
 	for _, filter := range filters {
-		clauses = append(clauses, "("+filter.Clause+")")
+		clauses = append(clauses, "("+filter+")")
 	}
 	clause := strings.Join(clauses, " AND ")
 

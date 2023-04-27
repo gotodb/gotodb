@@ -4,14 +4,13 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/planner"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type AggregateFuncGlobalJob struct {
 	Location  *pb.Location
 	Inputs    []*pb.Location
 	Output    *pb.Location
-	FuncNodes []*operator.FuncCallNode
+	FuncNodes []*planner.FuncCallNode
 	Metadata  *metadata.Metadata
 }
 

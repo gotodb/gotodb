@@ -6,7 +6,6 @@ import (
 	"github.com/gotodb/gotodb/partition"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/planner"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type JobType int32
@@ -148,7 +147,7 @@ func createJob(inode planner.Plan, jobs *[]Job, executorHeap Worker, pn int) ([]
 		k := 0
 		if scanNodePar.IsPartition() {
 			partitionNum := scanNodePar.GetPartitionNum()
-			var parFilters []*operator.BooleanExpressionNode
+			var parFilters []*planner.BooleanExpressionNode
 			for _, f := range node.Filters {
 				cols, err := f.GetColumns()
 				if err != nil {
@@ -374,11 +373,11 @@ func createJob(inode planner.Plan, jobs *[]Job, executorHeap Worker, pn int) ([]
 				outputs = append(outputs, loc.NewChannel(int32(i)))
 			}
 
-			var keyExps []*operator.ExpressionNode
+			var keyExps []*planner.ExpressionNode
 			for _, key := range node.LeftKeys {
-				exp := &operator.ExpressionNode{
-					BooleanExpression: &operator.BooleanExpressionNode{
-						Predicated: &operator.PredicatedNode{
+				exp := &planner.ExpressionNode{
+					BooleanExpression: &planner.BooleanExpressionNode{
+						Predicated: &planner.PredicatedNode{
 							ValueExpression: key,
 						},
 					},
@@ -400,11 +399,11 @@ func createJob(inode planner.Plan, jobs *[]Job, executorHeap Worker, pn int) ([]
 			for i := 0; i < pn; i++ {
 				outputs = append(outputs, loc.NewChannel(int32(i)))
 			}
-			var keyExps []*operator.ExpressionNode
+			var keyExps []*planner.ExpressionNode
 			for _, key := range node.RightKeys {
-				exp := &operator.ExpressionNode{
-					BooleanExpression: &operator.BooleanExpressionNode{
-						Predicated: &operator.PredicatedNode{
+				exp := &planner.ExpressionNode{
+					BooleanExpression: &planner.BooleanExpressionNode{
+						Predicated: &planner.PredicatedNode{
 							ValueExpression: key,
 						},
 					},

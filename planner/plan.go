@@ -4,7 +4,6 @@ import (
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/planner/operator"
 	"strings"
 )
 
@@ -68,12 +67,12 @@ func NewPlanFromStatement(runtime *config.Runtime, t parser.IStatementContext) P
 		catalog, schema := runtime.Catalog, runtime.Schema
 
 		if ct := tt.GetCatalog(); ct != nil {
-			catalogNode := operator.NewIdentifierNode(runtime, ct)
+			catalogNode := NewIdentifierNode(runtime, ct)
 			catalog = catalogNode.GetText()
 		}
 
 		if sc := tt.GetSchema(); sc != nil {
-			schemaNode := operator.NewIdentifierNode(runtime, sc)
+			schemaNode := NewIdentifierNode(runtime, sc)
 			schema = schemaNode.GetText()
 		}
 
@@ -84,7 +83,7 @@ func NewPlanFromStatement(runtime *config.Runtime, t parser.IStatementContext) P
 	if tt.SHOW() != nil && tt.TABLES() != nil {
 		catalog, schema := runtime.Catalog, runtime.Schema
 		if qname := tt.QualifiedName(); qname != nil {
-			name := operator.NewQualifiedNameNode(runtime, qname).Result()
+			name := NewQualifiedNameNode(runtime, qname).Result()
 			names := strings.Split(name, ".")
 			if len(names) == 1 {
 				schema = names[0]
@@ -102,12 +101,12 @@ func NewPlanFromStatement(runtime *config.Runtime, t parser.IStatementContext) P
 		var like, escape string
 
 		if tt.LIKE() != nil {
-			stringValue := operator.NewStringValueNode(runtime, tt.GetPattern())
+			stringValue := NewStringValueNode(runtime, tt.GetPattern())
 			like = stringValue.Str
 		}
 
 		if tt.ESCAPE() != nil {
-			stringValue := operator.NewStringValueNode(runtime, tt.GetEscape())
+			stringValue := NewStringValueNode(runtime, tt.GetEscape())
 			escape = stringValue.Str
 		}
 
@@ -117,7 +116,7 @@ func NewPlanFromStatement(runtime *config.Runtime, t parser.IStatementContext) P
 	if tt.SHOW() != nil && tt.SCHEMAS() != nil {
 		catalog := runtime.Catalog
 		if id := tt.Identifier(0); id != nil {
-			catalog = operator.NewIdentifierNode(runtime, id).GetText()
+			catalog = NewIdentifierNode(runtime, id).GetText()
 		}
 		var like, escape *string
 		return NewShowPlanSchemas(runtime, catalog, like, escape)
@@ -127,7 +126,7 @@ func NewPlanFromStatement(runtime *config.Runtime, t parser.IStatementContext) P
 	if (tt.SHOW() != nil && tt.COLUMNS() != nil) || (tt.DESC() != nil || tt.DESCRIBE() != nil) {
 		catalog, schema, table := runtime.Catalog, runtime.Schema, runtime.Table
 		if qname := tt.QualifiedName(); qname != nil {
-			name := operator.NewQualifiedNameNode(runtime, qname).Result()
+			name := NewQualifiedNameNode(runtime, qname).Result()
 			catalog, schema, table = metadata.SplitTableName(runtime, name)
 		}
 		return NewShowPlanColumns(runtime, catalog, schema, table)
@@ -137,7 +136,7 @@ func NewPlanFromStatement(runtime *config.Runtime, t parser.IStatementContext) P
 	if tt.SHOW() != nil && tt.PARTITIONS() != nil {
 		catalog, schema, table := runtime.Catalog, runtime.Schema, runtime.Table
 		if qname := tt.QualifiedName(); qname != nil {
-			name := operator.NewQualifiedNameNode(runtime, qname).Result()
+			name := NewQualifiedNameNode(runtime, qname).Result()
 			catalog, schema, table = metadata.SplitTableName(runtime, name)
 		}
 		var res Plan
@@ -270,7 +269,7 @@ func NewPlanFromSampleRelation(runtime *config.Runtime, t parser.ISampledRelatio
 	tt := t.(*parser.SampledRelationContext)
 	res := NewPlanFromRelationPrimary(runtime, tt.RelationPrimary())
 	if id := tt.Identifier(); id != nil {
-		idNode := operator.NewIdentifierNode(runtime, id)
+		idNode := NewIdentifierNode(runtime, id)
 		rename := idNode.GetText()
 		renameNode := NewRenamePlan(runtime, res, rename)
 		res.SetOutput(renameNode)
@@ -312,7 +311,7 @@ func NewPlanFromRelation(runtime *config.Runtime, t parser.IRelationContext) Pla
 		} else if joinText[0:1] == "R" {
 			joinType = RightJoin
 		}
-		joinCriteriaNode := operator.NewJoinCriteriaNode(runtime, tt.JoinCriteria())
+		joinCriteriaNode := NewJoinCriteriaNode(runtime, tt.JoinCriteria())
 		res := NewJoinPlan(runtime, leftNode, rightNode, joinType, joinCriteriaNode)
 		leftNode.SetOutput(res)
 		rightNode.SetOutput(res)

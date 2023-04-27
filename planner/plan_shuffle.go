@@ -2,25 +2,23 @@ package planner
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/planner/operator"
-
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
+	"github.com/gotodb/gotodb/pkg/parser"
 )
 
 type ShufflePlan struct {
 	Input              Plan
 	Output             Plan
 	Metadata           *metadata.Metadata
-	BooleanExpressions []*operator.BooleanExpressionNode
+	BooleanExpressions []*BooleanExpressionNode
 }
 
 func NewShufflePlan(runtime *config.Runtime, input Plan, t parser.IBooleanExpressionContext) *ShufflePlan {
 	res := &ShufflePlan{
 		Input:              input,
 		Metadata:           metadata.NewMetadata(),
-		BooleanExpressions: []*operator.BooleanExpressionNode{operator.NewBooleanExpressionNode(runtime, t)},
+		BooleanExpressions: []*BooleanExpressionNode{NewBooleanExpressionNode(runtime, t)},
 	}
 	return res
 }
@@ -64,6 +62,6 @@ func (n *ShufflePlan) String() string {
 	return res
 }
 
-func (n *ShufflePlan) AddBooleanExpressions(nodes ...*operator.BooleanExpressionNode) {
+func (n *ShufflePlan) AddBooleanExpressions(nodes ...*BooleanExpressionNode) {
 	n.BooleanExpressions = append(n.BooleanExpressions, nodes...)
 }

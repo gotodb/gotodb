@@ -3,7 +3,6 @@ package planner
 import (
 	"fmt"
 	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/planner/operator"
 	"strings"
 
 	"github.com/gotodb/gotodb/config"
@@ -16,8 +15,8 @@ type SelectPlan struct {
 	Output        Plan
 	Metadata      *metadata.Metadata
 	SetQuantifier *datatype.QuantifierType
-	SelectItems   []*operator.SelectItemNode
-	Having        *operator.BooleanExpressionNode
+	SelectItems   []*SelectItemNode
+	Having        *BooleanExpressionNode
 	IsAggregate   bool
 }
 
@@ -26,7 +25,7 @@ func NewSelectPlan(runtime *config.Runtime, input Plan, sq parser.ISetQuantifier
 		Input:         input,
 		Metadata:      metadata.NewMetadata(),
 		SetQuantifier: nil,
-		SelectItems:   []*operator.SelectItemNode{},
+		SelectItems:   []*SelectItemNode{},
 		Having:        nil,
 	}
 	if sq != nil {
@@ -34,7 +33,7 @@ func NewSelectPlan(runtime *config.Runtime, input Plan, sq parser.ISetQuantifier
 		res.SetQuantifier = &q
 	}
 	for i := 0; i < len(items); i++ {
-		itemNode := operator.NewSelectItemNode(runtime, items[i])
+		itemNode := NewSelectItemNode(runtime, items[i])
 		res.SelectItems = append(res.SelectItems, itemNode)
 		if itemNode.IsAggregate() {
 			res.IsAggregate = true
@@ -42,7 +41,7 @@ func NewSelectPlan(runtime *config.Runtime, input Plan, sq parser.ISetQuantifier
 	}
 
 	if having != nil {
-		res.Having = operator.NewBooleanExpressionNode(runtime, having)
+		res.Having = NewBooleanExpressionNode(runtime, having)
 		if res.Having.IsAggregate() {
 			res.IsAggregate = true
 		}

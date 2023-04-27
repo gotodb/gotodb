@@ -4,13 +4,12 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/planner"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type FilterJob struct {
 	Location           *pb.Location
 	Input, Output      *pb.Location
-	BooleanExpressions []*operator.BooleanExpressionNode
+	BooleanExpressions []*planner.BooleanExpressionNode
 	Metadata           *metadata.Metadata
 }
 

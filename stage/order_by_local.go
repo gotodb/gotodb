@@ -4,14 +4,13 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/planner"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type OrderByLocalJob struct {
 	Location  *pb.Location
 	Input     *pb.Location
 	Output    *pb.Location
-	SortItems []*operator.SortItemNode
+	SortItems []*planner.SortItemNode
 	Metadata  *metadata.Metadata
 }
 

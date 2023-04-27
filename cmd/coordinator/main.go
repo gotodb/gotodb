@@ -13,7 +13,6 @@ import (
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/pkg/parser"
 	"github.com/gotodb/gotodb/planner"
-	"github.com/gotodb/gotodb/planner/operator"
 	"github.com/gotodb/gotodb/row"
 	"github.com/gotodb/gotodb/stage"
 	"github.com/gotodb/gotodb/util"
@@ -111,7 +110,7 @@ func Query(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err := optimizer.PredicatePushDown(logicalTree, []*operator.BooleanExpressionNode{}); err != nil {
+	if err := optimizer.PredicatePushDown(logicalTree, []*planner.BooleanExpressionNode{}); err != nil {
 		_, _ = fmt.Fprintf(w, "%v", err)
 		return
 	}

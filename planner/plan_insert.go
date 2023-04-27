@@ -6,7 +6,6 @@ import (
 	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type InsertPlan struct {
@@ -36,7 +35,7 @@ func NewInsertPlan(runtime *config.Runtime, input Plan, qualifiedName parser.IQu
 
 	if columns != nil {
 		for _, context := range columns.AllIdentifier() {
-			itemNode := operator.NewIdentifierNode(runtime, context)
+			itemNode := NewIdentifierNode(runtime, context)
 			res.Columns = append(res.Columns, itemNode.GetText())
 		}
 	}

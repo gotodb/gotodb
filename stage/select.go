@@ -5,15 +5,14 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/planner"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type SelectJob struct {
 	Location      *pb.Location
 	Input, Output *pb.Location
 	SetQuantifier *datatype.QuantifierType
-	SelectItems   []*operator.SelectItemNode
-	Having        *operator.BooleanExpressionNode
+	SelectItems   []*planner.SelectItemNode
+	Having        *planner.BooleanExpressionNode
 	Metadata      *metadata.Metadata
 	IsAggregate   bool
 }

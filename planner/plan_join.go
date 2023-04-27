@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type JoinType int32
@@ -21,10 +20,10 @@ type JoinPlan struct {
 	LeftInput, RightInput Plan
 	Output                Plan
 	JoinType              JoinType
-	JoinCriteria          *operator.JoinCriteriaNode
+	JoinCriteria          *JoinCriteriaNode
 }
 
-func NewJoinPlan(_ *config.Runtime, leftInput Plan, rightInput Plan, joinType JoinType, joinCriteria *operator.JoinCriteriaNode) *JoinPlan {
+func NewJoinPlan(_ *config.Runtime, leftInput Plan, rightInput Plan, joinType JoinType, joinCriteria *JoinCriteriaNode) *JoinPlan {
 	res := &JoinPlan{
 		Metadata:     metadata.NewMetadata(),
 		LeftInput:    leftInput,

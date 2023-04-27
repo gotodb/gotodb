@@ -2,8 +2,6 @@ package planner
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/planner/operator"
-
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
 )
@@ -12,10 +10,10 @@ type DistinctGlobalPlan struct {
 	Input       Plan
 	Output      Plan
 	Metadata    *metadata.Metadata
-	Expressions []*operator.ExpressionNode
+	Expressions []*ExpressionNode
 }
 
-func NewDistinctGlobalPlan(_ *config.Runtime, eps []*operator.ExpressionNode, input Plan) *DistinctGlobalPlan {
+func NewDistinctGlobalPlan(_ *config.Runtime, eps []*ExpressionNode, input Plan) *DistinctGlobalPlan {
 	res := &DistinctGlobalPlan{
 		Input:       input,
 		Metadata:    metadata.NewMetadata(),
@@ -63,6 +61,6 @@ func (n *DistinctGlobalPlan) String() string {
 	return res
 }
 
-func (n *DistinctGlobalPlan) AddExpressions(nodes ...*operator.ExpressionNode) {
+func (n *DistinctGlobalPlan) AddExpressions(nodes ...*ExpressionNode) {
 	n.Expressions = append(n.Expressions, nodes...)
 }

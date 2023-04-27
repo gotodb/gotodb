@@ -5,7 +5,6 @@ import (
 	"github.com/gotodb/gotodb/partition"
 	"github.com/gotodb/gotodb/pb"
 	"github.com/gotodb/gotodb/planner"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type ScanJob struct {
@@ -16,7 +15,7 @@ type ScanJob struct {
 	Metadata  *metadata.Metadata
 	Partition *partition.Partition
 	Outputs   []*pb.Location
-	Filters   []*operator.BooleanExpressionNode
+	Filters   []*planner.BooleanExpressionNode
 }
 
 func (n *ScanJob) GetType() JobType {

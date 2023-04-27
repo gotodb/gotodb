@@ -2,8 +2,6 @@ package planner
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/planner/operator"
-
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
 )
@@ -13,11 +11,11 @@ type HashJoinPlan struct {
 	LeftInput, RightInput Plan
 	Output                Plan
 	JoinType              JoinType
-	JoinCriteria          *operator.JoinCriteriaNode
-	LeftKeys, RightKeys   []*operator.ValueExpressionNode
+	JoinCriteria          *JoinCriteriaNode
+	LeftKeys, RightKeys   []*ValueExpressionNode
 }
 
-func NewHashJoinNodeFromJoinNode(_ *config.Runtime, node *JoinPlan, leftKeys, rightKeys []*operator.ValueExpressionNode) *HashJoinPlan {
+func NewHashJoinNodeFromJoinNode(_ *config.Runtime, node *JoinPlan, leftKeys, rightKeys []*ValueExpressionNode) *HashJoinPlan {
 	return &HashJoinPlan{
 		Metadata:     node.Metadata,
 		LeftInput:    node.LeftInput,
@@ -29,7 +27,7 @@ func NewHashJoinNodeFromJoinNode(_ *config.Runtime, node *JoinPlan, leftKeys, ri
 	}
 }
 
-func NewHashJoinNode(_ *config.Runtime, leftInput Plan, rightInput Plan, joinType JoinType, joinCriteria *operator.JoinCriteriaNode, leftKeys, rightKeys []*operator.ValueExpressionNode) *HashJoinPlan {
+func NewHashJoinNode(_ *config.Runtime, leftInput Plan, rightInput Plan, joinType JoinType, joinCriteria *JoinCriteriaNode, leftKeys, rightKeys []*ValueExpressionNode) *HashJoinPlan {
 	res := &HashJoinPlan{
 		Metadata:     metadata.NewMetadata(),
 		LeftInput:    leftInput,

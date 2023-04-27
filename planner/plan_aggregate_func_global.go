@@ -3,17 +3,16 @@ package planner
 import (
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type AggregateFuncGlobalPlan struct {
 	Input     Plan
 	Output    Plan
-	FuncNodes []*operator.FuncCallNode
+	FuncNodes []*FuncCallNode
 	Metadata  *metadata.Metadata
 }
 
-func NewAggregateFuncGlobalPlan(_ *config.Runtime, funcs []*operator.FuncCallNode, input Plan) *AggregateFuncGlobalPlan {
+func NewAggregateFuncGlobalPlan(_ *config.Runtime, funcs []*FuncCallNode, input Plan) *AggregateFuncGlobalPlan {
 	return &AggregateFuncGlobalPlan{
 		Input:     input,
 		FuncNodes: funcs,

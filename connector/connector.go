@@ -7,7 +7,6 @@ import (
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/partition"
 	"github.com/gotodb/gotodb/pkg/likematcher"
-	"github.com/gotodb/gotodb/planner/operator"
 	"github.com/gotodb/gotodb/row"
 	"io"
 )
@@ -15,7 +14,7 @@ import (
 type Connector interface {
 	GetMetadata() (*metadata.Metadata, error)
 	GetPartition(parallelNumber int) (*partition.Partition, error)
-	GetReader(file *partition.FileLocation, selectedMD *metadata.Metadata, filters []*operator.BooleanExpressionNode) (row.GroupReader, error)
+	GetReader(file *partition.FileLocation, selectedMD *metadata.Metadata, filters []string) (row.GroupReader, error)
 	Insert(rb *row.RowsBuffer, Columns []string) (affectedRows int64, err error)
 	ShowTables(catalog, schema string, like, escape *string) row.Reader
 	ShowSchemas(catalog string, like, escape *string) row.Reader

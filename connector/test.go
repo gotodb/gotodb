@@ -6,7 +6,6 @@ import (
 	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/partition"
-	"github.com/gotodb/gotodb/planner/operator"
 	"github.com/gotodb/gotodb/row"
 	"io"
 	"math/rand"
@@ -164,7 +163,7 @@ func (c *Test) GetPartition(_ int) (*partition.Partition, error) {
 	return c.Partition, nil
 }
 
-func (c *Test) GetReader(f *partition.FileLocation, selectedMD *metadata.Metadata, _ []*operator.BooleanExpressionNode) (row.GroupReader, error) {
+func (c *Test) GetReader(f *partition.FileLocation, selectedMD *metadata.Metadata, _ []string) (row.GroupReader, error) {
 	reader, err := file.NewHandler(f, c.Metadata, true)
 	if err != nil {
 		return nil, err

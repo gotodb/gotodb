@@ -2,32 +2,31 @@ package optimizer
 
 import (
 	"fmt"
-	"github.com/gotodb/gotodb/planner/operator"
 	"math/rand"
 
 	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/planner"
 )
 
-func ExtractDistinctExpressions(funcs []*operator.FuncCallNode) []*operator.ExpressionNode {
-	var res []*operator.ExpressionNode
+func ExtractDistinctExpressions(funcs []*planner.FuncCallNode) []*planner.ExpressionNode {
+	var res []*planner.ExpressionNode
 	for _, f := range funcs {
 		if f.SetQuantifier != nil && (*f.SetQuantifier) == datatype.DISTINCT {
 			res = append(res, f.Expressions...)
 			colName := fmt.Sprintf("DIST_%v_%v", len(res), rand.Int())
 			f.Expressions[0].Name = colName
-			f.Expressions = []*operator.ExpressionNode{
+			f.Expressions = []*planner.ExpressionNode{
 				{
 					Name: colName,
-					BooleanExpression: &operator.BooleanExpressionNode{
+					BooleanExpression: &planner.BooleanExpressionNode{
 						Name: colName,
-						Predicated: &operator.PredicatedNode{
+						Predicated: &planner.PredicatedNode{
 							Name: colName,
-							ValueExpression: &operator.ValueExpressionNode{
+							ValueExpression: &planner.ValueExpressionNode{
 								Name: colName,
-								PrimaryExpression: &operator.PrimaryExpressionNode{
+								PrimaryExpression: &planner.PrimaryExpressionNode{
 									Name: colName,
-									Identifier: &operator.IdentifierNode{
+									Identifier: &planner.IdentifierNode{
 										Str: &colName,
 									},
 								},
@@ -49,7 +48,7 @@ func ExtractAggFunc(node planner.Plan) error {
 	case *planner.SelectPlan:
 		selectNode := node.(*planner.SelectPlan)
 		if selectNode.IsAggregate {
-			var funcs []*operator.FuncCallNode
+			var funcs []*planner.FuncCallNode
 			for _, item := range selectNode.SelectItems {
 				item.ExtractAggFunc(&funcs)
 			}
@@ -71,23 +70,23 @@ func ExtractAggFunc(node planner.Plan) error {
 
 			_ = nodeLocal.SetMetadata()
 
-			funcsGlobal := make([]*operator.FuncCallNode, len(funcs))
+			funcsGlobal := make([]*planner.FuncCallNode, len(funcs))
 			for i, f := range funcs {
-				funcsGlobal[i] = &operator.FuncCallNode{
+				funcsGlobal[i] = &planner.FuncCallNode{
 					FuncName:   f.FuncName + "GLOBAL",
 					ResColName: f.ResColName,
-					Expressions: []*operator.ExpressionNode{
+					Expressions: []*planner.ExpressionNode{
 						{
 							Name: f.ResColName,
-							BooleanExpression: &operator.BooleanExpressionNode{
+							BooleanExpression: &planner.BooleanExpressionNode{
 								Name: f.ResColName,
-								Predicated: &operator.PredicatedNode{
+								Predicated: &planner.PredicatedNode{
 									Name: f.ResColName,
-									ValueExpression: &operator.ValueExpressionNode{
+									ValueExpression: &planner.ValueExpressionNode{
 										Name: f.ResColName,
-										PrimaryExpression: &operator.PrimaryExpressionNode{
+										PrimaryExpression: &planner.PrimaryExpressionNode{
 											Name: f.ResColName,
-											Identifier: &operator.IdentifierNode{
+											Identifier: &planner.IdentifierNode{
 												Str: &f.ResColName,
 											},
 										},

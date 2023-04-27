@@ -5,7 +5,6 @@ import (
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/connector"
 	"github.com/gotodb/gotodb/metadata"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type ScanPlan struct {
@@ -16,7 +15,7 @@ type ScanPlan struct {
 	Metadata  *metadata.Metadata
 	Connector connector.Connector
 	Output    Plan
-	Filters   []*operator.BooleanExpressionNode
+	Filters   []*BooleanExpressionNode
 }
 
 func NewScanPlan(runtime *config.Runtime, name string) *ScanPlan {

@@ -97,11 +97,16 @@ func (e *Executor) RunScan() error {
 		}(rbWriter)
 	}
 
+	var filters []string
+	for _, filter := range job.Filters {
+		filters = append(filters, filter.Clause)
+	}
+
 	// no partitions
 	if !job.Partition.IsPartition() {
 		for _, file := range job.Partition.GetNoPartitionFiles() {
 			var reader row.GroupReader
-			reader, err = ctr.GetReader(file, inputMetadata, job.Filters)
+			reader, err = ctr.GetReader(file, inputMetadata, filters)
 			if err != nil {
 				break
 			}
@@ -149,7 +154,7 @@ func (e *Executor) RunScan() error {
 
 			for _, file := range job.Partition.GetPartitionFiles(i) {
 				var reader row.GroupReader
-				reader, err = ctr.GetReader(file, inputMetadata, job.Filters)
+				reader, err = ctr.GetReader(file, inputMetadata, filters)
 				if err != nil {
 					break
 				}

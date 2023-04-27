@@ -5,21 +5,20 @@ import (
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type FilterPlan struct {
 	Input              Plan
 	Output             Plan
 	Metadata           *metadata.Metadata
-	BooleanExpressions []*operator.BooleanExpressionNode
+	BooleanExpressions []*BooleanExpressionNode
 }
 
 func NewFilterPlan(runtime *config.Runtime, input Plan, t parser.IBooleanExpressionContext) *FilterPlan {
 	res := &FilterPlan{
 		Input:              input,
 		Metadata:           metadata.NewMetadata(),
-		BooleanExpressions: []*operator.BooleanExpressionNode{operator.NewBooleanExpressionNode(runtime, t)},
+		BooleanExpressions: []*BooleanExpressionNode{NewBooleanExpressionNode(runtime, t)},
 	}
 	return res
 }
@@ -63,6 +62,6 @@ func (n *FilterPlan) String() string {
 	return res
 }
 
-func (n *FilterPlan) AddBooleanExpressions(nodes ...*operator.BooleanExpressionNode) {
+func (n *FilterPlan) AddBooleanExpressions(nodes ...*BooleanExpressionNode) {
 	n.BooleanExpressions = append(n.BooleanExpressions, nodes...)
 }

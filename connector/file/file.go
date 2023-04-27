@@ -12,7 +12,6 @@ import (
 	"github.com/gotodb/gotodb/config"
 	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
-	"github.com/gotodb/gotodb/planner/operator"
 	"github.com/gotodb/gotodb/row"
 )
 
@@ -80,7 +79,7 @@ func (c *File) GetPartition(_ int) (*partition.Partition, error) {
 	return c.Partition, nil
 }
 
-func (c *File) GetReader(file *partition.FileLocation, selectedMD *metadata.Metadata, _ []*operator.BooleanExpressionNode) (row.GroupReader, error) {
+func (c *File) GetReader(file *partition.FileLocation, selectedMD *metadata.Metadata, _ []string) (row.GroupReader, error) {
 	reader, err := NewHandler(file, c.Metadata, true)
 	if err != nil {
 		return nil, err

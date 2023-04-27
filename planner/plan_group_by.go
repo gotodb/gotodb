@@ -6,21 +6,20 @@ import (
 	"github.com/gotodb/gotodb/datatype"
 	"github.com/gotodb/gotodb/metadata"
 	"github.com/gotodb/gotodb/pkg/parser"
-	"github.com/gotodb/gotodb/planner/operator"
 )
 
 type GroupByPlan struct {
 	Input    Plan
 	Output   Plan
 	Metadata *metadata.Metadata
-	GroupBy  *operator.GroupByNode
+	GroupBy  *GroupByNode
 }
 
 func NewGroupByPlan(runtime *config.Runtime, input Plan, groupBy parser.IGroupByContext) *GroupByPlan {
 	return &GroupByPlan{
 		Input:    input,
 		Metadata: metadata.NewMetadata(),
-		GroupBy:  operator.NewGroupByNode(runtime, groupBy),
+		GroupBy:  NewGroupByNode(runtime, groupBy),
 	}
 }
 
